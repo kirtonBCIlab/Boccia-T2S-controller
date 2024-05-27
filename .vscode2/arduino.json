@@ -1,0 +1,5 @@
+{
+    "sketch": "Arduino test files\\stepper_and_optical\\stepper_and_optical.ino",
+    "configuration": "cpu=atmega2560",
+    "board": "arduino:avr:mega"
+}

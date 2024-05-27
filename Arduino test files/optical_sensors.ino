@@ -1,3 +1,5 @@
+/* This code is to test out the 2 optical sensors and learn how to activate them */
+
 // Define the pin numbers for the sensors
 #define SENSOR1_PIN 26
 #define SENSOR2_PIN 22

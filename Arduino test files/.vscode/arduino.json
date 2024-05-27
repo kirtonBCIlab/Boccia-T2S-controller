@@ -1,5 +1,5 @@
 {
-    "sketch": "ino_testfiles.ino",
+    "sketch": "toggle_test\\toggle_test.ino",
     "port": "COM3",
     "configuration": "cpu=atmega2560",
     "board": "arduino:avr:mega"
