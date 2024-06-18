@@ -7,7 +7,7 @@ import serial
 import time
 
 # Set up serial connection (adjust 'COM3' to your Arduino's port)
-ser = serial.Serial('COM3', 9600, timeout=1)
+ser = serial.Serial('COM7', 9600, timeout=1)
 time.sleep(2)  # Wait for the serial connection to initialize
 
 toggle_flag = False
