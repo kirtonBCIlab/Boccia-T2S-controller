@@ -267,7 +267,7 @@ class MainWindow(QMainWindow):
 
     def sendRotationValue(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
-            value = ((self.rotationSlider.value())/100) * 1000
+            value = (((self.rotationSlider.value())/100) * 1000 ) + 5000
             serial_value = f'{value:03d}\n'.encode()
             try:
                 self.serial_connection.write(serial_value)
@@ -278,7 +278,7 @@ class MainWindow(QMainWindow):
 
     def sendHeightValue(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
-            value = ((self.heightSlider.value())/100) * 255
+            value = (((self.heightSlider.value())/100) * 255 ) + 6000
             serial_value = f'{value:03d}\n'.encode()
             try:
                 self.serial_connection.write(serial_value)
