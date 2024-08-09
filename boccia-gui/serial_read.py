@@ -18,5 +18,5 @@ def start_echo_server(port):
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    port = 'COM6'  # Change this to the COM port you're using
+    port = 'COM3'  # Change this to the COM port you're using
     start_echo_server(port)
