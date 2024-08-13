@@ -204,6 +204,13 @@ class MainWindow(QMainWindow):
         self.leftButton = QPushButton('←')
         self.rightButton = QPushButton('→')
 
+        # Connect button clicks to corresponding methods
+        self.upButton.clicked.connect(self.sendUpArrowCode)
+        self.downButton.clicked.connect(self.sendDownArrowCode)
+        self.leftButton.clicked.connect(self.sendLeftArrowCode)
+        self.rightButton.clicked.connect(self.sendRightArrowCode)
+
+
         self.upButton.setStyleSheet(buttonStyle)
         self.downButton.setStyleSheet(buttonStyle)
         self.leftButton.setStyleSheet(buttonStyle)
@@ -371,6 +378,27 @@ class MainWindow(QMainWindow):
                 #print('Status: Code 7102 sent for Right Arrow')
             except Exception as e:
                 self.statusLabel.setText('Status: Error sending right arrow code')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
+    
+    def sendUpArrowCode(self):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            try:
+                self.serial_connection.write(b'7103\n')
+                self.statusLabel.setText('Status: Code 7103 sent for Up Arrow')
+            except Exception as e:
+                self.statusLabel.setText('Status: Error sending up arrow code')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
+    def sendDownArrowCode(self):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            try:
+                self.serial_connection.write(b'7104\n')
+                self.statusLabel.setText('Status: Code 7104 sent for Down Arrow')
+            except Exception as e:
+                self.statusLabel.setText('Status: Error sending down arrow code')
         else:
             self.statusLabel.setText('Status: No serial connection')
 
