@@ -3,7 +3,7 @@ import serial
 import serial.tools.list_ports
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QSlider, QComboBox, QGridLayout, QMainWindow, QDialog
 from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 
 from control_settings_window import ControlSettingsWindow
 
@@ -65,6 +65,12 @@ class MainWindow(QMainWindow):
         self.initUI()
         self.control_settings_window = ControlSettingsWindow()
 
+        self.key_processed = False
+        self.left_sweep_command = "7100"
+        self.right_sweep_command = "7110"
+        self.down_sweep_command = "7200"
+        self.up_sweep_command = "7210"
+        self.drop_command = "-1070"
 
     def retrieve_control_settings(self):
         # Retrieve the selected control settings
@@ -73,16 +79,31 @@ class MainWindow(QMainWindow):
 
 
     def keyPressEvent(self, event):
-        key = event.key()
+        ''' Send serial code based on key press '''
+        if not self.key_processed:
+            key = event.key()          
+            self.selectSerialCommand(key)
 
-        if key == Qt.Key_A:
-            self.leftButton.click()
-        elif key == Qt.Key_W:
-            self.upButton.click()
-        elif key == Qt.Key_D:
-            self.rightButton.click()
-        elif key == Qt.Key_S:
-            self.downButton.click()
+    def keyReleaseEvent(self, event):
+        ''' Send stop code when key is released '''
+        if self.key_processed:
+            key = event.key()
+            self.sendSerialCode(self.drop_command)
+            
+    def selectSerialCommand(self, key):
+        actions = {
+                Qt.Key_A: self.sendSerialCode(self.left_sweep_command),
+                Qt.Key_W: self.sendSerialCode(self.up_sweep_command),
+                Qt.Key_D: self.sendSerialCode(self.right_sweep_command),
+                Qt.Key_S: self.sendSerialCode(self.down_sweep_command)
+            }
+        action = actions.get(key)
+        
+        if action:
+            action()
+            self.key_processed != self.key_processed
+
+
 
     def initUI(self):
         self.setWindowTitle('BCI Boccia Ramp Control')
@@ -335,22 +356,22 @@ class MainWindow(QMainWindow):
             self.statusLabel.setText('Status: No serial connection')
 
 
-    def keyPressEvent(self, event):
-        selected_key_L = self.control_settings_window.leftComboBox.currentText()
-        selected_key_R = self.control_settings_window.rightComboBox.currentText()
+    # def keyPressEvent(self, event):
+    #     selected_key_L = self.control_settings_window.leftComboBox.currentText()
+    #     selected_key_R = self.control_settings_window.rightComboBox.currentText()
         
-        if event.text().upper() == selected_key_L:
-            self.sendLeftArrowCode()
-        elif event.text().upper() == selected_key_R:
-            self.sendRightArrowCode()
+    #     if event.text().upper() == selected_key_L:
+    #         self.sendLeftArrowCode()
+    #     elif event.text().upper() == selected_key_R:
+    #         self.sendRightArrowCode()
 
     
-    def keyReleaseEvent(self, event):
-        selected_key_L = self.control_settings_window.leftComboBox.currentText()
-        selected_key_R = self.control_settings_window.rightComboBox.currentText()
+    # def keyReleaseEvent(self, event):
+    #     selected_key_L = self.control_settings_window.leftComboBox.currentText()
+    #     selected_key_R = self.control_settings_window.rightComboBox.currentText()
         
-        if event.text().upper() in [selected_key_L, selected_key_R]:
-            self.sendStopCode()
+    #     if event.text().upper() in [selected_key_L, selected_key_R]:
+    #         self.sendStopCode()
 
 
     def sendLeftArrowCode(self):
@@ -385,6 +406,16 @@ class MainWindow(QMainWindow):
         else:
             self.statusLabel.setText('Status: No serial connection')
 
+    def sendSerialCode(self, code):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            try:
+                code_str = str(code) + "\n"
+                self.serial_connection.write(code_str.encode("utf-8"))
+            except Exception as e:
+                self.statusLabel.setText('Status: Error sending serial code')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
     def openControlSettings(self):
         self.controlSettingsWindow = ControlSettingsWindow()
         self.controlSettingsWindow.show()
@@ -395,7 +426,6 @@ class MainWindow(QMainWindow):
             self.serialReadWindow.show()
         else:
             self.statusLabel.setText('Status: No serial connection')
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
