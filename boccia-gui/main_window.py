@@ -63,6 +63,14 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.control_settings_window = ControlSettingsWindow()
+
+
+    def retrieve_control_settings(self):
+        # Retrieve the selected control settings
+        settings = self.control_settings_window.get_selected_settings()
+        print(settings)  # Or use the settings as needed
+
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -293,6 +301,8 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.statusLabel.setText(f'Status: Failed to connect')
 
+
+
     def sendCalibrationCode(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             try:
@@ -324,8 +334,59 @@ class MainWindow(QMainWindow):
         else:
             self.statusLabel.setText('Status: No serial connection')
 
+
+    def keyPressEvent(self, event):
+        selected_key_L = self.control_settings_window.leftComboBox.currentText()
+        selected_key_R = self.control_settings_window.rightComboBox.currentText()
+        
+        if event.text().upper() == selected_key_L:
+            self.sendLeftArrowCode()
+        elif event.text().upper() == selected_key_R:
+            self.sendRightArrowCode()
+
+    
+    def keyReleaseEvent(self, event):
+        selected_key_L = self.control_settings_window.leftComboBox.currentText()
+        selected_key_R = self.control_settings_window.rightComboBox.currentText()
+        
+        if event.text().upper() in [selected_key_L, selected_key_R]:
+            self.sendStopCode()
+
+
+    def sendLeftArrowCode(self):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            try:
+                self.serial_connection.write(b'7101\n')
+                self.statusLabel.setText('Status: Code 7101 sent for Left Arrow')
+            except Exception as e:
+                self.statusLabel.setText('Status: Error sending left arrow code')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
+    def sendRightArrowCode(self):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            try:
+                self.serial_connection.write(b'7102\n')
+                self.statusLabel.setText('Status: Code 7102 sent for Right Arrow')
+                #print('Status: Code 7102 sent for Right Arrow')
+            except Exception as e:
+                self.statusLabel.setText('Status: Error sending right arrow code')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
+
+    def sendStopCode(self):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            try:
+                self.serial_connection.write(b'7100\n')
+                self.statusLabel.setText('Status: Code 7100 sent for Stop')
+            except Exception as e:
+                self.statusLabel.setText('Status: Error sending stop code')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
     def openControlSettings(self):
-        self.controlSettingsWindow = controlSettingsWindow()
+        self.controlSettingsWindow = ControlSettingsWindow()
         self.controlSettingsWindow.show()
 
     def openSerialReadWindow(self):
@@ -335,8 +396,10 @@ class MainWindow(QMainWindow):
         else:
             self.statusLabel.setText('Status: No serial connection')
 
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
+    window.retrieve_control_settings()
     sys.exit(app.exec_())
