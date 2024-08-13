@@ -61,10 +61,18 @@ class SerialReadWindow(QDialog):
 
 class MainWindow(QMainWindow):
     def __init__(self):
+
+        self.up_serial_command = '7210\n'
+        self.left_serial_command = '7100\n'
+        self.right_serial_command = '7110\n'
+        self.down_serial_command = '7200\n'
+        self.drop_serial_command = '-1070\n'
+
         super().__init__()
         self.initUI()
         self.control_settings_window = ControlSettingsWindow()
 
+        
 
     def retrieve_control_settings(self):
         # Retrieve the selected control settings
@@ -193,10 +201,10 @@ class MainWindow(QMainWindow):
         self.rightButton = QPushButton('→')
 
         # Connect button clicks to corresponding methods
-        self.upButton.clicked.connect(self.sendUpArrowCode)
-        self.downButton.clicked.connect(self.sendDownArrowCode)
-        self.leftButton.clicked.connect(self.sendLeftArrowCode)
-        self.rightButton.clicked.connect(self.sendRightArrowCode)
+        self.upButton.clicked.connect(lambda: self.sendSerialCommand(self.up_serial_command))
+        self.downButton.clicked.connect(lambda: self.sendSerialCommand(self.down_serial_command))
+        self.leftButton.clicked.connect(lambda: self.sendSerialCommand(self.left_serial_command))
+        self.rightButton.clicked.connect(lambda: self.sendSerialCommand(self.right_serial_command))
 
         self.upButton.setStyleSheet(buttonStyle)
         self.downButton.setStyleSheet(buttonStyle)
@@ -330,6 +338,12 @@ class MainWindow(QMainWindow):
 
 
     def keyPressEvent(self, event):
+
+        selected_key_L = 'A'
+        selected_key_R = 'D'
+        selected_key_U = 'W'
+        selected_key_D = 'S'
+
         selected_key_L = self.control_settings_window.leftComboBox.currentText()
         selected_key_R = self.control_settings_window.rightComboBox.currentText()
         selected_key_U = self.control_settings_window.upComboBox.currentText()
@@ -337,13 +351,13 @@ class MainWindow(QMainWindow):
         
         
         if event.text().upper() == selected_key_L:
-            self.sendLeftArrowCode()
+            self.sendSerialCommand(self.left_serial_command)
         elif event.text().upper() == selected_key_R:
-            self.sendRightArrowCode()
+            self.sendSerialCommand(self.right_serial_command)
         elif event.text().upper() == selected_key_U:
-            self.sendUpArrowCode()
+            self.sendSerialCommand(self.up_serial_command)
         elif event.text().upper() == selected_key_D:
-            self.sendDownArrowCode()
+            self.sendSerialCommand(self.down_serial_command)
 
     
     def keyReleaseEvent(self, event):
@@ -352,6 +366,17 @@ class MainWindow(QMainWindow):
         
         if event.text().upper() in [selected_key_L, selected_key_R]:
             self.sendStopCode()
+
+    def sendSerialCommand(self, command):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            try:
+                self.serial_connection.write(bytes(command, 'utf-8'))
+                print(f'Status: Command {command} sent')
+            except Exception as e:
+                self.statusLabel.setText('Status: Error sending serial command')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
 
 
     def sendLeftArrowCode(self):
@@ -369,7 +394,7 @@ class MainWindow(QMainWindow):
             try:
                 self.serial_connection.write(b'7102\n')
                 self.statusLabel.setText('Status: Code 7102 sent for Right Arrow')
-                #print('Status: Code 7102 sent for Right Arrow')
+                print('Status: Code 7102 sent for Right Arrow')
             except Exception as e:
                 self.statusLabel.setText('Status: Error sending right arrow code')
         else:
