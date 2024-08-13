@@ -72,18 +72,6 @@ class MainWindow(QMainWindow):
         print(settings)  # Or use the settings as needed
 
 
-    def keyPressEvent(self, event):
-        key = event.key()
-
-        if key == Qt.Key_A:
-            self.leftButton.click()
-        elif key == Qt.Key_W:
-            self.upButton.click()
-        elif key == Qt.Key_D:
-            self.rightButton.click()
-        elif key == Qt.Key_S:
-            self.downButton.click()
-
     def initUI(self):
         self.setWindowTitle('BCI Boccia Ramp Control')
         self.setStyleSheet("background-color: #2d2d2d; color: #ffffff;")
@@ -209,7 +197,6 @@ class MainWindow(QMainWindow):
         self.downButton.clicked.connect(self.sendDownArrowCode)
         self.leftButton.clicked.connect(self.sendLeftArrowCode)
         self.rightButton.clicked.connect(self.sendRightArrowCode)
-
 
         self.upButton.setStyleSheet(buttonStyle)
         self.downButton.setStyleSheet(buttonStyle)
@@ -345,11 +332,18 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event):
         selected_key_L = self.control_settings_window.leftComboBox.currentText()
         selected_key_R = self.control_settings_window.rightComboBox.currentText()
+        selected_key_U = self.control_settings_window.upComboBox.currentText()
+        selected_key_D = self.control_settings_window.downComboBox.currentText()
+        
         
         if event.text().upper() == selected_key_L:
             self.sendLeftArrowCode()
         elif event.text().upper() == selected_key_R:
             self.sendRightArrowCode()
+        elif event.text().upper() == selected_key_U:
+            self.sendUpArrowCode()
+        elif event.text().upper() == selected_key_D:
+            self.sendDownArrowCode()
 
     
     def keyReleaseEvent(self, event):
