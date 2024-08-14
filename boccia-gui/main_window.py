@@ -1,9 +1,11 @@
-import sys
+import sys, os
 import serial
 import serial.tools.list_ports
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QSlider, QComboBox, QGridLayout, QMainWindow, QDialog
-from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QFrame
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+from PyQt5.QtGui import QIcon
+
 
 from control_settings_window import ControlSettingsWindow
 
@@ -31,6 +33,7 @@ class SerialReadThread(QThread):
         self.running = False
         self.wait()
 
+# Serial Read Window (will be removed)
 class SerialReadWindow(QDialog):
     def __init__(self, serial_connection):
         super().__init__()
@@ -65,57 +68,85 @@ class MainWindow(QMainWindow):
         self.initUI()
         self.control_settings_window = ControlSettingsWindow()
 
+        # Serial Commands
         self.key_processed = False
         self.left_sweep_command = "7100"
         self.right_sweep_command = "7110"
         self.down_sweep_command = "7200"
         self.up_sweep_command = "7210"
+        self.calibration_command = "8700"
         self.drop_command = "-1070"
-
+        
+    # NEED TO BE REMOVED (SETTINGS CODE) --------------
     def retrieve_control_settings(self):
         # Retrieve the selected control settings
         settings = self.control_settings_window.get_selected_settings()
         print(settings)  # Or use the settings as needed
-
+    # ------------------------------------------------
 
     def keyPressEvent(self, event):
         ''' Send serial code based on key press '''
         if not self.key_processed:
             key = event.key()          
             self.selectSerialCommand(key)
+            super().keyPressEvent(event)
+            self.key_processed = key
 
     def keyReleaseEvent(self, event):
         ''' Send stop code when key is released '''
         if self.key_processed:
             key = event.key()
-            self.sendSerialCode(self.drop_command)
+            if key == self.key_processed:
+                self.selectSerialCommand(key)
+                self.key_processed = None
+
+            # self.selectSerialCommand(key)
+            # self.key_processed = False
             
+            # TO DO FOR ME -----------------------------------
+            # Update buttons to not be buttons
+            # Change the command labels to be rotation and elevation (space and enter)
+            # Double check the slider values being sent
+            # Check drop command
+            # USE SEND SERIAL CODE
+            # Clean UP CODE
+            # ------------------------------------------------
+
     def selectSerialCommand(self, key):
         actions = {
-                Qt.Key_A: self.sendSerialCode(self.left_sweep_command),
-                Qt.Key_W: self.sendSerialCode(self.up_sweep_command),
-                Qt.Key_D: self.sendSerialCode(self.right_sweep_command),
-                Qt.Key_S: self.sendSerialCode(self.down_sweep_command)
-            }
-        action = actions.get(key)
+            Qt.Key_A: lambda: self.sendSerialCode(self.left_sweep_command),
+            Qt.Key_W: lambda: self.sendSerialCode(self.up_sweep_command),
+            Qt.Key_D: lambda: self.sendSerialCode(self.right_sweep_command),
+            Qt.Key_S: lambda: self.sendSerialCode(self.down_sweep_command),
+            Qt.Key_Space: lambda: self.sendSerialCode(self.drop_command),
+            Qt.Key_Return: lambda: self.sendSerialCode(self.calibration_command)
+
+        }
+        # action = actions.get(key)
         
-        if action:
-            action()
-            self.key_processed != self.key_processed
-
-
+        # if action:
+        #     action()
+        #     self.key_processed = !self.key_processed
+        if key in actions:
+            actions[key]()
+            # self.key_processed = True
+      
 
     def initUI(self):
+
+        # title and styleimport os
         self.setWindowTitle('BCI Boccia Ramp Control')
         self.setStyleSheet("background-color: #2d2d2d; color: #ffffff;")
         
         centralWidget = QWidget()
         self.setCentralWidget(centralWidget)
         
+        # Layouts
         mainLayout = QVBoxLayout()
-        
+        buttonsLayout = QGridLayout()
         topRightButtonsLayout = QHBoxLayout()
         
+        # Connect Button
         self.connectButton = QPushButton('Connect')
         self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
         topRightButtonsLayout.addWidget(self.connectButton)
@@ -123,8 +154,9 @@ class MainWindow(QMainWindow):
         self.connectButton.clicked.connect(self.toggleConnection)
         self.connectButton.clicked.connect(self.connectSerialPort)
         
+        # Calibration Button
         self.calibrationButton = QPushButton('Calibrate')
-        self.calibrationButton.clicked.connect(self.sendCalibrationCode)
+        self.calibrationButton.clicked.connect(lambda: self.sendSerialCode(self.calibration_command))
         self.calibrationButton.setStyleSheet("""
                                                 QPushButton {
                                                     font-size: 16px;
@@ -141,10 +173,12 @@ class MainWindow(QMainWindow):
         topRightButtonsLayout.addWidget(self.calibrationButton)
         mainLayout.addLayout(topRightButtonsLayout)
 
+        # Connection Status Label
         statusLayout = QHBoxLayout()
         self.statusLabel = QLabel('Status: Disconnected')
         self.statusLabel.setStyleSheet("font-size: 16px; color: #a9a9a9;")
 
+        # Port Selection Label and ComboBox
         comLabel = QLabel('PORT')
         comLabel.setStyleSheet("font-size: 16px; color: #a9a9a9;")
 
@@ -157,10 +191,13 @@ class MainWindow(QMainWindow):
         statusLayout.addWidget(comLabel)
         statusLayout.addWidget(self.comComboBox)
 
+
+ # SPEED CONTROLS -------------------------------
         controlsLayout = QHBoxLayout()
         speedLabel = QLabel('Speed')
         speedLabel.setStyleSheet("font-size: 16px; color: #2c2c2c;")
       
+        # Height Speed Slider
         heightLayout = QHBoxLayout()
         heightLabel = QLabel('Height Speed: ')
         heightLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead;}")
@@ -181,6 +218,7 @@ class MainWindow(QMainWindow):
         heightLayout.addWidget(self.heightSlider)
         heightLayout.addWidget(self.heightValueLabel)
         
+        # Rotation Speed Slider
         rotationLayout = QHBoxLayout()
         rotationLabel = QLabel('Rotation Speed: ')
         rotationLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead;}")
@@ -200,6 +238,8 @@ class MainWindow(QMainWindow):
         rotationLayout.addWidget(self.rotationSlider)
         rotationLayout.addWidget(self.rotationValueLabel)
 
+
+        # CONTROLS -------------------------
         controlsLabel = QLabel('Controls')
         controlsLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead;}")
 
@@ -219,11 +259,19 @@ class MainWindow(QMainWindow):
         }
         """
 
+        # Arrow Keys Visual
         buttonsLayout = QGridLayout()
-        self.upButton = QPushButton('↑')
-        self.downButton = QPushButton('↓')
-        self.leftButton = QPushButton('←')
-        self.rightButton = QPushButton('→')
+
+        buttonsLayout = QGridLayout()
+        self.upButton = QPushButton('W ↑')
+        self.downButton = QPushButton('S ↓')
+        self.leftButton = QPushButton('A ←')
+        self.rightButton = QPushButton('→ D')
+
+        self.upButton.setEnabled(False)
+        self.downButton.setEnabled(False)
+        self.leftButton.setEnabled(False)
+        self.rightButton.setEnabled(False)
 
         self.upButton.setStyleSheet(buttonStyle)
         self.downButton.setStyleSheet(buttonStyle)
@@ -242,6 +290,7 @@ class MainWindow(QMainWindow):
         buttonsLayout.setColumnStretch(1, 2)
         buttonsLayout.setColumnStretch(2, 2)
 
+        # Adding the buttons to the layout
         heightLayout = QHBoxLayout()
         heightLayout.addWidget(heightLabel)
         heightLayout.addWidget(self.heightValueLabel)
@@ -259,6 +308,8 @@ class MainWindow(QMainWindow):
         controlsLayout.addLayout(buttonsLayout)
         controlsLayout.addLayout(slidersLayout)
 
+        
+        # ENTER ADDED -------------------------  
         settingsButton = QPushButton('Control Settings')
         settingsButton.setStyleSheet("""
                                         QPushButton {
@@ -287,23 +338,29 @@ class MainWindow(QMainWindow):
                                     """)
         serialReadButton.clicked.connect(self.openSerialReadWindow)
 
+
         mainLayout.addLayout(statusLayout)
         mainLayout.addWidget(controlsLabel)
         mainLayout.addLayout(controlsLayout)
         mainLayout.addWidget(speedLabel)
         mainLayout.addWidget(settingsButton)
         mainLayout.addWidget(serialReadButton)
-
         centralWidget.setLayout(mainLayout)
+    
 
+ # FUNCTIONS ----------------------------------------
+
+    # Update the height label
     def updateHeightLabel(self):
         value = self.heightSlider.value()
         self.heightValueLabel.setText(f'{value}%')
 
+    # Update the rotation label
     def updateRotationLabel(self):
         value = self.rotationSlider.value()
         self.rotationValueLabel.setText(f'{value}%')
 
+    # Toggle the connection status
     def toggleConnection(self):
         if self.connectButton.text() == 'Connect':
             self.connectButton.setText('Disconnect')
@@ -314,6 +371,7 @@ class MainWindow(QMainWindow):
             self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
             self.statusLabel.setText('Status: Disconnected')
             
+    # Connect to the selected serial port
     def connectSerialPort(self):
         port = self.comComboBox.currentText()
         try:
@@ -322,21 +380,12 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.statusLabel.setText(f'Status: Failed to connect')
 
-
-
-    def sendCalibrationCode(self):
-        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
-            try:
-                self.serial_connection.write(b'8700\n')
-            except Exception as e:
-                self.statusLabel.setText(f'Status: Error sending calibration code')
-        else:
-            self.statusLabel.setText('Status: No serial connection')
-
+    # Caclulate and send the Rotation slider value 
     def sendRotationValue(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             value = (((self.rotationSlider.value()) / 100) * 1000) + 5000
             serial_value = f'{int(value):03d}\n'.encode()
+            print(f'Rotation Value {serial_value}')
             try:
                 self.serial_connection.write(serial_value)
             except Exception as e:
@@ -344,10 +393,12 @@ class MainWindow(QMainWindow):
         else:
             self.statusLabel.setText('Status: No serial connection')
 
+    # Caclulate and send the Rotation slider value 
     def sendHeightValue(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             value = (((self.heightSlider.value())/100) * 255 ) + 6000
             serial_value = f'{int(value):03d}\n'.encode()
+            print(f'Height Value {serial_value}')
             try:
                 self.serial_connection.write(serial_value)
             except Exception as e:
@@ -374,52 +425,24 @@ class MainWindow(QMainWindow):
     #         self.sendStopCode()
 
 
-    def sendLeftArrowCode(self):
-        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
-            try:
-                self.serial_connection.write(b'7101\n')
-                self.statusLabel.setText('Status: Code 7101 sent for Left Arrow')
-            except Exception as e:
-                self.statusLabel.setText('Status: Error sending left arrow code')
-        else:
-            self.statusLabel.setText('Status: No serial connection')
-
-    def sendRightArrowCode(self):
-        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
-            try:
-                self.serial_connection.write(b'7102\n')
-                self.statusLabel.setText('Status: Code 7102 sent for Right Arrow')
-                #print('Status: Code 7102 sent for Right Arrow')
-            except Exception as e:
-                self.statusLabel.setText('Status: Error sending right arrow code')
-        else:
-            self.statusLabel.setText('Status: No serial connection')
-
-
-    def sendStopCode(self):
-        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
-            try:
-                self.serial_connection.write(b'7100\n')
-                self.statusLabel.setText('Status: Code 7100 sent for Stop')
-            except Exception as e:
-                self.statusLabel.setText('Status: Error sending stop code')
-        else:
-            self.statusLabel.setText('Status: No serial connection')
-
+    # SEND SERIAL CODE FUNCTION
     def sendSerialCode(self, code):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             try:
                 code_str = str(code) + "\n"
                 self.serial_connection.write(code_str.encode("utf-8"))
+                print(f'Status: Code {code_str}')
             except Exception as e:
                 self.statusLabel.setText('Status: Error sending serial code')
         else:
             self.statusLabel.setText('Status: No serial connection')
 
+    # CONTROL SETTINGS WINDOW
     def openControlSettings(self):
         self.controlSettingsWindow = ControlSettingsWindow()
         self.controlSettingsWindow.show()
 
+    # SERIAL READ WINDOW (will be removed)
     def openSerialReadWindow(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             self.serialReadWindow = SerialReadWindow(self.serial_connection)
