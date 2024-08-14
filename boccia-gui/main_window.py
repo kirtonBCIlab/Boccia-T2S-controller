@@ -74,11 +74,17 @@ class MainWindow(QMainWindow):
         self.key_processed = False
 
         
-        self.commands = {
+        self.hold_commands = {
             Qt.Key_A: "7100",
             Qt.Key_D: "7110",
             Qt.Key_S: "7200",
             Qt.Key_W: "7210",
+        }
+
+        self.toggle_commands = {
+            Qt.Key_1: "7110",  # Rotation right
+            Qt.Key_2: "-1070", # Drop
+            Qt.Key_R: "-1070"
         }
 
         # self.left_sweep_command = "7100"
@@ -99,21 +105,39 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event):
         if not event.isAutoRepeat():
             key = event.key()
-            if (key in self.commands) and (not self.key_processed):
-                print(f"Key pressed: {key}")
-                command = self.commands[key]
+            # if (key in self.operator_commands) and (not self.key_processed):
+            #     print(f"Key pressed: {key}")
+            #     command = self.operator_commands[key]
+            #     self.sendSerialCode(command)
+            #     self.key_processed = True
+            #     print(f"Sent press command: {command} to serial port")
+            #     event.accept()
+
+            #if (not self.key_processed):
+            if (key in self.hold_commands) and (not self.key_processed):
+                print(f"Operator key pressed: {key}")
+                command = self.hold_commands[key]
                 self.sendSerialCode(command)
                 self.key_processed = True
                 print(f"Sent press command: {command} to serial port")
-                event.accept()
+                # event.accept()
+
+            elif key in self.toggle_commands:
+                print(f"User key pressed: {key}")
+                command = self.toggle_commands[key]
+                self.sendSerialCode(command)
+                #self.key_processed = False
+                print(f"Sent press command: {command} to serial port")
+                # event.accept()
+            event.accept()
 
     
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
             key = event.key()
-            if (key in self.commands) and (self.key_processed):
+            if (key in self.hold_commands) and (self.key_processed):
                 print(f"Key released: {key}")
-                command = self.commands[key]
+                command = self.hold_commands[key]
                 self.sendSerialCode(command)
                 self.key_processed = False
                 print(f"Sent release command: {command} to serial port")
@@ -302,15 +326,19 @@ class MainWindow(QMainWindow):
         self.leftButton = QPushButton('A ←')
         self.rightButton = QPushButton('→ D')
 
+        self.dropButton = QPushButton('Drop \n(R)')
+
         self.upButton.setEnabled(False)
         self.downButton.setEnabled(False)
         self.leftButton.setEnabled(False)
         self.rightButton.setEnabled(False)
+        self.dropButton.setEnabled(False)
 
         self.upButton.setStyleSheet(buttonStyle)
         self.downButton.setStyleSheet(buttonStyle)
         self.leftButton.setStyleSheet(buttonStyle)
         self.rightButton.setStyleSheet(buttonStyle)
+        self.dropButton.setStyleSheet(buttonStyle)
 
         spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         buttonsLayout.addItem(spacer, 0, 3)
@@ -319,6 +347,7 @@ class MainWindow(QMainWindow):
         buttonsLayout.addWidget(self.downButton, 2, 1)
         buttonsLayout.addWidget(self.leftButton, 1, 0)
         buttonsLayout.addWidget(self.rightButton, 1, 2)
+        buttonsLayout.addWidget(self.dropButton, 1, 1)
 
         buttonsLayout.setColumnStretch(0, 2)
         buttonsLayout.setColumnStretch(1, 2)
