@@ -8,6 +8,7 @@ from PyQt5.QtGui import QIcon
 
 
 from control_settings_window import ControlSettingsWindow
+from key_press_handler import KeyPressHandler
 
 # Function to list available serial ports
 def list_serial_ports():
@@ -67,15 +68,25 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.initUI()
         self.control_settings_window = ControlSettingsWindow()
+        self.key_press_handler = None
 
         # Serial Commands
         self.key_processed = False
-        self.left_sweep_command = "7100"
-        self.right_sweep_command = "7110"
-        self.down_sweep_command = "7200"
-        self.up_sweep_command = "7210"
-        self.calibration_command = "8700"
-        self.drop_command = "-1070"
+
+        
+        self.commands = {
+            Qt.Key_A: "7100",
+            Qt.Key_D: "7110",
+            Qt.Key_S: "7200",
+            Qt.Key_W: "7210",
+        }
+
+        # self.left_sweep_command = "7100"
+        # self.right_sweep_command = "7110"
+        # self.down_sweep_command = "7200"
+        # self.up_sweep_command = "7210"
+        # self.calibration_command = "8700"
+        # self.drop_command = "-1070"
         
     # NEED TO BE REMOVED (SETTINGS CODE) --------------
     def retrieve_control_settings(self):
@@ -84,21 +95,44 @@ class MainWindow(QMainWindow):
         print(settings)  # Or use the settings as needed
     # ------------------------------------------------
 
+    
     def keyPressEvent(self, event):
-        ''' Send serial code based on key press '''
-        if not self.key_processed:
-            key = event.key()          
-            self.selectSerialCommand(key)
-            super().keyPressEvent(event)
-            self.key_processed = key
-
-    def keyReleaseEvent(self, event):
-        ''' Send stop code when key is released '''
-        if self.key_processed:
+        if not event.isAutoRepeat():
             key = event.key()
-            if key == self.key_processed:
-                self.selectSerialCommand(key)
-                self.key_processed = None
+            if (key in self.commands) and (not self.key_processed):
+                print(f"Key pressed: {key}")
+                command = self.commands[key]
+                self.sendSerialCode(command)
+                self.key_processed = True
+                print(f"Sent press command: {command} to serial port")
+                event.accept()
+
+    
+    def keyReleaseEvent(self, event):
+        if not event.isAutoRepeat():
+            key = event.key()
+            if (key in self.commands) and (self.key_processed):
+                print(f"Key released: {key}")
+                command = self.commands[key]
+                self.sendSerialCode(command)
+                self.key_processed = False
+                print(f"Sent release command: {command} to serial port")
+
+    # def keyPressEvent(self, event):
+    #     ''' Send serial code based on key press '''
+    #     if not self.key_processed:
+    #         key = event.key()          
+    #         self.selectSerialCommand(key)
+    #         super().keyPressEvent(event)
+    #         self.key_processed = key
+
+    # def keyReleaseEvent(self, event):
+    #     ''' Send stop code when key is released '''
+    #     if self.key_processed:
+    #         key = event.key()
+    #         if key == self.key_processed:
+    #             self.selectSerialCommand(key)
+    #             self.key_processed = None
 
             # self.selectSerialCommand(key)
             # self.key_processed = False
