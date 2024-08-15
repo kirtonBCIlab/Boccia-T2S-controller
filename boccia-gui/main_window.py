@@ -1,37 +1,157 @@
-import sys, serial, serial.tools.list_ports
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QSlider, QComboBox, QGridLayout, QMainWindow, QAction
-from PyQt5.QtWidgets import QSpacerItem, QSizePolicy
-from PyQt5.QtCore import Qt
+import sys
+import os
+import serial
+import serial.tools.list_ports
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, 
+    QSlider, QComboBox, QGridLayout, QMainWindow, QDialog, QSpacerItem, 
+    QSizePolicy, QFrame, QScrollArea
+)
+#from control_settings_window import ControlSettingsWindow
 
-from control_settings_window import ControlSettingsWindow
-
-
-    # Function to list available serial ports
+# Function to list available serial ports
 def list_serial_ports():
     ports = serial.tools.list_ports.comports()
     available_ports = [port.device for port in ports]
     return available_ports
 
+# Serial Read Thread
+class SerialReadThread(QThread):
+    newData = pyqtSignal(str)
+
+    def __init__(self, serial_connection):
+        super().__init__()
+        self.serial_connection = serial_connection
+        self.running = True
+
+    def run(self):
+        while self.running:
+            if self.serial_connection.in_waiting > 0:
+                data = self.serial_connection.read(self.serial_connection.in_waiting).decode('utf-8')
+                self.newData.emit(data)
+
+    def stop(self):
+        self.running = False
+        self.wait()
+class SerialReadWindow(QDialog):
+    def __init__(self, serial_connection):
+        super().__init__()
+        self.serial_connection = serial_connection
+        self.initUI()
+
+    def initUI(self):
+        self.scroll = QScrollArea()
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        self.setWindowTitle('Serial Port Reader')
+        self.setGeometry(100, 100, 400, 300)
+
+        layout = QVBoxLayout()
+
+        self.outputLabel = QLabel('Reading data from serial port\n')
+        self.outputLabel.setWordWrap(True)  # Ensure text wraps within the label
+        self.scroll.setWidget(self.outputLabel)
+        self.scroll.setWidgetResizable(True)  
+
+        layout.addWidget(self.scroll)
+        self.setLayout(layout)
+
+        self.thread = SerialReadThread(self.serial_connection)
+        self.thread.newData.connect(self.updateOutput)
+        self.thread.start()
+
+    # Buggy
+    def updateOutput(self, data):
+        print(str(data))  # Prints to terminal
+        self.outputLabel.setText(self.outputLabel.text() + data)
+
+    def closeEvent(self, event):
+        self.thread.stop()
+        event.accept()
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.resize(500, 400)
 
+        # Default Serial Commands
+        self.key_processed = False
+        self.calibrationCommand = '8400'
 
+        self.hold_commands = {
+            Qt.Key_A: "7100", # Rotation Left
+            Qt.Key_D: "7110", # Rotation Right
+            Qt.Key_S: "7200", # Elevation Down
+            Qt.Key_W: "7210", # Elevation Up
+        }
+
+        self.toggle_commands = {
+            Qt.Key_1: "7120",  # Rotation Right
+            Qt.Key_2: "-1070", # Drop
+            Qt.Key_R: "-1070"
+        }
+  
+    def update_command(self):
+        mode = self.commandAComboBox.currentText()
+        print(mode)
+
+        if mode == "Rotation":
+            self.toggle_commands = {
+                Qt.Key_1: "7120",  # Rotation Right
+                Qt.Key_2: "-1070",  # Drop
+                Qt.Key_R: "-1070"
+            }
+
+        elif mode == "Elevation":
+            self.toggle_commands = {
+                Qt.Key_1: "7210",  # Elevation Up
+                Qt.Key_2: "-1070",  # Drop
+                Qt.Key_R: "-1070"
+            }
+    
     def keyPressEvent(self, event):
-        key = event.key()
+        self.update_command()
+        if not event.isAutoRepeat():
+            key = event.key()
+            
+            if (key in self.hold_commands) and (not self.key_processed):
+                print(f"Operator key pressed: {key}")
+                command = self.hold_commands[key]
+                self.sendSerialCode(command)
+                self.key_processed = True
+                print(f"Sent press command: {command} to serial port\n")
 
-        if key == Qt.Key_A:
-            self.leftButton.click()  # Simulate a click on the left button
-        elif key == Qt.Key_W:
-            self.upButton.click()  # Simulate a click on the up button
-        elif key == Qt.Key_D:
-            self.rightButton.click()  # Simulate a click on the right button
-        elif key == Qt.Key_S:
-            self.downButton.click()  # Simulate a click on the down button
+            elif key in self.toggle_commands:
+                print(f"User key pressed: {key}")
+                command = self.toggle_commands[key]
+                self.sendSerialCode(command)
+                print(f"Sent press command: {command} to serial port\n")
+                
+            event.accept()
+
+    
+    def keyReleaseEvent(self, event):
+        if not event.isAutoRepeat():
+            key = event.key()
+            if (key in self.hold_commands) and (self.key_processed):
+                print(f"Key released: {key}")
+                command = self.hold_commands[key]
+                self.sendSerialCode(command)
+                self.key_processed = False
+                print(f"Sent release command: {command} to serial port\n")
+
 
     def initUI(self):
-        self.setWindowTitle('BCI Boccia Ramp Control')
+
+        self.setWindowIcon(QIcon(r'boccia-gui\brain.png'))
+
+        # title and styleimport os
+        self.setWindowTitle('BCI Ramp Controls')
         self.setStyleSheet("background-color: #2d2d2d; color: #ffffff;")
         
         centralWidget = QWidget()
@@ -39,66 +159,73 @@ class MainWindow(QMainWindow):
         
         # Layouts
         mainLayout = QVBoxLayout()
-        
-        # Top right corner buttons layout
+        buttonsLayout = QGridLayout()
         topRightButtonsLayout = QHBoxLayout()
         
-        # Connection Button
+        # Connect Button
         self.connectButton = QPushButton('Connect')
         self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
-        topRightButtonsLayout.addWidget(self.connectButton)  # Add the connect button first to align it to the left
-
-        topRightButtonsLayout.addStretch()  # This will push the subsequent buttons to the right
-
+        topRightButtonsLayout.addWidget(self.connectButton)
+        topRightButtonsLayout.addStretch()
         self.connectButton.clicked.connect(self.toggleConnection)
         self.connectButton.clicked.connect(self.connectSerialPort)
-
-                
+        
         # Calibration Button
         self.calibrationButton = QPushButton('Calibrate')
-        self.calibrationButton.clicked.connect(self.sendCalibrationCode)
-        self.calibrationButton.setStyleSheet("font-size: 16px; background-color: #3c3c3c; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
-        topRightButtonsLayout.addWidget(self.calibrationButton)
-
-        # Add the top right buttons layout to the main layout
-        mainLayout.addLayout(topRightButtonsLayout)
+        self.calibrationButton.clicked.connect(lambda: self.sendSerialCode(self.calibrationCommand))
+        self.calibrationButton.setStyleSheet("""
+                                                QPushButton {
+                                                    font-size: 16px;
+                                                    background-color: #3c3c3c;
+                                                    color: #ffffff;
+                                                    padding: 5px;
+                                                    border: 1px solid #ffffff;
+                                                }
+                                                QPushButton:hover {
+                                                    background-color: #555555;
+                                                }
+                                            """)
         
+        topRightButtonsLayout.addWidget(self.calibrationButton)
+        
+        mainLayout.addLayout(topRightButtonsLayout)
 
-        # Status
+        # Connection Status Label
         statusLayout = QHBoxLayout()
-        self.statusLabel = QLabel('Status: Disonnected')
+        self.statusLabel = QLabel('Status: Disconnected')
         self.statusLabel.setStyleSheet("font-size: 16px; color: #a9a9a9;")
 
-        # COM Port
+        # Port Selection Label and ComboBox
         comLabel = QLabel('PORT')
         comLabel.setStyleSheet("font-size: 16px; color: #a9a9a9;")
 
         self.comComboBox = QComboBox()
         self.comComboBox.addItems(list_serial_ports())
-        self.comComboBox.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff;")
+        self.comComboBox.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 3px;")
 
         statusLayout.addWidget(self.statusLabel)
         statusLayout.addStretch()
         statusLayout.addWidget(comLabel)
         statusLayout.addWidget(self.comComboBox)
-        
+       
 
-        # Controls
-        controlsLayout = QHBoxLayout()  
+
+ # SPEED CONTROLS -------------------------------
+        controlsLayout = QHBoxLayout()
         speedLabel = QLabel('Speed')
-        speedLabel.setStyleSheet("font-size: 16px; color: #2c2c2c;")
+        speedLabel.setStyleSheet("font-size: 20px; color: #2c2c2c; font-weight: bold;")
       
-        
+        # Height Speed Slider
         heightLayout = QHBoxLayout()
         heightLabel = QLabel('Height Speed: ')
         heightLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead;}")
         
-        #Slider for height
         self.heightSlider = QSlider(Qt.Horizontal)
         self.heightSlider.setMinimum(0)
-        self.heightSlider.setMaximum(100) #actual value = 255
+        self.heightSlider.setMaximum(100)
         self.heightSlider.setValue(50)
         self.heightSlider.valueChanged.connect(self.updateHeightLabel)
+        self.heightSlider.sliderReleased.connect(self.sendHeightValue)
         self.heightSlider.setStyleSheet("QSlider::groove:horizontal {background: #3c3c3c; height: 10px;}"
                                   "QSlider::handle:horizontal {background: #b48ead; width: 20px; margin: -5px 0;}")
 
@@ -109,14 +236,16 @@ class MainWindow(QMainWindow):
         heightLayout.addWidget(self.heightSlider)
         heightLayout.addWidget(self.heightValueLabel)
         
+        # Rotation Speed Slider
         rotationLayout = QHBoxLayout()
         rotationLabel = QLabel('Rotation Speed: ')
         rotationLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead;}")
         self.rotationSlider = QSlider(Qt.Horizontal)
         self.rotationSlider.setMinimum(0)
-        self.rotationSlider.setMaximum(100) # actual value = 999
+        self.rotationSlider.setMaximum(100)
         self.rotationSlider.setValue(50)
         self.rotationSlider.valueChanged.connect(self.updateRotationLabel)
+        self.rotationSlider.sliderReleased.connect(self.sendRotationValue)
         self.rotationSlider.setStyleSheet("QSlider::groove:horizontal {background: #3c3c3c; height: 10px;}"
                                   "QSlider::handle:horizontal {background: #b48ead; width: 20px; margin: -5px 0;}")
 
@@ -127,9 +256,11 @@ class MainWindow(QMainWindow):
         rotationLayout.addWidget(self.rotationSlider)
         rotationLayout.addWidget(self.rotationValueLabel)
 
-        controlsLabel = QLabel('Controls')
-        controlsLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead;}")
-        
+
+    # CONTROLS -------------------------
+        controlsLabel = QLabel('OPERATOR CONTROLS')
+        controlsLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead; font-weight: bold;}")
+
         buttonStyle = """
         QPushButton {
             width: 50px;
@@ -146,47 +277,48 @@ class MainWindow(QMainWindow):
         }
         """
 
-        # Movement buttons
+        # Arrow Keys Visual
         buttonsLayout = QGridLayout()
-        upButton = QPushButton('↑')
-        #upButton.setStyleSheet("QPushButton { width: 50px; height: 50px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff;}")
-        downButton = QPushButton('↓')
-        #downButton.setStyleSheet("QPushButton { width: 50px; height: 50px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff;}")
-        leftButton = QPushButton('←')
-        #leftButton.setStyleSheet("QPushButton { width: 50px; height: 50px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff;}")
-        rightButton = QPushButton('→')
-        #rightButton.setStyleSheet("QPushButton { width: 50px; height: 50px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff;}")
-        
-        upButton.setStyleSheet(buttonStyle)
-        downButton.setStyleSheet(buttonStyle)
-        leftButton.setStyleSheet(buttonStyle)
-        rightButton.setStyleSheet(buttonStyle)
 
-        # Create a spacer item
+        buttonsLayout = QGridLayout()
+        self.upButton = QPushButton('W ↑')
+        self.downButton = QPushButton('S ↓')
+        self.leftButton = QPushButton('A ←')
+        self.rightButton = QPushButton('→ D')
+
+        self.dropButton = QPushButton('Drop \n(R)')
+
+        self.upButton.setEnabled(False)
+        self.downButton.setEnabled(False)
+        self.leftButton.setEnabled(False)
+        self.rightButton.setEnabled(False)
+        self.dropButton.setEnabled(False)
+
+        self.upButton.setStyleSheet(buttonStyle)
+        self.downButton.setStyleSheet(buttonStyle)
+        self.leftButton.setStyleSheet(buttonStyle)
+        self.rightButton.setStyleSheet(buttonStyle)
+        self.dropButton.setStyleSheet(buttonStyle)
+
         spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         buttonsLayout.addItem(spacer, 0, 3)
 
-        # Create new layouts for buttons and sliders
-        buttonsLayout = QGridLayout()
-        slidersLayout = QVBoxLayout()
+        buttonsLayout.addWidget(self.upButton, 0, 1)
+        buttonsLayout.addWidget(self.downButton, 2, 1)
+        buttonsLayout.addWidget(self.leftButton, 1, 0)
+        buttonsLayout.addWidget(self.rightButton, 1, 2)
+        buttonsLayout.addWidget(self.dropButton, 1, 1)
 
-        # Add widgets to the new layouts
-        buttonsLayout.addWidget(upButton, 0, 1)
-        buttonsLayout.addWidget(downButton, 2, 1)
-        buttonsLayout.addWidget(leftButton, 1, 0)
-        buttonsLayout.addWidget(rightButton, 1, 2)
+        buttonsLayout.setColumnStretch(0, 2)
+        buttonsLayout.setColumnStretch(1, 2)
+        buttonsLayout.setColumnStretch(2, 2)
 
-         # Assuming buttonsLayout is your grid layout and you want to adjust the first three columns
-        buttonsLayout.setColumnStretch(0, 2)  # Makes the first column twice as wide as the others
-        buttonsLayout.setColumnStretch(1, 2)  # Makes the second column twice as wide as the others
-        buttonsLayout.setColumnStretch(2, 2)  # Makes the third column twice as wide as the others
-        spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        buttonsLayout.addItem(spacer, 0, 3)
-
-        # Create horizontal layout for height
+        # Adding the buttons to the layout
         heightLayout = QHBoxLayout()
         heightLayout.addWidget(heightLabel)
         heightLayout.addWidget(self.heightValueLabel)
+
+        slidersLayout = QVBoxLayout()
         slidersLayout.addLayout(heightLayout)
         slidersLayout.addWidget(self.heightSlider)
 
@@ -196,93 +328,217 @@ class MainWindow(QMainWindow):
         slidersLayout.addLayout(rotationLayout)
         slidersLayout.addWidget(self.rotationSlider)
 
-        # Add the new layouts to the main controls layout
         controlsLayout.addLayout(buttonsLayout)
         controlsLayout.addLayout(slidersLayout)
-     
+
         
-        # Settings Button
-        settingsButton = QPushButton('Control Settings')
-        settingsButton.setStyleSheet("font-size: 16px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff;")
-        settingsButton.clicked.connect(self.openControlSettings)
+    # USER CONTROLS  -------------------------  
+        userLabel = QLabel('USER CONTROLS')
+        userLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead; font-weight: bold;}")
+
+        userCommandsLayout = QGridLayout()
+        commandALabel = QLabel('(1) Command A')
+        commandALabel.setStyleSheet("QLabel { font: 20px Calibri; color: white;}")
+
+        self.commandAComboBox = QComboBox()
+        self.commandAComboBox.addItems([' Elevation', ' Rotation'])
+        self.commandAComboBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 2px;")
+        self.update_command()  
+        self.commandAComboBox.currentIndexChanged.connect(self.update_command)
+        self.commandAComboBox.currentIndexChanged.connect(self.on_combobox_changed)
         
-        # Adding everything to the main layout
+        commandBLabel = QLabel('(2) Command B')
+        commandBLabel.setStyleSheet("QLabel { font: 20px Calibri; color: white;}")
+
+        self.commandBComboBox = QComboBox()
+        self.commandBComboBox.addItems([' Drop'])        
+        self.commandBComboBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 2px;")
+        self.update_command() 
+        self.commandBComboBox.currentIndexChanged.connect(self.update_command)
+        self.commandBComboBox.currentIndexChanged.connect(self.on_combobox_changed)
+
+        userCommandsLayout.addWidget(commandALabel, 0, 0)
+        userCommandsLayout.addWidget(self.commandAComboBox, 0, 1)
+        userCommandsLayout.addWidget(commandBLabel, 1, 0)
+        userCommandsLayout.addWidget(self.commandBComboBox, 1, 1)
+
+        self.send_button = QPushButton('Update Controls')
+        self.send_button.setStyleSheet("""
+                                        QPushButton {
+                                            font-size: 16px;
+                                            background-color: #3c3c3c;
+                                            color: #ffffff;
+                                            border: 1px solid #ffffff;
+                                            padding: 3px;
+                                        }
+                                        QPushButton:hover {
+                                            background-color: #555555;
+                                        }
+                                    """)
+        self.send_button.clicked.connect(self.update_command)
+        self.send_button.clicked.connect(self.on_button_clicked)
+
+
+        serialReadButton = QPushButton('Read Serial')
+        serialReadButton.setStyleSheet("""
+                                        QPushButton {
+                                            font-size: 16px;
+                                            background-color: #3c3c3c;
+                                            color: #ffffff;
+                                            border: 1px solid #ffffff;
+                                            padding: 3px;
+                                        }
+                                        QPushButton:hover {
+                                            background-color: #555555;
+                                        }
+                                    """)
+        serialReadButton.clicked.connect(self.openSerialReadWindow)
+
+
         mainLayout.addLayout(statusLayout)
         mainLayout.addWidget(controlsLabel)
         mainLayout.addLayout(controlsLayout)
         mainLayout.addWidget(speedLabel)
-        mainLayout.addWidget(settingsButton)
-        
+        mainLayout.addWidget(userLabel)
+        mainLayout.addLayout(userCommandsLayout)
+
+        spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        mainLayout.addItem(spacer)
+
+        mainLayout.addWidget(self.send_button)
+        mainLayout.addWidget(serialReadButton)
         centralWidget.setLayout(mainLayout)
 
-        # Assuming this line is where you need to use the selected COM port
-        #selected_port = self.comComboBox.currentText()
-        #self.serialConnection = serial.Serial(selected_port, 9600, timeout=1)
+        mainLayout.setContentsMargins(20, 20, 20, 20)  # left, top, right, bottom
+
     
-    def connectSerialPort(self):
-        selected_port = self.comComboBox.currentText()
-        if selected_port:
-            try:
-                self.serialConnection = serial.Serial(selected_port, 9600, timeout=1)
-                self.statusLabel.setText('Status: Connected')
-            except serial.SerialException as e:
-                self.statusLabel.setText(f'Status: Error connecting to {selected_port}')
-                print(f"Error connecting to {selected_port}: {e}")
-            except PermissionError as e:
-                self.statusLabel.setText(f'Status: Permission denied for {selected_port}')
-                print(f"Permission denied for {selected_port}: {e}")
+
+ # FUNCTIONS ----------------------------------------
+
+    def on_combobox_changed(self):
+        self.send_button.setStyleSheet("""
+                                    QPushButton {
+                                        font-size: 16px;
+                                        background-color: green;
+                                        color: #ffffff;
+                                        border: 1px solid #ffffff;
+                                        padding: 3px;
+                                    }
+                                    QPushButton:hover {
+                                        background-color: #555555;
+                                    }
+                                """)
+        self.is_green = True  # Set the flag to indicate the button is green
+
+    def on_button_clicked(self):
+        if self.is_green:
+            self.send_button.setStyleSheet("""
+                                            QPushButton {
+                                                font-size: 16px;
+                                                background-color: #3c3c3c;
+                                                color: #ffffff;
+                                                border: 1px solid #ffffff;
+                                                padding: 3px;
+                                            }
+                                            QPushButton:hover {
+                                                background-color: #555555;
+                                            }
+                                        """)
+            self.is_green = False  # Reset the flag
         else:
-            self.statusLabel.setText('Status: Please select a COM port')
-            print("Please select a COM port before connecting.")
+            self.send_button.setStyleSheet("""
+                                            QPushButton {
+                                                font-size: 16px;
+                                                background-color: green;
+                                                color: #ffffff;
+                                                border: 1px solid #ffffff;
+                                                padding: 3px;
+                                            }
+                                            QPushButton:hover {
+                                                background-color: #555555;
+                                            }
+                                        """)
+            self.is_green = True  # Set the flag
 
-        
-    def updateHeightLabel(self, value):
-        self.heightValueLabel.setText((f"{value}%"))
-        self.heightValueLabel.setStyleSheet("font-size: 16px; color: white;")
-          
+    # Update the height label
+    def updateHeightLabel(self):
+        value = self.heightSlider.value()
+        self.heightValueLabel.setText(f'{value}%')
 
-    def updateRotationLabel(self, value):
-        self.rotationValueLabel.setText((f"{value}%"))
-        self.rotationValueLabel.setStyleSheet("font-size: 16px; color: white;")
-        
+    # Update the rotation label
+    def updateRotationLabel(self):
+        value = self.rotationSlider.value()
+        self.rotationValueLabel.setText(f'{value}%')
 
-    def openControlSettings(self):
-        self.controlSettingsWindow = ControlSettingsWindow()
-        self.controlSettingsWindow.show()
-
-
-
-    def sendCalibrationCode(self):
-        code = '8700'
-        try:
-            if self.serialConnection.isOpen():
-                self.serialConnection.write(code.encode())
-            else:
-                # Attempt to open the serial port
-                self.serialConnection.open()
-                # Check again if the port is open and send the code
-                if self.serialConnection.isOpen():
-                    self.serialConnection.write(code.encode())
-                else:
-                    print("Failed to open serial port.")
-        except serial.SerialException as e:
-            print(f"Serial error: {e}")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        
-        # SEE IF NEEDED BASED ON SERIAL CODE
+    # Toggle the connection status
     def toggleConnection(self):
-            # Toggle the button's text between 'Connect' and 'Disconnect'
-            if self.connectButton.text() == 'Connect':
-                self.connectButton.setText('Disconnect')
-                self.connectButton.setStyleSheet("font-size: 16px; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
-            else:
-                self.connectButton.setText('Connect')
-                self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
-    
+        if self.connectButton.text() == 'Connect':
+            self.connectButton.setText('Disconnect')
+            self.connectButton.setStyleSheet("font-size: 16px; background-color: red; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
+            self.statusLabel.setText('Status: Connected')
+        else:
+            self.connectButton.setText('Connect')
+            self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
+            self.statusLabel.setText('Status: Disconnected')
+            
+    # Connect to the selected serial port
+    def connectSerialPort(self):
+        port = self.comComboBox.currentText()
+        try:
+            self.serial_connection = serial.Serial(port, 9600, timeout=1)
+            self.statusLabel.setText('Status: Connected')
+        except Exception as e:
+            self.statusLabel.setText(f'Status: Disconnected')
+
+    # Caclulate and send the Rotation slider value 
+    def sendRotationValue(self):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            value = (((self.rotationSlider.value()) / 100) * 1000) + 5000
+            serial_value = f'{int(value):03d}\n'.encode()
+            print(f'Rotation Value {serial_value}')
+            try:
+                self.serial_connection.write(serial_value)
+            except Exception as e:
+                self.statusLabel.setText(f'Status: Error sending rotation value')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
+    # Caclulate and send the Rotation slider value 
+    def sendHeightValue(self):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            value = (((self.heightSlider.value())/100) * 255 ) + 6000
+            serial_value = f'{int(value):03d}\n'.encode()
+            print(f'Height Value {serial_value}')
+            try:
+                self.serial_connection.write(serial_value)
+            except Exception as e:
+                self.statusLabel.setText(f'Status: Error sending height value')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
+# SEND SERIAL CODE FUNCTION
+    def sendSerialCode(self, code):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            try:
+                code_str = str(code) + "\n"
+                self.serial_connection.write(code_str.encode("utf-8"))
+                print(f'Status: Code {code_str}\n')
+            except Exception as e:
+                self.statusLabel.setText('Status: Error sending serial code')
+        else:
+            self.statusLabel.setText('Status: No serial connection')
+
+# SERIAL READ WINDOW (will be removed)
+    def openSerialReadWindow(self):
+        self.scroll = QScrollArea()    
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            self.serialReadWindow = SerialReadWindow(self.serial_connection)
+            self.serialReadWindow.show()
+        else:
+            self.statusLabel.setText('Status: No serial connection')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    mainWindow = MainWindow()
-    mainWindow.show()
+    window = MainWindow()
+    window.show()
     sys.exit(app.exec_())
