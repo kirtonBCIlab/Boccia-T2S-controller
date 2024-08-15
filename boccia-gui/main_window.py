@@ -1,14 +1,15 @@
-import sys, os
+import sys
+import os
 import serial
 import serial.tools.list_ports
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QSlider, QComboBox, QGridLayout, QMainWindow, QDialog
-from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QFrame
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon
-
-
-from control_settings_window import ControlSettingsWindow
-from key_press_handler import KeyPressHandler
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, 
+    QSlider, QComboBox, QGridLayout, QMainWindow, QDialog, QSpacerItem, 
+    QSizePolicy, QFrame, QScrollArea
+)
+#from control_settings_window import ControlSettingsWindow
 
 # Function to list available serial ports
 def list_serial_ports():
@@ -16,6 +17,7 @@ def list_serial_ports():
     available_ports = [port.device for port in ports]
     return available_ports
 
+# Serial Read Thread
 class SerialReadThread(QThread):
     newData = pyqtSignal(str)
 
@@ -33,8 +35,6 @@ class SerialReadThread(QThread):
     def stop(self):
         self.running = False
         self.wait()
-
-# Serial Read Window (will be removed)
 class SerialReadWindow(QDialog):
     def __init__(self, serial_connection):
         super().__init__()
@@ -42,93 +42,96 @@ class SerialReadWindow(QDialog):
         self.initUI()
 
     def initUI(self):
+        self.scroll = QScrollArea()
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
         self.setWindowTitle('Serial Port Reader')
         self.setGeometry(100, 100, 400, 300)
 
         layout = QVBoxLayout()
 
         self.outputLabel = QLabel('Reading data from serial port\n')
-        layout.addWidget(self.outputLabel)
+        self.outputLabel.setWordWrap(True)  # Ensure text wraps within the label
+        self.scroll.setWidget(self.outputLabel)
+        self.scroll.setWidgetResizable(True)  
 
+        layout.addWidget(self.scroll)
         self.setLayout(layout)
 
         self.thread = SerialReadThread(self.serial_connection)
         self.thread.newData.connect(self.updateOutput)
         self.thread.start()
 
+    # Buggy
     def updateOutput(self, data):
+        print(str(data))  # Prints to terminal
         self.outputLabel.setText(self.outputLabel.text() + data)
 
     def closeEvent(self, event):
         self.thread.stop()
         event.accept()
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.control_settings_window = ControlSettingsWindow()
-        self.key_press_handler = None
+        self.resize(500, 400)
 
-        # Serial Commands
+        # Default Serial Commands
         self.key_processed = False
+        self.calibrationCommand = '8400'
 
-        
         self.hold_commands = {
-            Qt.Key_A: "7100",
-            Qt.Key_D: "7110",
-            Qt.Key_S: "7200",
-            Qt.Key_W: "7210",
+            Qt.Key_A: "7100", # Rotation Left
+            Qt.Key_D: "7110", # Rotation Right
+            Qt.Key_S: "7200", # Elevation Down
+            Qt.Key_W: "7210", # Elevation Up
         }
 
         self.toggle_commands = {
-            Qt.Key_1: "7110",  # Rotation right
+            Qt.Key_1: "7120",  # Rotation Right
             Qt.Key_2: "-1070", # Drop
             Qt.Key_R: "-1070"
         }
+  
+    def update_command(self):
+        mode = self.commandAComboBox.currentText()
+        print(mode)
 
-        # self.left_sweep_command = "7100"
-        # self.right_sweep_command = "7110"
-        # self.down_sweep_command = "7200"
-        # self.up_sweep_command = "7210"
-        # self.calibration_command = "8700"
-        # self.drop_command = "-1070"
-        
-    # NEED TO BE REMOVED (SETTINGS CODE) --------------
-    def retrieve_control_settings(self):
-        # Retrieve the selected control settings
-        settings = self.control_settings_window.get_selected_settings()
-        print(settings)  # Or use the settings as needed
-    # ------------------------------------------------
+        if mode == "Rotation":
+            self.toggle_commands = {
+                Qt.Key_1: "7120",  # Rotation Right
+                Qt.Key_2: "-1070",  # Drop
+                Qt.Key_R: "-1070"
+            }
 
+        elif mode == "Elevation":
+            self.toggle_commands = {
+                Qt.Key_1: "7210",  # Elevation Up
+                Qt.Key_2: "-1070",  # Drop
+                Qt.Key_R: "-1070"
+            }
     
     def keyPressEvent(self, event):
+        self.update_command()
         if not event.isAutoRepeat():
             key = event.key()
-            # if (key in self.operator_commands) and (not self.key_processed):
-            #     print(f"Key pressed: {key}")
-            #     command = self.operator_commands[key]
-            #     self.sendSerialCode(command)
-            #     self.key_processed = True
-            #     print(f"Sent press command: {command} to serial port")
-            #     event.accept()
-
-            #if (not self.key_processed):
+            
             if (key in self.hold_commands) and (not self.key_processed):
                 print(f"Operator key pressed: {key}")
                 command = self.hold_commands[key]
                 self.sendSerialCode(command)
                 self.key_processed = True
-                print(f"Sent press command: {command} to serial port")
-                # event.accept()
+                print(f"Sent press command: {command} to serial port\n")
 
             elif key in self.toggle_commands:
                 print(f"User key pressed: {key}")
                 command = self.toggle_commands[key]
                 self.sendSerialCode(command)
-                #self.key_processed = False
-                print(f"Sent press command: {command} to serial port")
-                # event.accept()
+                print(f"Sent press command: {command} to serial port\n")
+                
             event.accept()
 
     
@@ -140,60 +143,15 @@ class MainWindow(QMainWindow):
                 command = self.hold_commands[key]
                 self.sendSerialCode(command)
                 self.key_processed = False
-                print(f"Sent release command: {command} to serial port")
+                print(f"Sent release command: {command} to serial port\n")
 
-    # def keyPressEvent(self, event):
-    #     ''' Send serial code based on key press '''
-    #     if not self.key_processed:
-    #         key = event.key()          
-    #         self.selectSerialCommand(key)
-    #         super().keyPressEvent(event)
-    #         self.key_processed = key
-
-    # def keyReleaseEvent(self, event):
-    #     ''' Send stop code when key is released '''
-    #     if self.key_processed:
-    #         key = event.key()
-    #         if key == self.key_processed:
-    #             self.selectSerialCommand(key)
-    #             self.key_processed = None
-
-            # self.selectSerialCommand(key)
-            # self.key_processed = False
-            
-            # TO DO FOR ME -----------------------------------
-            # Update buttons to not be buttons
-            # Change the command labels to be rotation and elevation (space and enter)
-            # Double check the slider values being sent
-            # Check drop command
-            # USE SEND SERIAL CODE
-            # Clean UP CODE
-            # ------------------------------------------------
-
-    def selectSerialCommand(self, key):
-        actions = {
-            Qt.Key_A: lambda: self.sendSerialCode(self.left_sweep_command),
-            Qt.Key_W: lambda: self.sendSerialCode(self.up_sweep_command),
-            Qt.Key_D: lambda: self.sendSerialCode(self.right_sweep_command),
-            Qt.Key_S: lambda: self.sendSerialCode(self.down_sweep_command),
-            Qt.Key_Space: lambda: self.sendSerialCode(self.drop_command),
-            Qt.Key_Return: lambda: self.sendSerialCode(self.calibration_command)
-
-        }
-        # action = actions.get(key)
-        
-        # if action:
-        #     action()
-        #     self.key_processed = !self.key_processed
-        if key in actions:
-            actions[key]()
-            # self.key_processed = True
-      
 
     def initUI(self):
 
+        self.setWindowIcon(QIcon(r'boccia-gui\brain.png'))
+
         # title and styleimport os
-        self.setWindowTitle('BCI Boccia Ramp Control')
+        self.setWindowTitle('BCI Ramp Controls')
         self.setStyleSheet("background-color: #2d2d2d; color: #ffffff;")
         
         centralWidget = QWidget()
@@ -214,7 +172,7 @@ class MainWindow(QMainWindow):
         
         # Calibration Button
         self.calibrationButton = QPushButton('Calibrate')
-        self.calibrationButton.clicked.connect(lambda: self.sendSerialCode(self.calibration_command))
+        self.calibrationButton.clicked.connect(lambda: self.sendSerialCode(self.calibrationCommand))
         self.calibrationButton.setStyleSheet("""
                                                 QPushButton {
                                                     font-size: 16px;
@@ -229,6 +187,7 @@ class MainWindow(QMainWindow):
                                             """)
         
         topRightButtonsLayout.addWidget(self.calibrationButton)
+        
         mainLayout.addLayout(topRightButtonsLayout)
 
         # Connection Status Label
@@ -242,18 +201,19 @@ class MainWindow(QMainWindow):
 
         self.comComboBox = QComboBox()
         self.comComboBox.addItems(list_serial_ports())
-        self.comComboBox.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff;")
+        self.comComboBox.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 3px;")
 
         statusLayout.addWidget(self.statusLabel)
         statusLayout.addStretch()
         statusLayout.addWidget(comLabel)
         statusLayout.addWidget(self.comComboBox)
+       
 
 
  # SPEED CONTROLS -------------------------------
         controlsLayout = QHBoxLayout()
         speedLabel = QLabel('Speed')
-        speedLabel.setStyleSheet("font-size: 16px; color: #2c2c2c;")
+        speedLabel.setStyleSheet("font-size: 20px; color: #2c2c2c; font-weight: bold;")
       
         # Height Speed Slider
         heightLayout = QHBoxLayout()
@@ -297,9 +257,9 @@ class MainWindow(QMainWindow):
         rotationLayout.addWidget(self.rotationValueLabel)
 
 
-        # CONTROLS -------------------------
-        controlsLabel = QLabel('Controls')
-        controlsLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead;}")
+    # CONTROLS -------------------------
+        controlsLabel = QLabel('OPERATOR CONTROLS')
+        controlsLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead; font-weight: bold;}")
 
         buttonStyle = """
         QPushButton {
@@ -372,20 +332,52 @@ class MainWindow(QMainWindow):
         controlsLayout.addLayout(slidersLayout)
 
         
-        # ENTER ADDED -------------------------  
-        settingsButton = QPushButton('Control Settings')
-        settingsButton.setStyleSheet("""
+    # USER CONTROLS  -------------------------  
+        userLabel = QLabel('USER CONTROLS')
+        userLabel.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead; font-weight: bold;}")
+
+        userCommandsLayout = QGridLayout()
+        commandALabel = QLabel('(1) Command A')
+        commandALabel.setStyleSheet("QLabel { font: 20px Calibri; color: white;}")
+
+        self.commandAComboBox = QComboBox()
+        self.commandAComboBox.addItems([' Elevation', ' Rotation'])
+        self.commandAComboBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 2px;")
+        self.update_command()  
+        self.commandAComboBox.currentIndexChanged.connect(self.update_command)
+        self.commandAComboBox.currentIndexChanged.connect(self.on_combobox_changed)
+        
+        commandBLabel = QLabel('(2) Command B')
+        commandBLabel.setStyleSheet("QLabel { font: 20px Calibri; color: white;}")
+
+        self.commandBComboBox = QComboBox()
+        self.commandBComboBox.addItems([' Drop'])        
+        self.commandBComboBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 2px;")
+        self.update_command() 
+        self.commandBComboBox.currentIndexChanged.connect(self.update_command)
+        self.commandBComboBox.currentIndexChanged.connect(self.on_combobox_changed)
+
+        userCommandsLayout.addWidget(commandALabel, 0, 0)
+        userCommandsLayout.addWidget(self.commandAComboBox, 0, 1)
+        userCommandsLayout.addWidget(commandBLabel, 1, 0)
+        userCommandsLayout.addWidget(self.commandBComboBox, 1, 1)
+
+        self.send_button = QPushButton('Update Controls')
+        self.send_button.setStyleSheet("""
                                         QPushButton {
                                             font-size: 16px;
                                             background-color: #3c3c3c;
                                             color: #ffffff;
                                             border: 1px solid #ffffff;
+                                            padding: 3px;
                                         }
                                         QPushButton:hover {
                                             background-color: #555555;
                                         }
                                     """)
-        settingsButton.clicked.connect(self.openControlSettings)
+        self.send_button.clicked.connect(self.update_command)
+        self.send_button.clicked.connect(self.on_button_clicked)
+
 
         serialReadButton = QPushButton('Read Serial')
         serialReadButton.setStyleSheet("""
@@ -394,6 +386,7 @@ class MainWindow(QMainWindow):
                                             background-color: #3c3c3c;
                                             color: #ffffff;
                                             border: 1px solid #ffffff;
+                                            padding: 3px;
                                         }
                                         QPushButton:hover {
                                             background-color: #555555;
@@ -406,12 +399,66 @@ class MainWindow(QMainWindow):
         mainLayout.addWidget(controlsLabel)
         mainLayout.addLayout(controlsLayout)
         mainLayout.addWidget(speedLabel)
-        mainLayout.addWidget(settingsButton)
+        mainLayout.addWidget(userLabel)
+        mainLayout.addLayout(userCommandsLayout)
+
+        spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        mainLayout.addItem(spacer)
+
+        mainLayout.addWidget(self.send_button)
         mainLayout.addWidget(serialReadButton)
         centralWidget.setLayout(mainLayout)
+
+        mainLayout.setContentsMargins(20, 20, 20, 20)  # left, top, right, bottom
+
     
 
  # FUNCTIONS ----------------------------------------
+
+    def on_combobox_changed(self):
+        self.send_button.setStyleSheet("""
+                                    QPushButton {
+                                        font-size: 16px;
+                                        background-color: green;
+                                        color: #ffffff;
+                                        border: 1px solid #ffffff;
+                                        padding: 3px;
+                                    }
+                                    QPushButton:hover {
+                                        background-color: #555555;
+                                    }
+                                """)
+        self.is_green = True  # Set the flag to indicate the button is green
+
+    def on_button_clicked(self):
+        if self.is_green:
+            self.send_button.setStyleSheet("""
+                                            QPushButton {
+                                                font-size: 16px;
+                                                background-color: #3c3c3c;
+                                                color: #ffffff;
+                                                border: 1px solid #ffffff;
+                                                padding: 3px;
+                                            }
+                                            QPushButton:hover {
+                                                background-color: #555555;
+                                            }
+                                        """)
+            self.is_green = False  # Reset the flag
+        else:
+            self.send_button.setStyleSheet("""
+                                            QPushButton {
+                                                font-size: 16px;
+                                                background-color: green;
+                                                color: #ffffff;
+                                                border: 1px solid #ffffff;
+                                                padding: 3px;
+                                            }
+                                            QPushButton:hover {
+                                                background-color: #555555;
+                                            }
+                                        """)
+            self.is_green = True  # Set the flag
 
     # Update the height label
     def updateHeightLabel(self):
@@ -441,7 +488,7 @@ class MainWindow(QMainWindow):
             self.serial_connection = serial.Serial(port, 9600, timeout=1)
             self.statusLabel.setText('Status: Connected')
         except Exception as e:
-            self.statusLabel.setText(f'Status: Failed to connect')
+            self.statusLabel.setText(f'Status: Disconnected')
 
     # Caclulate and send the Rotation slider value 
     def sendRotationValue(self):
@@ -469,44 +516,21 @@ class MainWindow(QMainWindow):
         else:
             self.statusLabel.setText('Status: No serial connection')
 
-
-    # def keyPressEvent(self, event):
-    #     selected_key_L = self.control_settings_window.leftComboBox.currentText()
-    #     selected_key_R = self.control_settings_window.rightComboBox.currentText()
-        
-    #     if event.text().upper() == selected_key_L:
-    #         self.sendLeftArrowCode()
-    #     elif event.text().upper() == selected_key_R:
-    #         self.sendRightArrowCode()
-
-    
-    # def keyReleaseEvent(self, event):
-    #     selected_key_L = self.control_settings_window.leftComboBox.currentText()
-    #     selected_key_R = self.control_settings_window.rightComboBox.currentText()
-        
-    #     if event.text().upper() in [selected_key_L, selected_key_R]:
-    #         self.sendStopCode()
-
-
-    # SEND SERIAL CODE FUNCTION
+# SEND SERIAL CODE FUNCTION
     def sendSerialCode(self, code):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             try:
                 code_str = str(code) + "\n"
                 self.serial_connection.write(code_str.encode("utf-8"))
-                print(f'Status: Code {code_str}')
+                print(f'Status: Code {code_str}\n')
             except Exception as e:
                 self.statusLabel.setText('Status: Error sending serial code')
         else:
             self.statusLabel.setText('Status: No serial connection')
 
-    # CONTROL SETTINGS WINDOW
-    def openControlSettings(self):
-        self.controlSettingsWindow = ControlSettingsWindow()
-        self.controlSettingsWindow.show()
-
-    # SERIAL READ WINDOW (will be removed)
+# SERIAL READ WINDOW (will be removed)
     def openSerialReadWindow(self):
+        self.scroll = QScrollArea()    
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             self.serialReadWindow = SerialReadWindow(self.serial_connection)
             self.serialReadWindow.show()
@@ -517,5 +541,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
-    window.retrieve_control_settings()
     sys.exit(app.exec_())
