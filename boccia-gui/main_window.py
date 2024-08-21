@@ -65,8 +65,13 @@ class SerialReadWindow(QDialog):
 
     # Buggy
     def updateOutput(self, data):
-        print(str(data))  # Prints to terminal
-        self.outputLabel.setText(self.outputLabel.text() + data)
+        self.serial_buffer += data  # Append incoming data to the buffer
+        while '\n' in self.serial_buffer:  # Check for complete lines
+            line, self.serial_buffer = self.serial_buffer.split('\n', 1)
+            line = line.strip()  # Remove leading and trailing whitespace
+            print(line)  # Prints to terminal
+            self.outputLabel.setText(self.outputLabel.text() + line + '\n')
+
 
     def closeEvent(self, event):
         self.thread.stop()
