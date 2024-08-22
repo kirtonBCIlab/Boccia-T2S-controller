@@ -35,10 +35,12 @@ class SerialReadThread(QThread):
     def stop(self):
         self.running = False
         self.wait()
+
 class SerialReadWindow(QDialog):
     def __init__(self, serial_connection):
         super().__init__()
         self.serial_connection = serial_connection
+        self.serial_buffer = ""
         self.initUI()
 
     def initUI(self):
@@ -86,7 +88,7 @@ class MainWindow(QMainWindow):
 
         # Default Serial Commands
         self.key_processed = False
-        self.calibrationCommand = '8400'
+        self.calibrationCommand = '8700'
 
         self.hold_commands = {
             Qt.Key_A: "7100", # Rotation Left
@@ -169,7 +171,7 @@ class MainWindow(QMainWindow):
         
         # Connect Button
         self.connectButton = QPushButton('Connect')
-        self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
+        self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; padding: 5px; border-radius: 5px; border: 1px solid #ffffff;")
         topRightButtonsLayout.addWidget(self.connectButton)
         topRightButtonsLayout.addStretch()
         self.connectButton.clicked.connect(self.toggleConnection)
@@ -184,6 +186,7 @@ class MainWindow(QMainWindow):
                                                     background-color: #3c3c3c;
                                                     color: #ffffff;
                                                     padding: 5px;
+                                                    border-radius: 5px;
                                                     border: 1px solid #ffffff;
                                                 }
                                                 QPushButton:hover {
@@ -192,7 +195,6 @@ class MainWindow(QMainWindow):
                                             """)
         
         topRightButtonsLayout.addWidget(self.calibrationButton)
-        
         mainLayout.addLayout(topRightButtonsLayout)
 
         # Connection Status Label
@@ -206,7 +208,7 @@ class MainWindow(QMainWindow):
 
         self.comComboBox = QComboBox()
         self.comComboBox.addItems(list_serial_ports())
-        self.comComboBox.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 3px;")
+        self.comComboBox.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 3px;")
 
         statusLayout.addWidget(self.statusLabel)
         statusLayout.addStretch()
@@ -272,6 +274,7 @@ class MainWindow(QMainWindow):
             height: 50px;
             background-color: #3c3c3c;
             color: #ffffff;
+            border-radius: 5px;
             border: 1px solid #ffffff;
         }
         QPushButton:hover {
@@ -344,45 +347,28 @@ class MainWindow(QMainWindow):
         userCommandsLayout = QGridLayout()
         commandALabel = QLabel('(1) Command A')
         commandALabel.setStyleSheet("QLabel { font: 20px Calibri; color: white;}")
-
-        self.commandAComboBox = QComboBox()
-        self.commandAComboBox.addItems([' Elevation', ' Rotation'])
-        self.commandAComboBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 2px;")
-        self.update_command()  
-        self.commandAComboBox.currentIndexChanged.connect(self.update_command)
-        self.commandAComboBox.currentIndexChanged.connect(self.on_combobox_changed)
+        self.elevationBox = QPushButton('Elevation')
+        self.elevationBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 2px;")
+        self.elevationBox.setEnabled(False)
         
         commandBLabel = QLabel('(2) Command B')
         commandBLabel.setStyleSheet("QLabel { font: 20px Calibri; color: white;}")
-
-        self.commandBComboBox = QComboBox()
-        self.commandBComboBox.addItems([' Drop'])        
-        self.commandBComboBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border: 1px solid #ffffff; padding: 2px;")
-        self.update_command() 
-        self.commandBComboBox.currentIndexChanged.connect(self.update_command)
-        self.commandBComboBox.currentIndexChanged.connect(self.on_combobox_changed)
+        self.dropBox = QPushButton('Drop')      
+        self.dropBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 2px;")
+        self.dropBox.setEnabled(False)
+        
+        commandCLabel = QLabel('(3) Command C')
+        commandCLabel.setStyleSheet("QLabel { font: 20px Calibri; color: white;}")
+        self.rotationBox = QPushButton('Rotation')
+        self.rotationBox.setStyleSheet("background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 2px;")
+        self.rotationBox.setEnabled(False)
 
         userCommandsLayout.addWidget(commandALabel, 0, 0)
-        userCommandsLayout.addWidget(self.commandAComboBox, 0, 1)
+        userCommandsLayout.addWidget(self.elevationBox, 0, 1)
         userCommandsLayout.addWidget(commandBLabel, 1, 0)
-        userCommandsLayout.addWidget(self.commandBComboBox, 1, 1)
-
-        self.send_button = QPushButton('Update Controls')
-        self.send_button.setStyleSheet("""
-                                        QPushButton {
-                                            font-size: 16px;
-                                            background-color: #3c3c3c;
-                                            color: #ffffff;
-                                            border: 1px solid #ffffff;
-                                            padding: 3px;
-                                        }
-                                        QPushButton:hover {
-                                            background-color: #555555;
-                                        }
-                                    """)
-        self.send_button.clicked.connect(self.update_command)
-        self.send_button.clicked.connect(self.on_button_clicked)
-
+        userCommandsLayout.addWidget(self.dropBox, 1, 1)
+        userCommandsLayout.addWidget(commandCLabel, 2, 0)
+        userCommandsLayout.addWidget(self.rotationBox, 2, 1)
 
         serialReadButton = QPushButton('Read Serial')
         serialReadButton.setStyleSheet("""
@@ -391,6 +377,7 @@ class MainWindow(QMainWindow):
                                             background-color: #3c3c3c;
                                             color: #ffffff;
                                             border: 1px solid #ffffff;
+                                            border-radius: 5px;
                                             padding: 3px;
                                         }
                                         QPushButton:hover {
@@ -410,7 +397,7 @@ class MainWindow(QMainWindow):
         spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         mainLayout.addItem(spacer)
 
-        mainLayout.addWidget(self.send_button)
+        # mainLayout.addWidget(self.send_button)
         mainLayout.addWidget(serialReadButton)
         centralWidget.setLayout(mainLayout)
 
@@ -427,6 +414,7 @@ class MainWindow(QMainWindow):
                                         background-color: green;
                                         color: #ffffff;
                                         border: 1px solid #ffffff;
+                                        border-radius: 5px;
                                         padding: 3px;
                                     }
                                     QPushButton:hover {
@@ -443,6 +431,7 @@ class MainWindow(QMainWindow):
                                                 background-color: #3c3c3c;
                                                 color: #ffffff;
                                                 border: 1px solid #ffffff;
+                                                border-radius: 5px;
                                                 padding: 3px;
                                             }
                                             QPushButton:hover {
@@ -457,6 +446,7 @@ class MainWindow(QMainWindow):
                                                 background-color: green;
                                                 color: #ffffff;
                                                 border: 1px solid #ffffff;
+                                                border-radius: 5px;
                                                 padding: 3px;
                                             }
                                             QPushButton:hover {
