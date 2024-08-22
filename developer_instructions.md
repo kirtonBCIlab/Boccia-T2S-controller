@@ -13,7 +13,8 @@
    - Open the pallet command Ctrl + Shift + P
    - Start typing "Arduino", and set the board (board manager and change board), select the port, and select the sketch. This should create a new Arduino.json file
    - Verify the code (build) and upload to the board using the command pallet OR upload button on top right
-     **Note:** *To detect which COM port is the Arduino connected to, you can open the device manager, and scroll down to ports. See the ports available, and the connect the Arduino, the list will refresh and the new port that shows up will be the one corresponding to the Arduino*
+
+      **Note:** *To detect which COM port is the Arduino connected to, you can open the device manager, and scroll down to ports. See the ports available, and the connect the Arduino, the list will refresh and the new port that shows up will be the one corresponding to the Arduino*
 
 2. **Upload Firmware:**
    - Run the `main.cpp` file from the `bci-hardware` directory.
