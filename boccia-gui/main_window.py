@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import (
     QSlider, QComboBox, QGridLayout, QMainWindow, QDialog, QSpacerItem, 
     QSizePolicy, QFrame, QScrollArea
 )
-#from control_settings_window import ControlSettingsWindow
 
 # Function to list available serial ports
 def list_serial_ports():
@@ -99,30 +98,12 @@ class MainWindow(QMainWindow):
 
         self.toggle_commands = {
             Qt.Key_1: "7120",  # Rotation Right
-            Qt.Key_2: "-1070", # Drop
+            Qt.Key_2: "-1070",  # Drop
+            Qt.Key_3: "7210",
             Qt.Key_R: "-1070"
         }
-  
-    def update_command(self):
-        mode = self.commandAComboBox.currentText()
-        print(mode)
-
-        if mode == "Rotation":
-            self.toggle_commands = {
-                Qt.Key_1: "7120",  # Rotation Right
-                Qt.Key_2: "-1070",  # Drop
-                Qt.Key_R: "-1070"
-            }
-
-        elif mode == "Elevation":
-            self.toggle_commands = {
-                Qt.Key_1: "7210",  # Elevation Up
-                Qt.Key_2: "-1070",  # Drop
-                Qt.Key_R: "-1070"
-            }
     
     def keyPressEvent(self, event):
-        self.update_command()
         if not event.isAutoRepeat():
             key = event.key()
             
@@ -175,28 +156,30 @@ class MainWindow(QMainWindow):
         topRightButtonsLayout.addWidget(self.connectButton)
         topRightButtonsLayout.addStretch()
         self.connectButton.clicked.connect(self.toggleConnection)
-        self.connectButton.clicked.connect(self.connectSerialPort)
+        # self.connectButton.clicked.connect(self.connectSerialPort)
         
-        # Calibration Button
-        self.calibrationButton = QPushButton('Calibrate')
-        self.calibrationButton.clicked.connect(lambda: self.sendSerialCode(self.calibrationCommand))
-        self.calibrationButton.setStyleSheet("""
-                                                QPushButton {
-                                                    font-size: 16px;
-                                                    background-color: #3c3c3c;
-                                                    color: #ffffff;
-                                                    padding: 5px;
-                                                    border-radius: 5px;
-                                                    border: 1px solid #ffffff;
-                                                }
-                                                QPushButton:hover {
-                                                    background-color: #555555;
-                                                }
-                                            """)
-        
-        topRightButtonsLayout.addWidget(self.calibrationButton)
+
+        # Calibration Drop down
+        self.calibrationLabel = QLabel('Calibrate')
+        self.calibrationLabel.setStyleSheet("font-size: 16px; color: #a9a9a9;")
+        self.calibrationDropDown = QComboBox()
+        self.calibrationDropDown.addItems(['Full', 'Rotation', 'Elevation 1', 'Elevation 2'])
+        self.calibrationDropDown.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 3px;")
+        topRightButtonsLayout.addWidget(self.calibrationLabel)
+        topRightButtonsLayout.addWidget(self.calibrationDropDown)
         mainLayout.addLayout(topRightButtonsLayout)
 
+        def updateCommand():
+            if self.calibrationDropDown.currentText() == 'Full':
+                self.calibrationCommand = '8700'
+            elif self.calibrationDropDown.currentText() == 'Rotation':
+                self.calibrationCommand = '8200'
+            elif self.calibrationDropDown.currentText() == 'Elevation 1':
+                self.calibrationCommand = '8500'
+            elif self.calibrationDropDown.currentText() == 'Elevation 2':
+                self.calibrationCommand = '8400'
+        self.calibrationDropDown.currentTextChanged.connect(updateCommand)
+        
         # Connection Status Label
         statusLayout = QHBoxLayout()
         self.statusLabel = QLabel('Status: Disconnected')
@@ -210,11 +193,12 @@ class MainWindow(QMainWindow):
         self.comComboBox.addItems(list_serial_ports())
         self.comComboBox.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 3px;")
 
+        
         statusLayout.addWidget(self.statusLabel)
         statusLayout.addStretch()
         statusLayout.addWidget(comLabel)
         statusLayout.addWidget(self.comComboBox)
-       
+        
 
 
  # SPEED CONTROLS -------------------------------
@@ -370,6 +354,22 @@ class MainWindow(QMainWindow):
         userCommandsLayout.addWidget(commandCLabel, 2, 0)
         userCommandsLayout.addWidget(self.rotationBox, 2, 1)
 
+        calibrateButton = QPushButton('Calibrate')
+        calibrateButton.setStyleSheet("""
+                                        QPushButton {
+                                            font-size: 16px;
+                                            background-color: #3c3c3c;
+                                            color: #ffffff;
+                                            border: 1px solid #ffffff;
+                                            border-radius: 5px;
+                                            padding: 3px;
+                                        }
+                                        QPushButton:hover {
+                                            background-color: #555555;
+                                        }
+                                    """)
+        calibrateButton.clicked.connect(lambda: self.sendSerialCode(self.calibrationCommand))
+
         serialReadButton = QPushButton('Read Serial')
         serialReadButton.setStyleSheet("""
                                         QPushButton {
@@ -397,7 +397,7 @@ class MainWindow(QMainWindow):
         spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         mainLayout.addItem(spacer)
 
-        # mainLayout.addWidget(self.send_button)
+        mainLayout.addWidget(calibrateButton)
         mainLayout.addWidget(serialReadButton)
         centralWidget.setLayout(mainLayout)
 
@@ -469,12 +469,14 @@ class MainWindow(QMainWindow):
     def toggleConnection(self):
         if self.connectButton.text() == 'Connect':
             self.connectButton.setText('Disconnect')
-            self.connectButton.setStyleSheet("font-size: 16px; background-color: red; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
+            self.connectButton.setStyleSheet("font-size: 16px; background-color: red; color: #ffffff; border-radius: 5px; padding: 5px; border: 1px solid #ffffff;")
             self.statusLabel.setText('Status: Connected')
+            self.connectSerialPort()
         else:
             self.connectButton.setText('Connect')
-            self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; padding: 5px; border: 1px solid #ffffff;")
+            self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; border-radius: 5px; padding: 5px; border: 1px solid #ffffff;")
             self.statusLabel.setText('Status: Disconnected')
+            self.disconnectSerialPort()
             
     # Connect to the selected serial port
     def connectSerialPort(self):
@@ -484,6 +486,13 @@ class MainWindow(QMainWindow):
             self.statusLabel.setText('Status: Connected')
         except Exception as e:
             self.statusLabel.setText(f'Status: Disconnected')
+
+    def disconnectSerialPort(self):
+        if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
+            self.serial_connection.close()
+            self.statusLabel.setText('Status: Disconnected')
+        else:
+            self.statusLabel.setText('Status: No connection to disconnect')
 
     # Caclulate and send the Rotation slider value 
     def sendRotationValue(self):
