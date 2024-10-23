@@ -135,8 +135,14 @@ class MainWindow(QMainWindow):
 
 
     def initUI(self):
+        
+        ## Rotation speeds as percentages
+        self.default_speeds = {
+            'rotation': 50,
+            'elevation': 50
+        }
 
-        self.setWindowIcon(QIcon(r'boccia-gui\brain.png'))
+        self.setWindowIcon(QIcon(r'brain.png'))
 
         # title and styleimport os
         self.setWindowTitle('BCI Ramp Controls')
@@ -218,9 +224,9 @@ class MainWindow(QMainWindow):
         self.heightSlider = QSlider(Qt.Horizontal)
         self.heightSlider.setMinimum(0)
         self.heightSlider.setMaximum(100)
-        self.heightSlider.setValue(50)
+        self.heightSlider.setValue(self.default_speeds['elevation'])    
         self.heightSlider.valueChanged.connect(self.updateHeightLabel)
-        self.heightSlider.sliderReleased.connect(self.sendHeightValue)
+        self.heightSlider.sliderReleased.connect(self.setElevationSpeed)
         self.heightSlider.setStyleSheet("QSlider::groove:horizontal {background: #3c3c3c; height: 10px;}"
                                   "QSlider::handle:horizontal {background: #b48ead; width: 20px; margin: -5px 0;}")
 
@@ -238,9 +244,9 @@ class MainWindow(QMainWindow):
         self.rotationSlider = QSlider(Qt.Horizontal)
         self.rotationSlider.setMinimum(0)
         self.rotationSlider.setMaximum(100)
-        self.rotationSlider.setValue(50)
+        self.rotationSlider.setValue(self.default_speeds['rotation'])
         self.rotationSlider.valueChanged.connect(self.updateRotationLabel)
-        self.rotationSlider.sliderReleased.connect(self.sendRotationValue)
+        self.rotationSlider.sliderReleased.connect(self.setRotationSpeed)
         self.rotationSlider.setStyleSheet("QSlider::groove:horizontal {background: #3c3c3c; height: 10px;}"
                                   "QSlider::handle:horizontal {background: #b48ead; width: 20px; margin: -5px 0;}")
 
@@ -474,8 +480,12 @@ class MainWindow(QMainWindow):
         if self.connectButton.text() == 'Connect':
             self.connectButton.setText('Disconnect')
             self.connectButton.setStyleSheet("font-size: 16px; background-color: red; color: #ffffff; border-radius: 5px; padding: 5px; border: 1px solid #ffffff;")
-            self.statusLabel.setText('Status: Connected')
+            # self.statusLabel.setText('Status: Connected')
             self.connectSerialPort()
+
+            ## Wait 100 msec and then set the speeds
+            QTimer.singleShot(100, self.setElevationSpeed)
+            QTimer.singleShot(10, self.setRotationSpeed)
         else:
             self.connectButton.setText('Connect')
             self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; border-radius: 5px; padding: 5px; border: 1px solid #ffffff;")
@@ -501,24 +511,28 @@ class MainWindow(QMainWindow):
     # Caclulate and send the Rotation slider value 
     def setRotationSpeed(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
-            value = (((self.rotationSlider.value()) / 100) * 1000) + 5000
-            serial_value = f'{int(value):03d}\n'.encode()
-            print(f'Rotation Value {serial_value}')
+            value = int(((self.rotationSlider.value()) / 100) * 1000)
+            serial_command = "rx" + str(value) + "\n"
+            # value = (((self.rotationSlider.value()) / 100) * 1000) + 5000
+            # serial_value = f'{int(value):03d}\n'.encode()
+            # print(f'Rotation Value {"rx" + serial_value}')
             try:
-                self.serial_connection.write(serial_value)
+                self.serial_connection.write(serial_command.encode("utf-8"))
             except Exception as e:
                 self.statusLabel.setText(f'Status: Error sending rotation value')
         else:
             self.statusLabel.setText('Status: No serial connection')
 
     # Caclulate and send the Rotation slider value 
-    def sendHeightValue(self):
+    def setElevationSpeed(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
-            value = (((self.heightSlider.value())/100) * 255 ) + 6000
-            serial_value = f'{int(value):03d}\n'.encode()
-            print(f'Height Value {serial_value}')
+            value = int((self.heightSlider.value() / 100) * 255)
+            serial_command = "ex" + str(value) + "\n"
+            # value = (((self.heightSlider.value())/100) * 255 ) + 6000
+            # serial_value = f'{int(value):03d}\n'.encode()
+            # print(f'Height Value {serial_value}')
             try:
-                self.serial_connection.write(serial_value)
+                self.serial_connection.write(serial_command.encode("utf-8"))
             except Exception as e:
                 self.statusLabel.setText(f'Status: Error sending height value')
         else:
