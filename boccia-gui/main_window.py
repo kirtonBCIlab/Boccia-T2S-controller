@@ -87,22 +87,22 @@ class MainWindow(QMainWindow):
 
         # Default Serial Commands
         self.key_processed = False
-        self.calibrationCommand = '8700'
+        self.calibrationCommand = 'dc>rc>ec'
 
         self.hold_commands = {
-            Qt.Key_A: "7100", # Rotation Left
-            Qt.Key_D: "7110", # Rotation Right
-            Qt.Key_S: "7200", # Elevation Down
-            Qt.Key_W: "7210", # Elevation Up
+            Qt.Key_A: "rs0", # Rotation left
+            Qt.Key_D: "rs1", # Rotation right
+            Qt.Key_S: "es0", # Elevation down
+            Qt.Key_W: "es1", # Elevation up
         }
 
         self.toggle_commands = {
-            Qt.Key_1: "7120",  # Rotation Right
-            Qt.Key_2: "-1070",  # Drop
-            Qt.Key_3: "7210",
-            Qt.Key_R: "-1070"
+            Qt.Key_1: "es1",    # Elevation up
+            Qt.Key_2: "dd-70",  # Drop
+            Qt.Key_3: "rs1",    # Rotation right   
+            Qt.Key_R: "dd-70"   # Drop
         }
-    
+
     def keyPressEvent(self, event):
         if not event.isAutoRepeat():
             key = event.key()
@@ -160,24 +160,28 @@ class MainWindow(QMainWindow):
         
 
         # Calibration Drop down
+        calibration_options = {
+            'Full': 'dc>rc>ec',
+            'Rotation': 'rc',
+            'Elevation': 'ec'
+        }
         self.calibrationLabel = QLabel('Calibrate')
         self.calibrationLabel.setStyleSheet("font-size: 16px; color: #a9a9a9;")
         self.calibrationDropDown = QComboBox()
-        self.calibrationDropDown.addItems(['Full', 'Rotation', 'Elevation 1', 'Elevation 2'])
+        self.calibrationDropDown.addItems(calibration_options.keys())
         self.calibrationDropDown.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 3px;")
         topRightButtonsLayout.addWidget(self.calibrationLabel)
         topRightButtonsLayout.addWidget(self.calibrationDropDown)
         mainLayout.addLayout(topRightButtonsLayout)
 
         def updateCommand():
-            if self.calibrationDropDown.currentText() == 'Full':
-                self.calibrationCommand = '8700'
-            elif self.calibrationDropDown.currentText() == 'Rotation':
-                self.calibrationCommand = '8200'
-            elif self.calibrationDropDown.currentText() == 'Elevation 1':
-                self.calibrationCommand = '8500'
-            elif self.calibrationDropDown.currentText() == 'Elevation 2':
-                self.calibrationCommand = '8400'
+            self.calibrationCommand = calibration_options[self.calibrationDropDown.currentText()]
+            # if self.calibrationDropDown.currentText() == 'Full':
+            #     self.calibrationCommand = 'dc>rc>ec'
+            # elif self.calibrationDropDown.currentText() == 'Rotation':
+            #     self.calibrationCommand = 'rc'
+            # elif self.calibrationDropDown.currentText() == 'Elevation':
+            #     self.calibrationCommand = 'ec'
         self.calibrationDropDown.currentTextChanged.connect(updateCommand)
         
         # Connection Status Label
@@ -495,7 +499,7 @@ class MainWindow(QMainWindow):
             self.statusLabel.setText('Status: No connection to disconnect')
 
     # Caclulate and send the Rotation slider value 
-    def sendRotationValue(self):
+    def setRotationSpeed(self):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             value = (((self.rotationSlider.value()) / 100) * 1000) + 5000
             serial_value = f'{int(value):03d}\n'.encode()
