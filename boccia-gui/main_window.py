@@ -167,15 +167,17 @@ class MainWindow(QMainWindow):
 
         # Calibration Drop down
         calibration_options = {
-            'Full': 'dc>rc>ec',
-            'Rotation': 'rc',
-            'Elevation': 'ec'
+            "Full": "dc>rc>ec",
+            "Drop": "dr100",
+            'Rotation': "rc0",
+            "Elevation - manual": "ec0",
+            "Elevation - auto": "ec1",
         }
         self.calibrationLabel = QLabel('Calibrate')
         self.calibrationLabel.setStyleSheet("font-size: 16px; color: #a9a9a9;")
         self.calibrationDropDown = QComboBox()
         self.calibrationDropDown.addItems(calibration_options.keys())
-        self.calibrationDropDown.setStyleSheet("font-size: 16px; width: 70px; background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 3px;")
+        self.calibrationDropDown.setStyleSheet("font-size: 16px; width: 130px; background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 3px;")
         topRightButtonsLayout.addWidget(self.calibrationLabel)
         topRightButtonsLayout.addWidget(self.calibrationDropDown)
         mainLayout.addLayout(topRightButtonsLayout)
@@ -224,13 +226,15 @@ class MainWindow(QMainWindow):
         self.heightSlider = QSlider(Qt.Horizontal)
         self.heightSlider.setMinimum(0)
         self.heightSlider.setMaximum(100)
-        self.heightSlider.setValue(self.default_speeds['elevation'])    
+        self.heightSlider.setValue(self.default_speeds['elevation']) 
+        self.heightSlider.setTracking(True)
+        self.heightSlider.setMouseTracking(True)   
         self.heightSlider.valueChanged.connect(self.updateHeightLabel)
         self.heightSlider.sliderReleased.connect(self.setElevationSpeed)
         self.heightSlider.setStyleSheet("QSlider::groove:horizontal {background: #3c3c3c; height: 10px;}"
                                   "QSlider::handle:horizontal {background: #b48ead; width: 20px; margin: -5px 0;}")
 
-        self.heightValueLabel = QLabel('50%')
+        self.heightValueLabel = QLabel(str(self.default_speeds["elevation"]) + "%")
         self.heightValueLabel.setStyleSheet("font-size: 16px; color: white;")
         
         heightLayout.addWidget(heightLabel)
@@ -244,13 +248,15 @@ class MainWindow(QMainWindow):
         self.rotationSlider = QSlider(Qt.Horizontal)
         self.rotationSlider.setMinimum(0)
         self.rotationSlider.setMaximum(100)
+        self.rotationSlider.setTracking(True)
+        self.rotationSlider.setMouseTracking(True)
         self.rotationSlider.setValue(self.default_speeds['rotation'])
         self.rotationSlider.valueChanged.connect(self.updateRotationLabel)
         self.rotationSlider.sliderReleased.connect(self.setRotationSpeed)
         self.rotationSlider.setStyleSheet("QSlider::groove:horizontal {background: #3c3c3c; height: 10px;}"
                                   "QSlider::handle:horizontal {background: #b48ead; width: 20px; margin: -5px 0;}")
 
-        self.rotationValueLabel = QLabel('50%')
+        self.rotationValueLabel = QLabel(str(self.default_speeds["rotation"]) + "%")
         self.rotationValueLabel.setStyleSheet("font-size: 16px; color: #ffffff;")
 
         rotationLayout.addWidget(rotationLabel)
@@ -480,16 +486,19 @@ class MainWindow(QMainWindow):
         if self.connectButton.text() == 'Connect':
             self.connectButton.setText('Disconnect')
             self.connectButton.setStyleSheet("font-size: 16px; background-color: red; color: #ffffff; border-radius: 5px; padding: 5px; border: 1px solid #ffffff;")
-            # self.statusLabel.setText('Status: Connected')
+            self.comComboBox.setEnabled(False)
             self.connectSerialPort()
 
+            # self.setElevationSpeed()
+            # self.setRotationSpeed()
             ## Wait 100 msec and then set the speeds
-            QTimer.singleShot(100, self.setElevationSpeed)
-            QTimer.singleShot(10, self.setRotationSpeed)
+            # QTimer.singleShot(100, self.setElevationSpeed)
+            # QTimer.singleShot(10, self.setRotationSpeed)
         else:
             self.connectButton.setText('Connect')
             self.connectButton.setStyleSheet("font-size: 16px; background-color: green; color: #ffffff; border-radius: 5px; padding: 5px; border: 1px solid #ffffff;")
             self.statusLabel.setText('Status: Disconnected')
+            self.comComboBox.setEnabled(True)
             self.disconnectSerialPort()
             
     # Connect to the selected serial port
@@ -513,9 +522,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             value = int(((self.rotationSlider.value()) / 100) * 1000)
             serial_command = "rx" + str(value) + "\n"
-            # value = (((self.rotationSlider.value()) / 100) * 1000) + 5000
-            # serial_value = f'{int(value):03d}\n'.encode()
-            # print(f'Rotation Value {"rx" + serial_value}')
+            
             try:
                 self.serial_connection.write(serial_command.encode("utf-8"))
             except Exception as e:
@@ -528,9 +535,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'serial_connection') and self.serial_connection.is_open:
             value = int((self.heightSlider.value() / 100) * 255)
             serial_command = "ex" + str(value) + "\n"
-            # value = (((self.heightSlider.value())/100) * 255 ) + 6000
-            # serial_value = f'{int(value):03d}\n'.encode()
-            # print(f'Height Value {serial_value}')
+
             try:
                 self.serial_connection.write(serial_command.encode("utf-8"))
             except Exception as e:
