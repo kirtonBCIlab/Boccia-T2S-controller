@@ -1,82 +1,35 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QComboBox, QVBoxLayout, QWidget
+import unittest
+from unittest.mock import MagicMock, patch
+from PyQt5.QtWidgets import QApplication
+from control_settings_window import ControlSettingsWindow
+from main_window import MainWindow
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+class TestMainWindow(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication([])  # Create a QApplication instance
 
-        self.send_button = QPushButton('Update Controls')
-        self.send_button.setStyleSheet("""
-                                        QPushButton {
-                                            font-size: 16px;
-                                            background-color: #3c3c3c;
-                                            color: #ffffff;
-                                            border: 1px solid #ffffff;
-                                        }
-                                        QPushButton:hover {
-                                            background-color: #555555;
-                                        }
-                                    """)
+    def setUp(self):
+        self.main_window = MainWindow()
+        self.main_window.serial_connection = MagicMock()
+        self.main_window.statusLabel = MagicMock()
 
-        self.commandAcombobox = QComboBox()
-        self.commandAcombobox.addItems(['Option 1', 'Option 2', 'Option 3'])
+    def test_send_calibration_code_success(self):
+        self.main_window.serial_connection.is_open = True
+        self.main_window.sendCalibrationCode()
+        self.main_window.serial_connection.write.assert_called_once_with(b'8700\n')
+        self.main_window.statusLabel.setText.assert_not_called()
 
-        self.commandAcombobox.currentIndexChanged.connect(self.on_combobox_changed)
-        self.send_button.clicked.connect(self.on_button_clicked)
+    def test_send_calibration_code_exception(self):
+        self.main_window.serial_connection.is_open = True
+        self.main_window.serial_connection.write.side_effect = Exception('Test exception')
+        self.main_window.sendCalibrationCode()
+        self.main_window.statusLabel.setText.assert_called_once_with('Status: Error sending calibration code')
 
-        self.is_green = False  # Flag to track the button's color state
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.commandAcombobox)
-        layout.addWidget(self.send_button)
-
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
-    def on_combobox_changed(self):
-        self.send_button.setStyleSheet("""
-                                        QPushButton {
-                                            font-size: 16px;
-                                            background-color: green;
-                                            color: #ffffff;
-                                            border: 1px solid #ffffff;
-                                        }
-                                        QPushButton:hover {
-                                            background-color: #555555;
-                                        }
-                                    """)
-        self.is_green = True  # Set the flag to indicate the button is green
-
-    def on_button_clicked(self):
-        if self.is_green:
-            self.send_button.setStyleSheet("""
-                                            QPushButton {
-                                                font-size: 16px;
-                                                background-color: #3c3c3c;
-                                                color: #ffffff;
-                                                border: 1px solid #ffffff;
-                                            }
-                                            QPushButton:hover {
-                                                background-color: #555555;
-                                            }
-                                        """)
-            self.is_green = False  # Reset the flag
-        else:
-            self.send_button.setStyleSheet("""
-                                            QPushButton {
-                                                font-size: 16px;
-                                                background-color: green;
-                                                color: #ffffff;
-                                                border: 1px solid #ffffff;
-                                            }
-                                            QPushButton:hover {
-                                                background-color: #555555;
-                                            }
-                                        """)
-            self.is_green = True  # Set the flag
+    def test_send_calibration_code_no_connection(self):
+        self.main_window.serial_connection.is_open = False
+        self.main_window.sendCalibrationCode()
+        self.main_window.statusLabel.setText.assert_called_once_with('Status: No serial connection')
 
 if __name__ == '__main__':
-    app = QApplication([])
-    window = MainWindow()
-    window.show()
-    app.exec_()
+    unittest.main()
