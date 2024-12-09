@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+
+# Python 
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.env
+*.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
