@@ -82,12 +82,17 @@ class SerialReadWindow(QDialog):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.initUI()
-        self.resize(500, 400)
 
         # Default Serial Commands
         self.key_processed = False
-        self.calibrationCommand = 'dc>rc>ec'
+        self.calibration_options = {
+            "Full": "dd-70>rc>ec",
+            "Drop": "dd-70",
+            'Rotation': "rc0",
+            "Elevation - manual": "ec0",
+            "Elevation - auto": "ec1",
+        }
+        self.calibrationCommand = self.calibration_options["Full"]	# Default calibration command
 
         self.hold_commands = {
             Qt.Key_A: "rs0", # Rotation left
@@ -102,6 +107,10 @@ class MainWindow(QMainWindow):
             Qt.Key_3: "rs1",    # Rotation right   
             Qt.Key_R: "dd-70"   # Drop
         }
+
+        # Create UI window
+        self.initUI()
+        self.resize(500, 400)
 
     def keyPressEvent(self, event):
         if not event.isAutoRepeat():
@@ -166,30 +175,17 @@ class MainWindow(QMainWindow):
         
 
         # Calibration Drop down
-        calibration_options = {
-            "Full": "dc>rc>ec",
-            "Drop": "dr100",
-            'Rotation': "rc0",
-            "Elevation - manual": "ec0",
-            "Elevation - auto": "ec1",
-        }
         self.calibrationLabel = QLabel('Calibrate')
         self.calibrationLabel.setStyleSheet("font-size: 16px; color: #a9a9a9;")
         self.calibrationDropDown = QComboBox()
-        self.calibrationDropDown.addItems(calibration_options.keys())
+        self.calibrationDropDown.addItems(self.calibration_options.keys())
         self.calibrationDropDown.setStyleSheet("font-size: 16px; width: 130px; background-color: #3c3c3c; color: #ffffff; border-radius: 5px; border: 1px solid #ffffff; padding: 3px;")
         topRightButtonsLayout.addWidget(self.calibrationLabel)
         topRightButtonsLayout.addWidget(self.calibrationDropDown)
         mainLayout.addLayout(topRightButtonsLayout)
 
         def updateCommand():
-            self.calibrationCommand = calibration_options[self.calibrationDropDown.currentText()]
-            # if self.calibrationDropDown.currentText() == 'Full':
-            #     self.calibrationCommand = 'dc>rc>ec'
-            # elif self.calibrationDropDown.currentText() == 'Rotation':
-            #     self.calibrationCommand = 'rc'
-            # elif self.calibrationDropDown.currentText() == 'Elevation':
-            #     self.calibrationCommand = 'ec'
+            self.calibrationCommand = self.calibration_options[self.calibrationDropDown.currentText()]
         self.calibrationDropDown.currentTextChanged.connect(updateCommand)
         
         # Connection Status Label
