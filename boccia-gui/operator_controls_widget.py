@@ -39,26 +39,27 @@ class OperatorControlsWidget(QWidget):
         self.main_layout.addLayout(self.content_layout)
         self.setLayout(self.main_layout)
 
+
     def create_operator_controls(self):
         """ Initialize UI elements for operator controls"""
 
         # Create buttons
-        self.up_button = self.create_static_button('W ↑')
-        self.down_button = self.create_static_button('S ↓')
-        self.left_button = self.create_static_button('A ←')
-        self.right_button = self.create_static_button('→ D')
-        self.drop_button = self.create_static_button('Drop \n(R)')
+        up_button = self.create_static_button('W ↑')
+        down_button = self.create_static_button('S ↓')
+        left_button = self.create_static_button('A ←')
+        right_button = self.create_static_button('→ D')
+        drop_button = self.create_static_button('Drop \n(R)')
         
         # Organize buttons in grid layout
         spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         buttons_layout = QGridLayout()
         buttons_layout.addItem(spacer, 0, 3)
 
-        buttons_layout.addWidget(self.up_button, 0, 1)
-        buttons_layout.addWidget(self.down_button, 2, 1)
-        buttons_layout.addWidget(self.left_button, 1, 0)
-        buttons_layout.addWidget(self.right_button, 1, 2)
-        buttons_layout.addWidget(self.drop_button, 1, 1)
+        buttons_layout.addWidget(up_button, 0, 1)
+        buttons_layout.addWidget(down_button, 2, 1)
+        buttons_layout.addWidget(left_button, 1, 0)
+        buttons_layout.addWidget(right_button, 1, 2)
+        buttons_layout.addWidget(drop_button, 1, 1)
 
         buttons_layout.setColumnStretch(0, 2)
         buttons_layout.setColumnStretch(1, 2)
@@ -116,6 +117,7 @@ class OperatorControlsWidget(QWidget):
 
         return slider_layout
     
+
     def create_static_button(self, button_text):
         """ Returns a static button """
 
@@ -142,9 +144,11 @@ class OperatorControlsWidget(QWidget):
 
         return button
     
+
     def change_slider_label(self, slider, label):
         """ Update the slider value label """
         label.setText(f"{slider.value()} %")
+
 
     def slider_released(self, slider):
         """ Set the speed of the motor """
