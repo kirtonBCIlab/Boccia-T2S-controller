@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
         self.centralWidget.setLayout(self.mainLayout)
 
         # Set window properties
-        self.setWindowIcon(QIcon(r'brain.png'))
+        self.setWindowIcon(QIcon(r"brain.png"))
         self.setWindowTitle('BCI Ramp Controls')
         self.setStyleSheet(Styles.WINDOW_BACKGROUND)
 
