@@ -1,7 +1,4 @@
-import sys
-import os
-import serial
-import serial.tools.list_ports
+
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
@@ -10,6 +7,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy, QFrame, QScrollArea
 )
 from operator_controls_widget import OperatorControlsWidget
+from styles import Styles
 
 
 # # Function to list available serial ports
@@ -81,6 +79,9 @@ from operator_controls_widget import OperatorControlsWidget
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.main_label_style = "QLabel { font: 20px Calibri; color: #b48ead; font-weight: bold;}"
+
         self.init_UI()
 
     def init_UI(self):
@@ -95,7 +96,7 @@ class MainWindow(QMainWindow):
         # Set window properties
         self.setWindowIcon(QIcon(r'brain.png'))
         self.setWindowTitle('BCI Ramp Controls')
-        self.setStyleSheet("background-color: #2d2d2d; color: #ffffff;")
+        self.setStyleSheet(Styles.WINDOW_BACKGROUND)
 
         # Create operator controls
         self.operatorControlsWidget = OperatorControlsWidget()

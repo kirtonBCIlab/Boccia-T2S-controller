@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QSpacerItem,
     QSizePolicy,
     )
+from styles import Styles
 
 class OperatorControlsWidget(QWidget):
     def __init__(self):
@@ -23,7 +24,7 @@ class OperatorControlsWidget(QWidget):
         
         # Main label section   
         self.controls_label = QLabel('OPERATOR CONTROLS')
-        self.controls_label.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead; font-weight: bold;}")
+        self.controls_label.setStyleSheet(Styles.MAIN_LABEL)
         
         # Content section
         self.operator_controls_layout = self.create_operator_controls()
@@ -89,10 +90,10 @@ class OperatorControlsWidget(QWidget):
         
         # Labels section
         slider_label = QLabel(f"{name.capitalize()} speed:")
-        slider_label.setStyleSheet("QLabel { font: 20px Calibri; color: #b48ead;}")
+        slider_label.setStyleSheet(Styles.SUB_LABEL)
         
         value_label = QLabel(f"{self.default_speeds[name]} %")
-        value_label.setStyleSheet("font-size: 16px; color: #ffffff;")
+        value_label.setStyleSheet(Styles.VALUE_TEXT)
 
         slider_label_layout = QHBoxLayout()
         slider_label_layout.addWidget(slider_label)
