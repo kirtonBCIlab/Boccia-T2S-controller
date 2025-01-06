@@ -21,11 +21,6 @@ class SerialControlsWidget(QWidget):
         self.parent.serial_handler.connection_changed.connect(self._handle_connection_change)
         
         # Settings
-        # self.connect_button_styles = {
-        #     "connect": f"{Styles.BUTTON_BASE} background-color: green;",
-        #     "disconnect": f"{Styles.BUTTON_BASE} background-color: red;",
-        #     "error": f"{Styles.BUTTON_BASE} background-color: orange;"
-        # }
         self.connect_button_styles = {
             "connect": Styles.create_button_style("green"),
             "disconnect": Styles.create_button_style("red"),
