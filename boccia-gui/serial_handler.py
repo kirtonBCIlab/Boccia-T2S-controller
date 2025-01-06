@@ -5,7 +5,8 @@ from PyQt5.QtCore import QThread, pyqtSignal
 class SerialHandler(QThread):
     """ Handles serial communication with the COM ports and connected devices """
     # Events
-    connection_changed = pyqtSignal(str)
+    connection_changed = pyqtSignal(str)    # Signal to indicate a change in the connection status
+    new_data = pyqtSignal(str)              # Signal to indicate new data has been received
 
     def __init__(
             self,
@@ -25,6 +26,7 @@ class SerialHandler(QThread):
         self._port = port
         self._baudrate = baudrate
         
+        self._serial = None
         self._connection_status = ["Connected", "Disconnected", "Error"]
         self._current_connection_status = self._connection_status[1]
 
@@ -70,6 +72,7 @@ class SerialHandler(QThread):
         """ Close the serial connection """
         try:
             self._serial.close()
+            self._serial = None
             self._current_connection_status = self._connection_status[1]
             self.connection_changed.emit(self._current_connection_status)
         except serial.SerialException:
@@ -81,10 +84,39 @@ class SerialHandler(QThread):
         """ Send data to the serial port """
         self._serial.write(data)
 
+    
+    def run(self, running:bool = True):
+        """ Start separate threat to read data from the serial port """
+        
+        # Skip if there is no serial connection
+        if not self._serial:
+            return
+        
+        self._serial.timeout = 0.1  # Non-blocking timeout
+        buffer = ""
+        self._running = True
+        
+        while self._running and self._serial.is_open:
+            try:
+                if self._serial.in_waiting > 0:
+                    # Read available bytes
+                    line = self._serial.readline()
+                    decoded_line = line.decode("UTF-8").strip()
 
-    def read(self):
-        """ Read data from the serial port """
-        return self._serial.read()
+                    # Only emit if there is data
+                    if decoded_line:
+                        self.new_data.emit(decoded_line)
+                else: 
+                    QThread.msleep(10)
+                        
+            except Exception as e:
+                self.new_data.emit(f"Error reading serial data: {str(e)}")
+                break
+
+
+    def stop(self):
+        """ Stop the thread to read from the serial port """
+        self._running = False
 
 
     def list_serial_ports(self):

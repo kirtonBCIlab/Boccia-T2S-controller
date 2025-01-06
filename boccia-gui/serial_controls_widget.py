@@ -1,6 +1,7 @@
 # Import libraries
 from styles import Styles
 from PyQt5.QtCore import Qt
+from serial_read_window import SerialReadWindow
 from PyQt5.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -128,8 +129,12 @@ class SerialConnectionWidget(QWidget):
 
 
     def _read_serial_data(self):
-        print("Reading serial data...")
+        if self.parent.serial_handler.get_current_connection_status() != "Connected":
+            return
+        
+        serial_read_window = SerialReadWindow(self.parent)
         pass
+
 
     def _handle_connection_change(self, message: str):
         print(message)
