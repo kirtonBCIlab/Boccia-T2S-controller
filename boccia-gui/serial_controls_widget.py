@@ -27,9 +27,9 @@ class SerialControlsWidget(QWidget):
         #     "error": f"{Styles.BUTTON_BASE} background-color: orange;"
         # }
         self.connect_button_styles = {
-            "connect": Styles.create_button_style(Styles, "green"),
-            "disconnect": Styles.create_button_style(Styles, "red"),
-            "error": Styles.create_button_style(Styles, "orange")
+            "connect": Styles.create_button_style("green"),
+            "disconnect": Styles.create_button_style("red"),
+            "error": Styles.create_button_style("orange")
         }
     
         # Main label section

@@ -47,9 +47,9 @@ class Styles:
         """
     
     @staticmethod
-    def create_button_style(cls, brackground_color:str):
+    def create_button_style(brackground_color:str):
         return f"""
-            {cls.BUTTON_BASE}
+            {Styles.BUTTON_BASE}
             QPushButton {{
             background-color: {brackground_color};
             }}
