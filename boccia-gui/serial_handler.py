@@ -71,8 +71,10 @@ class SerialHandler(QThread):
         try:
             self._serial.close()
             self._current_connection_status = self._connection_status[1]
+            self.connection_changed.emit(self._current_connection_status)
         except serial.SerialException:
             self._current_connection_status = self._connection_status[2]
+            self.connection_changed.emit(self._current_connection_status)
         
 
     def send(self, data):
