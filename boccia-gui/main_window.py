@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy, QFrame, QScrollArea
 )
 from operator_controls_widget import OperatorControlsWidget
+from serial_controls_widget import SerialConnectionWidget
 from styles import Styles
 
 
@@ -98,13 +99,20 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('BCI Ramp Controls')
         self.setStyleSheet(Styles.WINDOW_BACKGROUND)
 
+        # Create serial controls widget
+        self.serialControlsWidget = SerialConnectionWidget()
+        self.serialControlsWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.serialControlsWidget.show()  # Ensure widget is visible
+
         # Create operator controls
         self.operatorControlsWidget = OperatorControlsWidget()
         self.operatorControlsWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.operatorControlsWidget.show()  # Ensure widget is visible
 
-        # Add to layout
+        # Organize main layout
+        self.mainLayout.addWidget(self.serialControlsWidget)
         self.mainLayout.addWidget(self.operatorControlsWidget)
+        
 
 
     #     # Default Serial Commands
