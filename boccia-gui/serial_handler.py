@@ -1,12 +1,15 @@
 import serial
-from PyQt5.QtCore import QThread
+import serial.tools.list_ports
+from PyQt5.QtCore import QThread, pyqtSignal
 
 class SerialHandler(QThread):
     """ Handles serial communication with the COM ports and connected devices """
+    # Events
+    connection_changed = pyqtSignal(str)
 
     def __init__(
             self,
-            port:str = "COM1",
+            port:str = "",
             baudrate:int = 9600):
         """
             Initialize the SerialHandler object
@@ -18,11 +21,13 @@ class SerialHandler(QThread):
                 - `baudrate`: int\n
                     The baudrate to use for the serial connection
         """
+        super().__init__()
         self._port = port
         self._baudrate = baudrate
         
         self._connection_status = ["Connected", "Disconnected", "Error"]
         self._current_connection_status = self._connection_status[1]
+
 
     @property
     def port(self):
@@ -31,7 +36,7 @@ class SerialHandler(QThread):
     @port.setter
     def port(self, port):
         self._port = port
-        self._serial.port = port
+
 
     @property
     def baudrate(self):
@@ -42,13 +47,24 @@ class SerialHandler(QThread):
         self._baudrate = baudrate
         self._serial.baudrate = baudrate   
 
+    def toggle_serial_connection(self):
+        """ Toggle the serial connection """
+        if (self._current_connection_status == "Disconnected") or (self._current_connection_status == "Error"):
+            self.connect()
+        else:
+            self.disconnect()
+
+
     def connect(self):
         """ Open a serial connection """
         try:
             self._serial = serial.Serial(self._port, self._baudrate)
             self._current_connection_status = self._connection_status[0]
+            self.connection_changed.emit(self._current_connection_status)
         except serial.SerialException:
             self._current_connection_status = self._connection_status[2]
+            self.connection_changed.emit(self._current_connection_status)
+
 
     def disconnect(self):
         """ Close the serial connection """
@@ -63,15 +79,19 @@ class SerialHandler(QThread):
         """ Send data to the serial port """
         self._serial.write(data)
 
+
     def read(self):
         """ Read data from the serial port """
         return self._serial.read()
 
+
     def list_serial_ports(self):
         ports = serial.tools.list_ports.comports()
         available_ports = [port.device for port in ports]
+
         return available_ports
     
+
     def get_current_connection_status(self):
         return self._current_connection_status
     

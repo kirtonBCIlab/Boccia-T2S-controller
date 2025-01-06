@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
 from operator_controls_widget import OperatorControlsWidget
 from serial_controls_widget import SerialConnectionWidget
 from user_controls_widget import UserControlsWidget
+from serial_handler import SerialHandler
 from styles import Styles
 
 
@@ -112,6 +113,9 @@ class MainWindow(QMainWindow):
             Qt.Key_A: self.command_mapping["rotation_left"],
             Qt.Key_D: self.command_mapping["rotation_right"],
         }
+
+        # Initialize serial handler
+        self.serial_handler = SerialHandler()
 
         # Initialize user interface
         self.init_UI()
