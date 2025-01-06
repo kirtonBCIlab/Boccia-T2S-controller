@@ -31,6 +31,7 @@ class SerialReadWindow(QDialog):
 
         self.parent.serial_handler.new_data.connect(self.update_output)
         self.parent.serial_handler.start()
+        self.parent.serial_controls_widget.toggle_read_serial()
 
 
     def update_output(self, data):
@@ -39,5 +40,6 @@ class SerialReadWindow(QDialog):
 
 
     def closeEvent(self, event):
+        self.parent.serial_controls_widget.toggle_read_serial()
         self.parent.serial_handler.stop()
         event.accept()

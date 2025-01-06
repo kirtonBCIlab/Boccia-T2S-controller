@@ -10,15 +10,28 @@ class Styles:
 
     # Buttons
     BUTTON_BASE = """
-        font-size: 16px;
-        color: #ffffff;
-        padding: 5px;
-        border-radius: 5px;
-        border: 1px solid #ffffff;
+        QPushButton {
+            font-size: 16px;
+            color: #ffffff;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ffffff;
+            }
+        """
+    
+    DISABLED_BUTTON = """
+        QPushButton {
+            font-size: 16px;
+            color: #a9a9a9;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #a9a9a9;
+            background-color: #3c3c3c;
+            }
         """
 
     HOVER_BUTTON = f"""
-        QPushButton {{{BUTTON_BASE}}}
+        {BUTTON_BASE}
         QPushButton:hover {{background-color: #555555}}        
         """
 
@@ -31,4 +44,13 @@ class Styles:
         border-radius: 5px; 
         border: 1px solid #ffffff; 
         padding: 3px;
+        """
+    
+    @staticmethod
+    def create_button_style(cls, brackground_color:str):
+        return f"""
+            {cls.BUTTON_BASE}
+            QPushButton {{
+            background-color: {brackground_color};
+            }}
         """

@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy, QFrame, QScrollArea
 )
 from operator_controls_widget import OperatorControlsWidget
-from serial_controls_widget import SerialConnectionWidget
+from serial_controls_widget import SerialControlsWidget
 from user_controls_widget import UserControlsWidget
 from serial_handler import SerialHandler
 from styles import Styles
@@ -136,24 +136,21 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(Styles.WINDOW_BACKGROUND)
 
         # Create serial controls widget
-        self.serialControlsWidget = SerialConnectionWidget(self)
-        self.serialControlsWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.serialControlsWidget.show()  # Ensure widget is visible
+        self.serial_controls_widget = SerialControlsWidget(self)
+        self.serial_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Create operator controls
-        self.operatorControlsWidget = OperatorControlsWidget()
-        self.operatorControlsWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.operatorControlsWidget.show()  # Ensure widget is visible
+        self.operator_controls_widget = OperatorControlsWidget()
+        self.operator_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Create user controls
-        self.userControlsWidget = UserControlsWidget()
-        self.userControlsWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # self.userControlsWidget.show()  
+        self.user_controls_widget = UserControlsWidget()
+        self.user_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) 
 
         # Organize main layout
-        self.mainLayout.addWidget(self.serialControlsWidget)
-        self.mainLayout.addWidget(self.operatorControlsWidget)
-        self.mainLayout.addWidget(self.userControlsWidget)
+        self.mainLayout.addWidget(self.serial_controls_widget)
+        self.mainLayout.addWidget(self.operator_controls_widget)
+        self.mainLayout.addWidget(self.user_controls_widget)
         
 
 

@@ -93,21 +93,17 @@ class SerialHandler(QThread):
             return
         
         self._serial.timeout = 0.1  # Non-blocking timeout
-        buffer = ""
         self._running = True
         
         while self._running and self._serial.is_open:
             try:
-                if self._serial.in_waiting > 0:
-                    # Read available bytes
-                    line = self._serial.readline()
+                line = self._serial.readline()
+                
+                # Only process if there is data
+                if line:
                     decoded_line = line.decode("UTF-8").strip()
-
-                    # Only emit if there is data
                     if decoded_line:
                         self.new_data.emit(decoded_line)
-                else: 
-                    QThread.msleep(10)
                         
             except Exception as e:
                 self.new_data.emit(f"Error reading serial data: {str(e)}")
@@ -116,6 +112,7 @@ class SerialHandler(QThread):
 
     def stop(self):
         """ Stop the thread to read from the serial port """
+        print("serial stopped")
         self._running = False
 
 

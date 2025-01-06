@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy
     )
 
-class SerialConnectionWidget(QWidget):
+class SerialControlsWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
@@ -21,10 +21,15 @@ class SerialConnectionWidget(QWidget):
         self.parent.serial_handler.connection_changed.connect(self._handle_connection_change)
         
         # Settings
+        # self.connect_button_styles = {
+        #     "connect": f"{Styles.BUTTON_BASE} background-color: green;",
+        #     "disconnect": f"{Styles.BUTTON_BASE} background-color: red;",
+        #     "error": f"{Styles.BUTTON_BASE} background-color: orange;"
+        # }
         self.connect_button_styles = {
-            "connect": f"{Styles.BUTTON_BASE} background-color: green;",
-            "disconnect": f"{Styles.BUTTON_BASE} background-color: red;",
-            "error": f"{Styles.BUTTON_BASE} background-color: orange;"
+            "connect": Styles.create_button_style(Styles, "green"),
+            "disconnect": Styles.create_button_style(Styles, "red"),
+            "error": Styles.create_button_style(Styles, "orange")
         }
     
         # Main label section
@@ -45,6 +50,15 @@ class SerialConnectionWidget(QWidget):
         self.main_layout.addWidget(self.main_label)
         self.main_layout.addLayout(self.content_layout)
         self.main_layout.addLayout(self.serial_actions_container)
+
+    
+    def toggle_read_serial(self):
+        if self.read_serial_button.isEnabled():
+            self.read_serial_button.setEnabled(False)
+            self.read_serial_button.setStyleSheet(Styles.DISABLED_BUTTON)
+        else:
+            self.read_serial_button.setEnabled(True)
+            self.read_serial_button.setStyleSheet(Styles.BUTTON_BASE)
 
 
     def _create_connect_and_status_section(self):
