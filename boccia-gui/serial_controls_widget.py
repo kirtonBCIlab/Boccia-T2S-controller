@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import (
 class SerialConnectionWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent = parent
 
         # Settings
         self.connect_button_styles = {
@@ -28,7 +29,8 @@ class SerialConnectionWidget(QWidget):
         # Content section
         self._create_connect_and_status_section()
         self._create_calibration_and_port_section()
-         
+        self._create_serial_actions()
+
         self.content_layout = QHBoxLayout()
         self.content_layout.addLayout(self.connection_section_layout)
         self.content_layout.addLayout(self.calibration_and_port_layout)
@@ -37,6 +39,7 @@ class SerialConnectionWidget(QWidget):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.addWidget(self.main_label)
         self.main_layout.addLayout(self.content_layout)
+        self.main_layout.addLayout(self.serial_actions_container)
 
 
     def _create_connect_and_status_section(self):
@@ -67,6 +70,7 @@ class SerialConnectionWidget(QWidget):
 
         self.calibration_combo_box = QComboBox()
         self.calibration_combo_box.setStyleSheet( f"{Styles.COMBOBOX_BASE} width: 130px;")
+        self.calibration_combo_box.addItems(self.parent.calibration_options.keys())
 
         self.calibration_section = QHBoxLayout()
         self.calibration_section.addWidget(self.calibration_label)
@@ -89,6 +93,28 @@ class SerialConnectionWidget(QWidget):
         self.calibration_and_port_layout.addLayout(self.port_section)
 
 
+    def _create_serial_actions(self):
+        hover_button_styles = f"""
+            QPushButton {{{Styles.BUTTON_BASE}}} 
+            QPushButton:hover {{background-color: #555555}}
+            """
+
+        # Calibrate button
+        self.calibrate_button = QPushButton('Calibrate')
+        self.calibrate_button.setStyleSheet(hover_button_styles)
+        self.calibrate_button.clicked.connect(self._send_calibration_command)
+
+        # Read serial button
+        self.read_serial_button = QPushButton('Read serial')
+        self.read_serial_button.setStyleSheet(hover_button_styles)
+        self.read_serial_button.clicked.connect(self._read_serial_data)
+
+        # Organize layout
+        self.serial_actions_container = QVBoxLayout()
+        self.serial_actions_container.addWidget(self.read_serial_button)
+        self.serial_actions_container.addWidget(self.calibrate_button)
+        
+
     def _toggle_connection_status(self):
         if self.connect_button.text() == 'Connect':
             self.connect_button.setText('Disconnect')
@@ -98,3 +124,11 @@ class SerialConnectionWidget(QWidget):
             self.connect_button.setText('Connect')
             self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
             self.port_combo_box.setEnabled(True)
+
+    def _send_calibration_command(self):
+        print("Calibrating...")
+        pass
+
+    def _read_serial_data(self):
+        print("Reading serial data...")
+        pass

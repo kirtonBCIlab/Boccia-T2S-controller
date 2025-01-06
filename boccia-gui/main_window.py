@@ -81,9 +81,17 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.main_label_style = "QLabel { font: 20px Calibri; color: #b48ead; font-weight: bold;}"
+        # General settings
+        self.calibration_options = {
+            "Full": "dd-70>rc>ec",
+            "Drop": "dd-70",
+            'Rotation': "rc0",
+            "Elevation - manual": "ec0",
+            "Elevation - auto": "ec1",
+        }
 
         self.init_UI()
+
 
     def init_UI(self):
          # Create and set central widget once
@@ -100,7 +108,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(Styles.WINDOW_BACKGROUND)
 
         # Create serial controls widget
-        self.serialControlsWidget = SerialConnectionWidget()
+        self.serialControlsWidget = SerialConnectionWidget(self)
         self.serialControlsWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.serialControlsWidget.show()  # Ensure widget is visible
 
