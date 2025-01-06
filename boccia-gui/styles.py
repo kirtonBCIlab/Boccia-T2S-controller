@@ -15,7 +15,12 @@ class Styles:
         padding: 5px;
         border-radius: 5px;
         border: 1px solid #ffffff;
-    """
+        """
+
+    HOVER_BUTTON = f"""
+        QPushButton {{{BUTTON_BASE}}}
+        QPushButton:hover {{background-color: #555555}}        
+        """
 
     # Combobox
     COMBOBOX_BASE = """
@@ -26,4 +31,4 @@ class Styles:
         border-radius: 5px; 
         border: 1px solid #ffffff; 
         padding: 3px;
-    """
+        """

@@ -38,7 +38,6 @@ class OperatorControlsWidget(QWidget):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.addWidget(self.controls_label)
         self.main_layout.addLayout(self.content_layout)
-        self.setLayout(self.main_layout)
 
 
     def create_operator_controls(self):
@@ -122,22 +121,7 @@ class OperatorControlsWidget(QWidget):
     def create_static_button(self, button_text):
         """ Returns a static button """
 
-        button_style = """
-        QPushButton {
-            width: 50px;
-            height: 50px;
-            background-color: #3c3c3c;
-            color: #ffffff;
-            border-radius: 5px;
-            border: 1px solid #ffffff;
-        }
-        QPushButton:hover {
-            background-color: #5c5c5c;
-        }
-        QPushButton:pressed {
-            background-color: #7c7c7c;
-        }
-        """
+        button_style = f"{Styles.BUTTON_BASE} width: 50px; height: 50px;"
 
         button = QPushButton(button_text)
         button.setStyleSheet(button_style)

@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
 )
 from operator_controls_widget import OperatorControlsWidget
 from serial_controls_widget import SerialConnectionWidget
+from user_controls_widget import UserControlsWidget
 from styles import Styles
 
 
@@ -90,6 +91,29 @@ class MainWindow(QMainWindow):
             "Elevation - auto": "ec1",
         }
 
+        self.command_mapping = {
+            "elevation_up": "es1",
+            "elevation_down": "es0",
+            "rotation_left": "rs0",
+            "rotation_right": "rs1",
+            "drop": "dd-70"
+        }
+
+        self.user_commands = {
+            Qt.Key_1: self.command_mapping["elevation_up"],
+            Qt.Key_2: self.command_mapping["rotation_right"],
+            Qt.Key_3: self.command_mapping["drop"],
+            Qt.Key_R: self.command_mapping["drop"]
+        }
+
+        self.operator_commands = {
+            Qt.Key_W: self.command_mapping["elevation_up"],
+            Qt.Key_S: self.command_mapping["elevation_down"],
+            Qt.Key_A: self.command_mapping["rotation_left"],
+            Qt.Key_D: self.command_mapping["rotation_right"],
+        }
+
+        # Initialize user interface
         self.init_UI()
 
 
@@ -117,9 +141,15 @@ class MainWindow(QMainWindow):
         self.operatorControlsWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.operatorControlsWidget.show()  # Ensure widget is visible
 
+        # Create user controls
+        self.userControlsWidget = UserControlsWidget()
+        self.userControlsWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # self.userControlsWidget.show()  
+
         # Organize main layout
         self.mainLayout.addWidget(self.serialControlsWidget)
         self.mainLayout.addWidget(self.operatorControlsWidget)
+        self.mainLayout.addWidget(self.userControlsWidget)
         
 
 

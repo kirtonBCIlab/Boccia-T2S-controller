@@ -94,19 +94,14 @@ class SerialConnectionWidget(QWidget):
 
 
     def _create_serial_actions(self):
-        hover_button_styles = f"""
-            QPushButton {{{Styles.BUTTON_BASE}}} 
-            QPushButton:hover {{background-color: #555555}}
-            """
-
         # Calibrate button
         self.calibrate_button = QPushButton('Calibrate')
-        self.calibrate_button.setStyleSheet(hover_button_styles)
+        self.calibrate_button.setStyleSheet(Styles.HOVER_BUTTON)
         self.calibrate_button.clicked.connect(self._send_calibration_command)
 
         # Read serial button
         self.read_serial_button = QPushButton('Read serial')
-        self.read_serial_button.setStyleSheet(hover_button_styles)
+        self.read_serial_button.setStyleSheet(Styles.HOVER_BUTTON)
         self.read_serial_button.clicked.connect(self._read_serial_data)
 
         # Organize layout
