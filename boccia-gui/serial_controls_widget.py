@@ -120,9 +120,11 @@ class SerialConnectionWidget(QWidget):
             self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
             self.port_combo_box.setEnabled(True)
 
+
     def _send_calibration_command(self):
         print("Calibrating...")
         pass
+
 
     def _read_serial_data(self):
         print("Reading serial data...")

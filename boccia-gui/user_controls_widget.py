@@ -60,6 +60,7 @@ class UserControlsWidget(QWidget):
         label.setStyleSheet(Styles.LABEL_TEXT)
         return label
     
+    
     def _create_command_button(self, button_text:str = ""):
         """ Create a QPushButton for the command and sets the default style """
         button = QPushButton(button_text)
