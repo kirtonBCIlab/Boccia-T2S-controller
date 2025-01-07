@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         self.init_UI()
 
         # Install event filter for keyboard events
-        self.key_press_handler = KeyPressHandler(self)
+        self.key_press_handler = KeyPressHandler(self.serial_handler)
         self.key_press_handler.installEventFilter(self)
         self.installEventFilter(self.key_press_handler)
 
@@ -66,7 +66,6 @@ class MainWindow(QMainWindow):
 
 
     def closeEvent(self, event):
-
         # Safely disconnect from serial port
         if self.serial_handler.get_current_connection_status() == "Connected":
             self.serial_handler.disconnect()

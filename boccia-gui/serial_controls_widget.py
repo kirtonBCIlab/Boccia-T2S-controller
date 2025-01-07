@@ -151,12 +151,12 @@ class SerialControlsWidget(QWidget):
         if self.serial_handler.get_current_connection_status() != "Connected":
             return
         
-        serial_read_window = SerialReadWindow(self.parent)
+        SerialReadWindow(self.parent)
         pass
 
 
     def _handle_connection_change(self, message: str):
-        
+        """ Handle connection status changes """
         # Change status label
         self.connection_status_label.setText(f"Status: {message}")
 
@@ -177,6 +177,7 @@ class SerialControlsWidget(QWidget):
 
 
     def _populate_ports(self):
+        """ Populate the port combo box with available ports """
         # Store current port selection
         current_port = self.port_combo_box.currentText()
 
@@ -191,6 +192,7 @@ class SerialControlsWidget(QWidget):
             self.port_combo_box.setCurrentIndex(index)
         elif ports:  # Default to first port if available
             self.port_combo_box.setCurrentIndex(0)
+
 
     def _actions_enabled(self, status: bool):
         """ Enable or disable action buttons, port combo box != status """

@@ -1,3 +1,4 @@
+# Standard libraries
 from PyQt5.QtWidgets import QComboBox
 
 class CustomComboBox(QComboBox):

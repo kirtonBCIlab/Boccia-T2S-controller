@@ -5,12 +5,11 @@ from PyQt5.QtCore import QObject
 from commands import Commands
 
 class KeyPressHandler(QObject):
-    def __init__(self, parent):
+    def __init__(self, serial_handler = None):
         super().__init__()
-        self.parent = parent
-        self.serial_handler = parent.serial_handler
 
-        self.key_processed = False # Flag to prevent multiple key presses
+        self.serial_handler = serial_handler
+
         self.key_pressed = None # Store the key pressed for hold commands
 
 
@@ -53,13 +52,3 @@ class KeyPressHandler(QObject):
                 self.key_pressed = None
 
             event.accept()
-
-
-    def focusInEvent(self, event):
-        print("Key handler active")
-        super().focusInEvent(event)
-
-
-    def focusOutEvent(self, event):
-        print("Key handler inactive")
-        super().focusOutEvent(event)

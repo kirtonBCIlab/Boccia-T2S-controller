@@ -50,6 +50,7 @@ class SerialHandler(QThread):
         self._baudrate = baudrate
         self._serial.baudrate = baudrate   
 
+
     def toggle_serial_connection(self):
         """ Toggle the serial connection """
         if (self._current_connection_status == "Disconnected") or (self._current_connection_status == "Error"):
@@ -99,7 +100,7 @@ class SerialHandler(QThread):
                 self.command_sent = False
 
     
-    def run(self, running:bool = True):
+    def run(self):
         """ Start separate threat to read data from the serial port """
         
         # Skip if there is no serial connection

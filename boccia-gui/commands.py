@@ -1,3 +1,4 @@
+# Standard libraries
 from PyQt5.QtCore import Qt
 
 class Commands():
