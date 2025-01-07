@@ -46,6 +46,19 @@ class Styles:
         padding: 3px;
         """
     
+    # Slider
+    SLIDER = """
+        QSlider::groove:horizontal {
+            background: #3c3c3c;
+            height: 10px;
+            }
+        QSlider::handle:horizontal {
+            background: #b48ead;
+            width: 20px;
+            margin: -5px 0;
+            }
+        """
+    
     @staticmethod
     def create_button_style(brackground_color:str):
         return f"""

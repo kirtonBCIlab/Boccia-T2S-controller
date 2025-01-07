@@ -1,7 +1,11 @@
-import sys
-import threading
-from PyQt5.QtWidgets import QDialog, QScrollArea, QLabel, QVBoxLayout, QApplication
-from PyQt5.QtCore import Qt, pyqtSignal, QObject
+# Standard libraries
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QDialog,
+    QScrollArea,
+    QLabel,
+    QVBoxLayout
+    )
 
 class SerialReadWindow(QDialog):
     def __init__(self, parent):

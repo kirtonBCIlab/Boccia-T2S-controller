@@ -1,35 +1,39 @@
 # Import libraries
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
+    QLabel,
     QWidget,
+    QComboBox,
     QHBoxLayout,
     QVBoxLayout,
-    QLabel,
-    QComboBox,
     QPushButton,
-    QSizePolicy
+    QSizePolicy,
     )
 
 # Custom libraries
 from styles import Styles
 from commands import Commands
+from custom_combo_box import CustomComboBox
 from serial_read_window import SerialReadWindow
 
 
 class SerialControlsWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent = None, serial_handler = None):
+        super().__init__()
+        
+        # Get acces to serial handler object
         self.parent = parent
+        self.serial_handler = serial_handler
 
         # Suscribe to external events
-        self.parent.serial_handler.connection_changed.connect(self._handle_connection_change)
+        self.serial_handler.connection_changed.connect(self._handle_connection_change)
         
         # Settings
         self.connect_button_styles = {
             "connect": Styles.create_button_style("green"),
             "disconnect": Styles.create_button_style("red"),
             "error": Styles.create_button_style("orange")
-        }
+            }
     
         # Main label section
         self.main_label = QLabel('SERIAL CONNECTION')
@@ -98,9 +102,8 @@ class SerialControlsWidget(QWidget):
         self.port_label = QLabel('COM Port')
         self.port_label.setStyleSheet(Styles.LABEL_TEXT)
 
-        self.port_combo_box = QComboBox()
+        self.port_combo_box = CustomComboBox()
         self.port_combo_box.setStyleSheet( f"{Styles.COMBOBOX_BASE} width: 70px;")
-        self.port_combo_box.activated.connect(self._populate_ports)
         self._populate_ports()
 
 
@@ -119,30 +122,33 @@ class SerialControlsWidget(QWidget):
         self.calibrate_button = QPushButton('Calibrate')
         self.calibrate_button.setStyleSheet(Styles.HOVER_BUTTON)
         self.calibrate_button.clicked.connect(self._send_calibration_command)
+        self.calibrate_button.setEnabled(False)
 
         # Read serial button
         self.read_serial_button = QPushButton('Read serial')
         self.read_serial_button.setStyleSheet(Styles.HOVER_BUTTON)
         self.read_serial_button.clicked.connect(self._read_serial_data)
+        self.read_serial_button.setEnabled(False)
 
         # Organize layout
         self.serial_actions_container = QVBoxLayout()
-        self.serial_actions_container.addWidget(self.read_serial_button)
         self.serial_actions_container.addWidget(self.calibrate_button)
+        self.serial_actions_container.addWidget(self.read_serial_button)
         
 
     def _toggle_connection_status(self):
-        self.parent.serial_handler.port = self.port_combo_box.currentText()
-        self.parent.serial_handler.toggle_serial_connection()
+        self.serial_handler.port = self.port_combo_box.currentText()
+        self.serial_handler.toggle_serial_connection()
         
 
     def _send_calibration_command(self):
-        print("Calibrating...")
+        current_calibration = self.calibration_combo_box.currentText()
+        self.serial_handler.send_command(Commands.CALIBRATION_COMMANDS[current_calibration])
         pass
 
 
     def _read_serial_data(self):
-        if self.parent.serial_handler.get_current_connection_status() != "Connected":
+        if self.serial_handler.get_current_connection_status() != "Connected":
             return
         
         serial_read_window = SerialReadWindow(self.parent)
@@ -150,20 +156,24 @@ class SerialControlsWidget(QWidget):
 
 
     def _handle_connection_change(self, message: str):
-        print(message)
+        
+        # Change status label
         self.connection_status_label.setText(f"Status: {message}")
+
         if message == "Connected":
             self.connect_button.setText("Disconnect")
             self.connect_button.setStyleSheet(self.connect_button_styles["disconnect"])
-            self.port_combo_box.setEnabled(False)
+            self._actions_enabled(True)
+
         elif message == "Error":
             self.connect_button.setText("Error")
             self.connect_button.setStyleSheet(self.connect_button_styles["error"])
-            self.port_combo_box.setEnabled(True)
+            self._actions_enabled(False)
+
         elif message == "Disconnected":
             self.connect_button.setText("Connect")
             self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
-            self.port_combo_box.setEnabled(True)
+            self._actions_enabled(False)
 
 
     def _populate_ports(self):
@@ -172,7 +182,7 @@ class SerialControlsWidget(QWidget):
 
         # Clear and populate port combo box
         self.port_combo_box.clear()
-        ports = self.parent.serial_handler.list_serial_ports()
+        ports = self.serial_handler.list_serial_ports()
         self.port_combo_box.addItems(ports)
 
         # Restore previous selection if available
@@ -181,3 +191,10 @@ class SerialControlsWidget(QWidget):
             self.port_combo_box.setCurrentIndex(index)
         elif ports:  # Default to first port if available
             self.port_combo_box.setCurrentIndex(0)
+
+    def _actions_enabled(self, status: bool):
+        """ Enable or disable action buttons, port combo box != status """
+        self.calibrate_button.setEnabled(status)
+        self.read_serial_button.setEnabled(status)
+        
+        self.port_combo_box.setEnabled(not status)

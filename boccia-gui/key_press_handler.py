@@ -1,5 +1,7 @@
-from PyQt5.QtCore import Qt, QObject
-from PyQt5.QtWidgets import QWidget
+# Default libraries
+from PyQt5.QtCore import QObject
+
+# Custom libraries
 from commands import Commands
 
 class KeyPressHandler(QObject):
@@ -9,6 +11,7 @@ class KeyPressHandler(QObject):
         self.serial_handler = parent.serial_handler
 
         self.key_processed = False # Flag to prevent multiple key presses
+        self.key_pressed = None # Store the key pressed for hold commands
 
 
     def eventFilter(self, obj, event):
@@ -23,22 +26,19 @@ class KeyPressHandler(QObject):
 
 
     def keyPressEvent(self, event):
-        print("Key pressed")
         if not event.isAutoRepeat():
             key = event.key()
             
-            if (key in Commands.HOLD_COMMANDS) and (not self.key_processed):
+            if (key in Commands.HOLD_COMMANDS):
                 print(f"Operator key pressed: {key}")
                 command = Commands.HOLD_COMMANDS[key]
                 self.serial_handler.send_command(command)
-                self.key_processed = True
-                print(f"Sent press command: {command} to serial port\n")
+                self.key_pressed = key
 
             elif key in Commands.TOGGLE_COMMANDS:
                 print(f"User key pressed: {key}")
                 command = Commands.TOGGLE_COMMANDS[key]
-                self.parent.serialHandler.send_command(command)
-                print(f"Sent press command: {command} to serial port\n")
+                self.serial_handler.send_command(command)
                 
             event.accept()
 
@@ -46,12 +46,13 @@ class KeyPressHandler(QObject):
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
             key = event.key()
-            if (key in Commands.HOLD_COMMANDS) and (self.serial_handler.command_sent):
-                print(f"Key released: {key}")
+            if (key in Commands.HOLD_COMMANDS) and (key == self.key_pressed):
+                print(f"Operator key released: {key}")
                 command = Commands.HOLD_COMMANDS[key]
                 self.serial_handler.send_command(command)
-                self.serial_handler.command_sent = False
-                print(f"Sent release command: {command} to serial port")
+                self.key_pressed = None
+
+            event.accept()
 
 
     def focusInEvent(self, event):

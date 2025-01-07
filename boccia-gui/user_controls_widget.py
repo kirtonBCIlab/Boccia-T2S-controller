@@ -1,5 +1,4 @@
-# Import libraries
-from styles import Styles
+# Standard libraries
 from PyQt5.QtWidgets import (
     QWidget,
     QHBoxLayout,    
@@ -8,11 +7,16 @@ from PyQt5.QtWidgets import (
     QPushButton,
     )
 
+# Custom libraries
+from styles import Styles
+from commands import Commands
+
 
 class UserControlsWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.parent = parent
+    def __init__(self, serial_handler = None):
+        super().__init__()
+
+        self.serial_handler = serial_handler
 
         # Main label section
         self.controls_label = QLabel('USER CONTROLS')
@@ -29,24 +33,14 @@ class UserControlsWidget(QWidget):
 
     def _create_commands_section(self):
         # Create commands labels
-        command1 = self._create_command_label("Command 1:")
-        command2 = self._create_command_label("Command 2:")
-        command3 = self._create_command_label("Command 3:")
-        
         command_label_layout = QVBoxLayout()
-        command_label_layout.addWidget(command1)
-        command_label_layout.addWidget(command2)
-        command_label_layout.addWidget(command3)
-
-        # Create commands buttons
-        command1_button = self._create_command_button("Elevation up")
-        command2_button = self._create_command_button("Rotation right")
-        command3_button = self._create_command_button("Drop")
-
         command_button_layout = QVBoxLayout()
-        command_button_layout.addWidget(command1_button)
-        command_button_layout.addWidget(command2_button)
-        command_button_layout.addWidget(command3_button)
+
+        for [c,command_text] in enumerate(Commands.BUTTON_COMMANDS.keys()):
+            command_label = self._create_command_label(f"Command: {c+1}")
+            command_button = self._create_command_button(command_text)
+            command_label_layout.addWidget(command_label)
+            command_button_layout.addWidget(command_button)
 
         # Organize layout
         self.commands_section_layout = QHBoxLayout()
@@ -72,10 +66,30 @@ class UserControlsWidget(QWidget):
 
     def _handle_command_click(self):
         """ Handle the command button click """
-
-        # Disable all buttons except the one clicked
         sender = self.sender()
-        for button in self.findChildren(QPushButton):
-            if button != sender:
-                button.setEnabled(not button.isEnabled())
-        pass
+        command = Commands.BUTTON_COMMANDS.get(sender.text())
+
+        # If the command is in the list, send it
+        if command:
+            self.serial_handler.send_command(command)
+
+        # If the command is "Drop", enable all buttons
+        if sender.text() == "Drop":
+            for button in self.findChildren(QPushButton):
+                button.setEnabled(True)
+                self._update_button_style(button)
+
+        # If elevation or rotation, toggle all other buttons
+        else:
+            for button in self.findChildren(QPushButton):
+                if button != sender:
+                    button.setEnabled(not button.isEnabled())
+
+                self._update_button_style(button)
+
+    def _update_button_style(self, button):
+        """ Update the button style based on its enabled state """
+        if button.isEnabled():
+            button.setStyleSheet(Styles.HOVER_BUTTON)
+        else:
+            button.setStyleSheet(Styles.DISABLED_BUTTON)

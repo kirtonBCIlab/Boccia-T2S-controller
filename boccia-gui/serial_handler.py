@@ -6,7 +6,7 @@ class SerialHandler(QThread):
     """ Handles serial communication with the COM ports and connected devices """
     # Events
     connection_changed = pyqtSignal(str)    # Signal to indicate a change in the connection status
-    new_data = pyqtSignal(str)              # Signal to indicate new data has been received
+    new_data = pyqtSignal(str)              # Signal to indicate new data has been received from the Arduino
 
     def __init__(
             self,
@@ -81,19 +81,22 @@ class SerialHandler(QThread):
             self.connection_changed.emit(self._current_connection_status)
         
 
-    def send_command(self, data):
-        """ Send data to the serial port """
+    def send_command(self, command:str):
+        """ Send `command` to the serial port """
+
+        # Skip if command is empty or only whitespaces
+        if not command.strip():
+            return
+
         if self._current_connection_status == "Connected":
             try:
-                code_str = data + "\n"
+                code_str = command + "\n"
                 self._serial.write(code_str.encode("UTF-8"))
                 print(f"Sent serial: {code_str}")
                 self.command_sent = True
             except Exception as e:
                 print(f"Error sending data to serial: {str(e)}")
                 self.command_sent = False
-
-
 
     
     def run(self, running:bool = True):
