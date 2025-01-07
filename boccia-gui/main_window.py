@@ -6,119 +6,30 @@ from PyQt5.QtWidgets import (
     QSlider, QComboBox, QGridLayout, QMainWindow, QDialog, QSpacerItem, 
     QSizePolicy, QFrame, QScrollArea
 )
-from operator_controls_widget import OperatorControlsWidget
-from serial_controls_widget import SerialControlsWidget
-from user_controls_widget import UserControlsWidget
-from serial_handler import SerialHandler
+
+# Custom libraries
 from styles import Styles
-
-
-# # Function to list available serial ports
-
-
-# # Serial Read Thread
-# class SerialReadThread(QThread):
-#     newData = pyqtSignal(str)
-
-#     def __init__(self, serial_connection):
-#         super().__init__()
-#         self.serial_connection = serial_connection
-#         self.running = True
-
-#     def run(self):
-#         while self.running:
-#             if self.serial_connection.in_waiting > 0:
-#                 data = self.serial_connection.read(self.serial_connection.in_waiting).decode('utf-8')
-#                 self.newData.emit(data)
-
-#     def stop(self):
-#         self.running = False
-#         self.wait()
-
-# class SerialReadWindow(QDialog):
-#     def __init__(self, serial_connection):
-#         super().__init__()
-#         self.serial_connection = serial_connection
-#         self.serial_buffer = ""
-#         self.initUI()
-
-#     def initUI(self):
-#         self.scroll = QScrollArea()
-#         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-#         self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-#         self.setWindowTitle('Serial Port Reader')
-#         self.setGeometry(100, 100, 400, 300)
-
-#         layout = QVBoxLayout()
-
-#         self.outputLabel = QLabel('Reading data from serial port\n')
-#         self.outputLabel.setWordWrap(True)  # Ensure text wraps within the label
-#         self.scroll.setWidget(self.outputLabel)
-#         self.scroll.setWidgetResizable(True)  
-
-#         layout.addWidget(self.scroll)
-#         self.setLayout(layout)
-
-#         self.thread = SerialReadThread(self.serial_connection)
-#         self.thread.newData.connect(self.updateOutput)
-#         self.thread.start()
-
-#     # Buggy
-#     def updateOutput(self, data):
-#         self.serial_buffer += data  # Append incoming data to the buffer
-#         while '\n' in self.serial_buffer:  # Check for complete lines
-#             line, self.serial_buffer = self.serial_buffer.split('\n', 1)
-#             line = line.strip()  # Remove leading and trailing whitespace
-#             print(line)  # Prints to terminal
-#             self.outputLabel.setText(self.outputLabel.text() + line + '\n')
-
-
-#     def closeEvent(self, event):
-#         self.thread.stop()
-#         event.accept()
+from serial_handler import SerialHandler
+from key_press_handler import KeyPressHandler
+from user_controls_widget import UserControlsWidget
+from serial_controls_widget import SerialControlsWidget
+from operator_controls_widget import OperatorControlsWidget
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super().__init__()
-
-        # General settings
-        self.calibration_options = {
-            "Full": "dd-70>rc>ec",
-            "Drop": "dd-70",
-            'Rotation': "rc0",
-            "Elevation - manual": "ec0",
-            "Elevation - auto": "ec1",
-        }
-
-        self.command_mapping = {
-            "elevation_up": "es1",
-            "elevation_down": "es0",
-            "rotation_left": "rs0",
-            "rotation_right": "rs1",
-            "drop": "dd-70"
-        }
-
-        self.user_commands = {
-            Qt.Key_1: self.command_mapping["elevation_up"],
-            Qt.Key_2: self.command_mapping["rotation_right"],
-            Qt.Key_3: self.command_mapping["drop"],
-            Qt.Key_R: self.command_mapping["drop"]
-        }
-
-        self.operator_commands = {
-            Qt.Key_W: self.command_mapping["elevation_up"],
-            Qt.Key_S: self.command_mapping["elevation_down"],
-            Qt.Key_A: self.command_mapping["rotation_left"],
-            Qt.Key_D: self.command_mapping["rotation_right"],
-        }
+        super().__init__()        
 
         # Initialize serial handler
         self.serial_handler = SerialHandler()
 
         # Initialize user interface
         self.init_UI()
+
+        # Install event filter for keyboard events
+        self.key_press_handler = KeyPressHandler(self)
+        self.key_press_handler.installEventFilter(self)
+        self.installEventFilter(self.key_press_handler)
 
 
     def init_UI(self):
@@ -151,8 +62,15 @@ class MainWindow(QMainWindow):
         self.mainLayout.addWidget(self.serial_controls_widget)
         self.mainLayout.addWidget(self.operator_controls_widget)
         self.mainLayout.addWidget(self.user_controls_widget)
+
         
 
+    # def eventFilter(self, obj, event):
+    #     if obj is self.key_press_handler:
+    #         if event.type() in (event.FocusOut, event.WindowDeactivate):
+    #             self.key_press_handler.setFocus()
+    #             return True
+    #     return super().eventFilter(obj, event)
 
     #     # Default Serial Commands
     #     self.key_processed = False

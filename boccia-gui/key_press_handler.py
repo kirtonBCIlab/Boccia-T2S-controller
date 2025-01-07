@@ -1,55 +1,64 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QObject
 from PyQt5.QtWidgets import QWidget
+from commands import Commands
 
-class KeyPressHandler(QWidget):
-    def __init__(self, serial_thread):
+class KeyPressHandler(QObject):
+    def __init__(self, parent):
         super().__init__()
-        self.serial_thread = serial_thread
+        self.parent = parent
+        self.serial_handler = parent.serial_handler
+
+        self.key_processed = False # Flag to prevent multiple key presses
+
+
+    def eventFilter(self, obj, event):
+        if event.type() == event.KeyPress:
+            self.keyPressEvent(event)
+            return True
+        elif event.type() == event.KeyRelease:
+            self.keyReleaseEvent(event)
+            return True
         
-        self.commands = {
-            Qt.Key_A: "7100",
-            Qt.Key_D: "7110",
-            Qt.Key_S: "7200",
-            Qt.Key_W: "7210",
-        }
+        return super().eventFilter(obj, event)
+
 
     def keyPressEvent(self, event):
+        print("Key pressed")
         if not event.isAutoRepeat():
             key = event.key()
-            if (key in self.commands) and (not self.serial_thread.is_command_sent):
-                print(f"Key pressed: {key}")
-                command = self.commands[key]
-                self.serial_thread.send_command(command)
-                self.serial_thread.is_command_sent = True
-                print(f"Sent press command: {command} to serial port")
-                event.accept()
-            # else:
-            #     super().keyPressEvent(event)
+            
+            if (key in Commands.HOLD_COMMANDS) and (not self.key_processed):
+                print(f"Operator key pressed: {key}")
+                command = Commands.HOLD_COMMANDS[key]
+                self.serial_handler.send_command(command)
+                self.key_processed = True
+                print(f"Sent press command: {command} to serial port\n")
 
-    # def keyPressEvent(self, event):
-    #     key = event.key()
-    #     if (key in self.commands) and :
-    #         print(f"Key pressed: {key}")
-    #         if self.serial_thread and self.serial_thread.serial:
-    #             command = self.commands[key]
-    #             if not self.serial_thread.is_command_sent:
-    #                 self.serial_thread.send_command(command)
-    #                 self.serial_thread.is_command_sent = True
-    #                 print(f"Sent command: {command} to serial port")
-        # else:
-        #     # Propagate the event to other widgets
-        #     super().keyPressEvent(event)
-        # event.accept()
+            elif key in Commands.TOGGLE_COMMANDS:
+                print(f"User key pressed: {key}")
+                command = Commands.TOGGLE_COMMANDS[key]
+                self.parent.serialHandler.send_command(command)
+                print(f"Sent press command: {command} to serial port\n")
+                
+            event.accept()
+
 
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
             key = event.key()
-            if (key in self.commands) and (self.serial_thread.is_command_sent):
+            if (key in Commands.HOLD_COMMANDS) and (self.serial_handler.command_sent):
                 print(f"Key released: {key}")
-                command = self.commands[key]
-                self.serial_thread.send_command(command)
-                self.serial_thread.is_command_sent = False
+                command = Commands.HOLD_COMMANDS[key]
+                self.serial_handler.send_command(command)
+                self.serial_handler.command_sent = False
                 print(f"Sent release command: {command} to serial port")
-            # else:
-            #     # Propagate the event to other widgets
-            #     super().keyReleaseEvent(event)
+
+
+    def focusInEvent(self, event):
+        print("Key handler active")
+        super().focusInEvent(event)
+
+
+    def focusOutEvent(self, event):
+        print("Key handler inactive")
+        super().focusOutEvent(event)

@@ -29,6 +29,7 @@ class SerialHandler(QThread):
         self._serial = None
         self._connection_status = ["Connected", "Disconnected", "Error"]
         self._current_connection_status = self._connection_status[1]
+        self.command_sent = False   # Flag to indicate if a command has been sent succesfully
 
 
     @property
@@ -80,9 +81,19 @@ class SerialHandler(QThread):
             self.connection_changed.emit(self._current_connection_status)
         
 
-    def send(self, data):
+    def send_command(self, data):
         """ Send data to the serial port """
-        self._serial.write(data)
+        if self._current_connection_status == "Connected":
+            try:
+                code_str = data + "\n"
+                self._serial.write(code_str.encode("UTF-8"))
+                print(f"Sent serial: {code_str}")
+                self.command_sent = True
+            except Exception as e:
+                print(f"Error sending data to serial: {str(e)}")
+                self.command_sent = False
+
+
 
     
     def run(self, running:bool = True):

@@ -1,7 +1,5 @@
 # Import libraries
-from styles import Styles
 from PyQt5.QtCore import Qt
-from serial_read_window import SerialReadWindow
 from PyQt5.QtWidgets import (
     QWidget,
     QHBoxLayout,
@@ -11,6 +9,12 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QSizePolicy
     )
+
+# Custom libraries
+from styles import Styles
+from commands import Commands
+from serial_read_window import SerialReadWindow
+
 
 class SerialControlsWidget(QWidget):
     def __init__(self, parent=None):
@@ -84,7 +88,7 @@ class SerialControlsWidget(QWidget):
 
         self.calibration_combo_box = QComboBox()
         self.calibration_combo_box.setStyleSheet( f"{Styles.COMBOBOX_BASE} width: 130px;")
-        self.calibration_combo_box.addItems(self.parent.calibration_options.keys())
+        self.calibration_combo_box.addItems(Commands.CALIBRATION_COMMANDS.keys())
 
         self.calibration_section = QHBoxLayout()
         self.calibration_section.addWidget(self.calibration_label)
