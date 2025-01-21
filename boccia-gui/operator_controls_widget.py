@@ -144,17 +144,17 @@ class OperatorControlsWidget(QWidget):
             if name == "elevation":
                 speed_command = self._set_elevation_speed(slider.value())
             elif name == "rotation":
-                speed_command = self._set_rotation_speed(slider.value())
+                speed_command = self._set_rotation_accel(slider.value())
 
             self.serial_handler.send_command(f"{speed_command}")
         pass
 
 
-    def _set_rotation_speed(self, value):
-        """ Set the rotation speed [steps/sec] """
-        MAX_SPEED = 1000 # Maximum recommended [steps/sec]
+    def _set_rotation_accel(self, value):
+        """ Set the rotation acceleration [steps/sec^2] """
+        MAX_ACCEL = 30 # Maximum recommended [steps/sec^2]
 
-        speed = int((value / 100) * MAX_SPEED)
+        speed = int((value / 100) * MAX_ACCEL)
         speed_command = f"rx{speed}"
 
         return speed_command
