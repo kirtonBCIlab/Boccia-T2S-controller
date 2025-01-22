@@ -31,6 +31,8 @@ class UserControlsWidget(QWidget):
         self.main_layout.addWidget(self.controls_label)
         self.main_layout.addLayout(self.commands_section_layout)
 
+        # Dictionary to store timer
+        self.timers = {}
 
     def _create_commands_section(self):
         # Create commands labels
@@ -77,19 +79,20 @@ class UserControlsWidget(QWidget):
         # If the command is "Drop", enable all buttons except Drop
         if sender.text() == "Drop":
             for button in self.findChildren(QPushButton):
-                if button != sender:
-                    button.setEnabled(True)
-
-                else:
-                    button.setEnabled(False)
-                    self._update_button_style(button)
-
-                    # Re-enable button after 10 second delay
-                    timer = QTimer()
-                    timer.timeout.connect(lambda: button.setEnabled(True))
-                    timer.start(10000) # 10000 ms = 10 seconds
-
+                
+                button.setEnabled(False)
                 self._update_button_style(button)
+
+                # Stop timer if it exists
+                if button in self.timers:
+                    self.timers[button].stop()
+
+                # Re-enable button after 10 second delay
+                timer = QTimer(self)
+                timer.setSingleShot(True)
+                timer.timeout.connect(lambda: self._reenable_buttons())
+                timer.start(10000) # 10000 ms = 10 seconds
+                self.timers[button] = timer
 
         # If elevation or rotation, toggle all other buttons
         else:
@@ -105,3 +108,13 @@ class UserControlsWidget(QWidget):
             button.setStyleSheet(Styles.HOVER_BUTTON)
         else:
             button.setStyleSheet(Styles.DISABLED_BUTTON)
+    
+    def _reenable_buttons(self):
+        # Re-enable button
+        for button in self.findChildren(QPushButton):
+            button.setEnabled(True)
+            self._update_button_style(button)
+
+        # Remove timer
+        if button in self.timers:
+            self.timers.pop(button)
