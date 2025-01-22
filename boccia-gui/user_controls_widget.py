@@ -1,4 +1,5 @@
 # Standard libraries
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
     QWidget,
     QHBoxLayout,    
@@ -73,10 +74,21 @@ class UserControlsWidget(QWidget):
         if command:
             self.serial_handler.send_command(command)
 
-        # If the command is "Drop", enable all buttons
+        # If the command is "Drop", enable all buttons except Drop
         if sender.text() == "Drop":
             for button in self.findChildren(QPushButton):
-                button.setEnabled(True)
+                if button != sender:
+                    button.setEnabled(True)
+
+                else:
+                    button.setEnabled(False)
+                    self._update_button_style(button)
+
+                    # Re-enable button after 10 second delay
+                    timer = QTimer()
+                    timer.timeout.connect(lambda: button.setEnabled(True))
+                    timer.start(10000) # 10000 ms = 10 seconds
+
                 self._update_button_style(button)
 
         # If elevation or rotation, toggle all other buttons
