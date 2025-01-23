@@ -7,8 +7,8 @@ class Commands():
     TOGGLE = "toggle"
 
     CALIBRATION_COMMANDS = {
-        "Full": "dd70>rc>ec",
-        "Drop": "dd70",
+        "Full": "dd-70>rc>ec",
+        "Drop": "dd-70",
         "Rotation": "rc0",
         "Elevation - manual": "ec0",
         "Elevation - auto": "ec1",
@@ -17,8 +17,8 @@ class Commands():
     HOLD_COMMANDS = {
         Qt.Key_A: "rs0",    # Rotation Left
         Qt.Key_D: "rs1",    # Rotation Right
-        Qt.Key_W: "es0",    # Elevation Up
-        Qt.Key_S: "es1",    # Elevation Down
+        Qt.Key_W: "es1",    # Elevation Up
+        Qt.Key_S: "es0",    # Elevation Down
         }
 
     TOGGLE_COMMANDS = {

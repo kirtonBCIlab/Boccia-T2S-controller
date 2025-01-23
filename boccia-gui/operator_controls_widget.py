@@ -144,27 +144,36 @@ class OperatorControlsWidget(QWidget):
             if name == "elevation":
                 speed_command = self._set_elevation_speed(slider.value())
             elif name == "rotation":
-                speed_command = self._set_rotation_speed(slider.value())
+                speed_command = self._set_rotation_accel(slider.value())
 
             self.serial_handler.send_command(f"{speed_command}")
         pass
 
 
-    def _set_rotation_speed(self, value):
-        """ Set the rotation speed [steps/sec] """
-        MAX_SPEED = 1000 # Maximum recommended [steps/sec]
+    def _set_rotation_accel(self, value):
+        """ Set the rotation acceleration [steps/sec^2] """
+        MAX_ACCEL = 30 # Maximum recommended [steps/sec^2]
 
-        speed = int((value / 100) * MAX_SPEED)
+        speed = int((value / 100) * MAX_ACCEL)
         speed_command = f"rx{speed}"
 
         return speed_command
 
 
     def _set_elevation_speed(self, value):
-        """ Set the elevation speed [0 - 255] """
+        """ 
+            Set the elevation speed [steps/sec]. The speed is mapped the value 
+            to the range [51 - 255] i.e. 20-100% of the speed range because
+            the motor does not move if pulses are below 20% of max speed.
+        """
         MAX_SPEED = 255 # Maximum speed 8-bit PWM
+        MIN_SPEED = MAX_SPEED * 0.2 # Minimum speed (20% of the max speed)
 
-        speed = int((value / 100) * MAX_SPEED)
-        speed_command = f"ex{speed}"
+        speed_range = MAX_SPEED - MIN_SPEED
+        input_value_range = 100
+
+        mapped_speed = int(MIN_SPEED + (speed_range / input_value_range) * value)
+
+        speed_command = f"ex{mapped_speed}"
         
         return speed_command
