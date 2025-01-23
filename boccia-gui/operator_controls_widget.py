@@ -161,10 +161,16 @@ class OperatorControlsWidget(QWidget):
 
 
     def _set_elevation_speed(self, value):
-        """ Set the elevation speed [0 - 255] """
+        """ Set the elevation speed [steps/sec] """
+        """ Map the value to the range [51 - 255] i.e. 20-100% of the speed range """
         MAX_SPEED = 255 # Maximum speed 8-bit PWM
+        MIN_SPEED = MAX_SPEED * 0.2 # Minimum speed (20% of the max speed)
 
-        speed = int((value / 100) * MAX_SPEED)
-        speed_command = f"ex{speed}"
+        speed_range = MAX_SPEED - MIN_SPEED
+        input_value_range = 100
+
+        mapped_speed = int(MIN_SPEED + (speed_range / input_value_range) * value)
+
+        speed_command = f"ex{mapped_speed}"
         
         return speed_command
