@@ -66,7 +66,7 @@ class KeyPressHandler(QObject):
                     self.timer = QTimer(self)
                     self.timer.setSingleShot(True)
                     self.timer.timeout.connect(lambda: self._reenable_key())
-                    self.timer.start(15000) # Locked for 15 seconds
+                    self.timer.start(15000) # Key disabled for 15 seconds
                     print("Key disabled for 15 seconds")
 
                 else:

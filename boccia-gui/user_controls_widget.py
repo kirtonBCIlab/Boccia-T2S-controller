@@ -91,7 +91,7 @@ class UserControlsWidget(QWidget):
                 timer = QTimer(self)
                 timer.setSingleShot(True)
                 timer.timeout.connect(lambda: self._reenable_buttons())
-                timer.start(10000) # 10000 ms = 10 seconds
+                timer.start(15000) # Button disabled for 15 seconds
                 self.timers[button] = timer
 
         # If elevation or rotation, toggle all other buttons
