@@ -46,6 +46,11 @@ class KeyPressHandler(QObject):
                 
                 # If a sweeping command is not currently active
                 if not self.commands.get_toggle_command_active():
+                    # Send the command
+                    command = Commands.TOGGLE_COMMANDS[key]
+                    self.serial_handler.send_command(command)
+                    print(f"Start {command} command")
+                    
                     # If the Drop key was pressed, start the drop delay timer    
                     if key == Qt.Key_3:
                         self.commands.drop_delay_timer()
@@ -54,11 +59,6 @@ class KeyPressHandler(QObject):
                     else:
                         self.key_toggled = key # Store the key
                         self.commands.set_toggle_command_active(True) # Set the flag
-
-                    # Send the command
-                    command = Commands.TOGGLE_COMMANDS[key]
-                    self.serial_handler.send_command(command)
-                    print(f"Start {command} command")
 
                 elif self.commands.get_toggle_command_active():
                     if key == self.key_toggled:
