@@ -42,6 +42,8 @@ class Commands():
 
         self.user_controls_widget = None
 
+        self.toggle_command_active = False
+
     def set_user_controls_widget(self, user_controls_widget):
         self.user_controls_widget = user_controls_widget
 
@@ -52,7 +54,7 @@ class Commands():
             self.timer.stop()
 
         # Disable user control buttons
-        self.user_controls_widget._disable_buttons()
+        self.user_controls_widget._toggle_buttons(False)
         self.drop_delay_active = True # Set the flag
 
         # Start the timer
@@ -65,8 +67,14 @@ class Commands():
     def timer_over(self):
         print("\nDrop delay over")
         self.drop_delay_active = False # Reset the flag
-        self.user_controls_widget._enable_buttons()
+        self.user_controls_widget._toggle_buttons(True)
 
     def get_drop_delay_active(self):
         return self.drop_delay_active
+    
+    def get_toggle_command_active(self):
+        return self.toggle_command_active
+    
+    def set_toggle_command_active(self, value):
+        self.toggle_command_active = value
 

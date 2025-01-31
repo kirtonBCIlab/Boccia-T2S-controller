@@ -79,7 +79,7 @@ class UserControlsWidget(QWidget):
 
         # If the command is "Drop", disable all buttons
         if sender.text() == "Drop":
-            self._disable_buttons()
+            self._toggle_buttons(False)
             self.commands.drop_delay_timer()
 
         # If elevation or rotation, toggle the other buttons
@@ -97,12 +97,7 @@ class UserControlsWidget(QWidget):
         else:
             button.setStyleSheet(Styles.DISABLED_BUTTON)
     
-    def _enable_buttons(self):
+    def _toggle_buttons(self, value):
         for button in self.findChildren(QPushButton):
-            button.setEnabled(True)
-            self._update_button_style(button)
-
-    def _disable_buttons(self):
-        for button in self.findChildren(QPushButton):
-            button.setEnabled(False)
+            button.setEnabled(value)
             self._update_button_style(button)

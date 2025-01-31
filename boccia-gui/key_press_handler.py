@@ -14,8 +14,6 @@ class KeyPressHandler(QObject):
 
         self.key_pressed = None # Store the key pressed for hold commands
         self.key_toggled = None # Store the key pressed for toggle commands
-        self.key_enabled = True # True if the key is enabled
-        self.toggle_command_active = False # Store if a toggle command is active
 
     def eventFilter(self, obj, event):
         if event.type() == event.KeyPress:
@@ -41,42 +39,40 @@ class KeyPressHandler(QObject):
             elif key in Commands.TOGGLE_COMMANDS:
                 print(f"\nUser key pressed: {key}")
 
-                # If the Drop key is pressed, start a timer to disable it
-                if key == Qt.Key_3:
-                    # If drop delay is active, return
-                    if self.commands.get_drop_delay_active():
-                        print("Waiting for drop movement to finish")
-                        return
+                # If drop delay is active, do not send any commands
+                if self.commands.get_drop_delay_active():
+                    print("Waiting for drop movement to finish")
+                    return
+                
+                # If a sweeping command is not currently active
+                if not self.commands.get_toggle_command_active():
+                    # If the Drop key was pressed, start the drop delay timer    
+                    if key == Qt.Key_3:
+                        self.commands.drop_delay_timer()
+
+                    # Else if Elevation or Rotation was toggled
+                    else:
+                        self.key_toggled = key # Store the key
+                        self.commands.set_toggle_command_active(True) # Set the flag
 
                     # Send the command
                     command = Commands.TOGGLE_COMMANDS[key]
                     self.serial_handler.send_command(command)
-                    print(f"Sent {command} command")
-                    self.commands.drop_delay_timer() # Start the timer
-                    
-                # Else if the Elevation or Rotation key is pressed
-                else:
-                    if self.toggle_command_active:
-                        if key == self.key_toggled:
-                            # Deactivate the command
-                            command = Commands.TOGGLE_COMMANDS[key]
-                            self.serial_handler.send_command(command)
-                            print(f"Stop sweeping {command} command")
+                    print(f"Start {command} command")
 
-                            self.toggle_command_active = False # Set the flag
-                            self.key_toggled = None # Reset the key
-
-                        else:
-                            print(f"Waiting for key {self.key_toggled} to be toggled off")
-                        
-                    else:
-                        # Activate the command
+                elif self.commands.get_toggle_command_active():
+                    if key == self.key_toggled:
+                        # Send the command
                         command = Commands.TOGGLE_COMMANDS[key]
                         self.serial_handler.send_command(command)
-                        print(f"Start sweeping {command} command")
-            
-                        self.toggle_command_active = True # Set the flag
-                        self.key_toggled = key # Store the key
+                        print(f"Stop {command} command")
+
+                        self.key_toggled = None # Reset the key
+                        self.commands.set_toggle_command_active(False) # Reset the flag
+
+                    else:
+                        command = Commands.TOGGLE_COMMANDS[self.key_toggled]
+                        print(f"Waiting for {command} command to be toggled off")
                 
             event.accept()
 
