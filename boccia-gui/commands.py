@@ -1,5 +1,5 @@
 # Standard libraries
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
 class Commands():
     CALIBRATION = "calibration"
@@ -33,3 +33,40 @@ class Commands():
         "Rotation right": "rs1",
         "Drop": "dd-70",
         }
+    
+    def __init__(self):
+        
+        self.timer = None # Timer for the drop delay
+        self.drop_delay = 15000 # [msec]
+        self.drop_delay_active = None
+
+        self.user_controls_widget = None
+
+    def set_user_controls_widget(self, user_controls_widget):
+        self.user_controls_widget = user_controls_widget
+
+    def drop_delay_timer(self):
+        
+        # Stop timer if it exists
+        if self.timer:
+            self.timer.stop()
+
+        # Disable user control buttons
+        self.user_controls_widget._disable_buttons()
+        self.drop_delay_active = True # Set the flag
+
+        # Start the timer
+        self.timer = QTimer()
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(lambda: self.timer_over())
+        self.timer.start(self.drop_delay)
+        print("Drop delay timer started")
+
+    def timer_over(self):
+        print("\nDrop delay over")
+        self.drop_delay_active = False # Reset the flag
+        self.user_controls_widget._enable_buttons()
+
+    def get_drop_delay_active(self):
+        return self.drop_delay_active
+

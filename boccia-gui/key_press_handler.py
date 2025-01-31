@@ -6,19 +6,15 @@ from PyQt5.QtCore import QTimer, Qt
 from commands import Commands
 
 class KeyPressHandler(QObject):
-    def __init__(self, serial_handler = None):
+    def __init__(self, serial_handler = None, commands = None):
         super().__init__()
 
         self.serial_handler = serial_handler
+        self.commands = commands
 
         self.key_pressed = None # Store the key pressed for hold commands
-
         self.key_toggled = None # Store the key pressed for toggle commands
-
         self.key_enabled = True # True if the key is enabled
-
-        self.timer = None # Timer for key lock
-
         self.toggle_command_active = False # Store if a toggle command is active
 
     def eventFilter(self, obj, event):
@@ -47,27 +43,17 @@ class KeyPressHandler(QObject):
 
                 # If the Drop key is pressed, start a timer to disable it
                 if key == Qt.Key_3:
-                    # If the key is disabled, return
-                    if not self.key_enabled:
+                    # If drop delay is active, return
+                    if self.commands.get_drop_delay_active():
                         print("Waiting for drop movement to finish")
                         return
-                    
+
+                    # Send the command
                     command = Commands.TOGGLE_COMMANDS[key]
                     self.serial_handler.send_command(command)
                     print(f"Sent {command} command")
-                    self.key_enabled = False # Disable the key
-
-                    # Stop timer if it exists
-                    if self.timer:
-                        self.timer.stop()
-
-                    # Start the timer
-                    self.timer = QTimer(self)
-                    self.timer.setSingleShot(True)
-                    self.timer.timeout.connect(lambda: self._reenable_key())
-                    self.timer.start(15000) # Key disabled for 15 seconds
-                    # print("Key disabled for 15 seconds")
-
+                    self.commands.drop_delay_timer() # Start the timer
+                    
                 # Else if the Elevation or Rotation key is pressed
                 else:
                     if self.toggle_command_active:
@@ -105,8 +91,3 @@ class KeyPressHandler(QObject):
                 self.key_pressed = None
 
             event.accept()
-
-
-    def _reenable_key(self):
-        # Re-enable key
-        self.key_enabled = True

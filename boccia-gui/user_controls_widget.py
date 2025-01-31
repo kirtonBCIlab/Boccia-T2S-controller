@@ -14,10 +14,11 @@ from commands import Commands
 
 
 class UserControlsWidget(QWidget):
-    def __init__(self, serial_handler = None):
+    def __init__(self, serial_handler = None, commands = None):
         super().__init__()
 
         self.serial_handler = serial_handler
+        self.commands = commands
 
         # Main label section
         self.controls_label = QLabel('USER CONTROLS')
@@ -76,25 +77,12 @@ class UserControlsWidget(QWidget):
         if command:
             self.serial_handler.send_command(command)
 
-        # If the command is "Drop", enable all buttons except Drop
+        # If the command is "Drop", disable all buttons
         if sender.text() == "Drop":
-            for button in self.findChildren(QPushButton):
-                
-                button.setEnabled(False)
-                self._update_button_style(button)
+            self._disable_buttons()
+            self.commands.drop_delay_timer()
 
-                # Stop timer if it exists
-                if button in self.timers:
-                    self.timers[button].stop()
-
-                # Re-enable button after 10 second delay
-                timer = QTimer(self)
-                timer.setSingleShot(True)
-                timer.timeout.connect(lambda: self._reenable_buttons())
-                timer.start(15000) # Button disabled for 15 seconds
-                self.timers[button] = timer
-
-        # If elevation or rotation, toggle all other buttons
+        # If elevation or rotation, toggle the other buttons
         else:
             for button in self.findChildren(QPushButton):
                 if button != sender:
@@ -109,12 +97,12 @@ class UserControlsWidget(QWidget):
         else:
             button.setStyleSheet(Styles.DISABLED_BUTTON)
     
-    def _reenable_buttons(self):
-        # Re-enable button
+    def _enable_buttons(self):
         for button in self.findChildren(QPushButton):
             button.setEnabled(True)
             self._update_button_style(button)
 
-        # Remove timer
-        if button in self.timers:
-            self.timers.pop(button)
+    def _disable_buttons(self):
+        for button in self.findChildren(QPushButton):
+            button.setEnabled(False)
+            self._update_button_style(button)
