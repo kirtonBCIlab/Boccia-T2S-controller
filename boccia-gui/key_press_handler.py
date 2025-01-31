@@ -37,26 +37,24 @@ class KeyPressHandler(QObject):
             key = event.key()
             
             if (key in Commands.HOLD_COMMANDS):
-                print(f"Operator key pressed: {key}")
+                print(f"\nOperator key pressed: {key}")
                 command = Commands.HOLD_COMMANDS[key]
                 self.serial_handler.send_command(command)
                 self.key_pressed = key
 
             elif key in Commands.TOGGLE_COMMANDS:
-                print(f"User key pressed: {key}")
+                print(f"\nUser key pressed: {key}")
 
                 # If the Drop key is pressed, start a timer to disable it
                 if key == Qt.Key_3:
-                    # If the key is already disabled, return
-                    if self.key_enabled == False:
-                        # print("Key is disabled")
+                    # If the key is disabled, return
+                    if not self.key_enabled:
+                        print("Waiting for drop movement to finish")
                         return
                     
-                    # If it is enabled, send the command then disable it
                     command = Commands.TOGGLE_COMMANDS[key]
                     self.serial_handler.send_command(command)
-                    # print("Sent command")
-
+                    print(f"Sent {command} command")
                     self.key_enabled = False # Disable the key
 
                     # Stop timer if it exists
@@ -68,7 +66,7 @@ class KeyPressHandler(QObject):
                     self.timer.setSingleShot(True)
                     self.timer.timeout.connect(lambda: self._reenable_key())
                     self.timer.start(15000) # Key disabled for 15 seconds
-                    print("Key disabled for 15 seconds")
+                    # print("Key disabled for 15 seconds")
 
                 # Else if the Elevation or Rotation key is pressed
                 else:
