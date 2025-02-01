@@ -1,5 +1,5 @@
-
 # Standard libraries
+import os
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QWidget,
@@ -15,6 +15,7 @@ from key_press_handler import KeyPressHandler
 from user_controls_widget import UserControlsWidget
 from serial_controls_widget import SerialControlsWidget
 from operator_controls_widget import OperatorControlsWidget
+from help_widget import HelpWidget
 
 
 class MainWindow(QMainWindow):
@@ -43,9 +44,14 @@ class MainWindow(QMainWindow):
         self.centralWidget.setLayout(self.mainLayout)
 
         # Set window properties
-        self.setWindowIcon(QIcon(r"brain.png"))
+        current_file_path = os.path.dirname(os.path.abspath(__file__))
+        self.setWindowIcon(QIcon(fr"{current_file_path}/brain.png"))
         self.setWindowTitle('BCI Ramp Controls')
         self.setStyleSheet(Styles.WINDOW_BACKGROUND)
+
+        # Create help widget
+        self.help_widget = HelpWidget()
+        self.help_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Create serial controls widget
         self.serial_controls_widget = SerialControlsWidget(self, self.serial_handler)
@@ -60,6 +66,7 @@ class MainWindow(QMainWindow):
         self.user_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) 
 
         # Organize main layout
+        self.mainLayout.addWidget(self.help_widget)
         self.mainLayout.addWidget(self.serial_controls_widget)
         self.mainLayout.addWidget(self.operator_controls_widget)
         self.mainLayout.addWidget(self.user_controls_widget)
