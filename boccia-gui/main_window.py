@@ -29,7 +29,10 @@ class MainWindow(QMainWindow):
         self.init_UI()
 
         # Install event filter for keyboard events
-        self.key_press_handler = KeyPressHandler(self.serial_handler)
+        self.key_press_handler = KeyPressHandler(
+            self,
+            self.serial_handler
+            )
         self.key_press_handler.installEventFilter(self)
         self.installEventFilter(self.key_press_handler)
 
@@ -46,7 +49,7 @@ class MainWindow(QMainWindow):
         # Set window properties
         current_file_path = os.path.dirname(os.path.abspath(__file__))
         self.setWindowIcon(QIcon(fr"{current_file_path}/brain.png"))
-        self.setWindowTitle('BCI Ramp Controls')
+        self.setWindowTitle('Boccia T2S Controller')
         self.setStyleSheet(Styles.WINDOW_BACKGROUND)
 
         # Create help widget

@@ -1,13 +1,13 @@
 # Default libraries
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject, Qt
 
 # Custom libraries
 from commands import Commands
 
 class KeyPressHandler(QObject):
-    def __init__(self, serial_handler = None):
+    def __init__(self, parent=None, serial_handler = None):
         super().__init__()
-
+        self.parent = parent
         self.serial_handler = serial_handler
 
         self.key_pressed = None # Store the key pressed for hold commands
@@ -15,7 +15,11 @@ class KeyPressHandler(QObject):
 
     def eventFilter(self, obj, event):
         if event.type() == event.KeyPress:
-            self.keyPressEvent(event)
+            if event.key() == Qt.Key_F1:
+                self.parent.help_widget.open_help_url()
+                return True
+            else:
+                self.keyPressEvent(event)
             return True
         elif event.type() == event.KeyRelease:
             self.keyReleaseEvent(event)
