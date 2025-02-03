@@ -58,7 +58,6 @@ class Commands():
             self.timer.stop()
 
         # Disable user control buttons
-        # self.user_controls_widget._toggle_buttons(False) # Disable the buttons()
         self.drop_delay_active = True # Set the flag
 
         # Start the timer
