@@ -19,8 +19,6 @@ from serial_read_window import SerialReadWindow
 
 
 class SerialControlsWidget(QWidget):
-    HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
-
     def __init__(self, parent = None, serial_handler = None):
         super().__init__()
         
@@ -78,7 +76,7 @@ class SerialControlsWidget(QWidget):
 
 
     def open_help_url(self):
-        webbrowser.open(self.HELP_URL)
+        webbrowser.open(Commands.HELP_URL)
 
 
     def _create_connect_and_status_section(self):
