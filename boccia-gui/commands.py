@@ -41,11 +41,15 @@ class Commands():
         self.drop_delay_active = None
 
         self.user_controls_widget = None
+        self.key_press_handler = None
 
         self.toggle_command_active = False
 
     def set_user_controls_widget(self, user_controls_widget):
         self.user_controls_widget = user_controls_widget
+
+    def set_key_press_handler(self, key_press_handler):
+        self.key_press_handler = key_press_handler
 
     def drop_delay_timer(self):
         
@@ -54,7 +58,7 @@ class Commands():
             self.timer.stop()
 
         # Disable user control buttons
-        self.user_controls_widget._toggle_buttons(False)
+        # self.user_controls_widget._toggle_buttons(False) # Disable the buttons()
         self.drop_delay_active = True # Set the flag
 
         # Start the timer
@@ -66,15 +70,11 @@ class Commands():
 
     def timer_over(self):
         print("\nDrop delay over")
-        self.drop_delay_active = False # Reset the flag
-        self.user_controls_widget._toggle_buttons(True)
+        self.drop_delay_active = False # Reset the drop delay flag
+        self.key_press_handler.reset_flags()
+        self.user_controls_widget._reset_buttons_and_flags()
 
     def get_drop_delay_active(self):
         return self.drop_delay_active
     
-    def get_toggle_command_active(self):
-        return self.toggle_command_active
-    
-    def set_toggle_command_active(self, value):
-        self.toggle_command_active = value
 

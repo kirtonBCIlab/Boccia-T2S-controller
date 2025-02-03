@@ -1,11 +1,12 @@
 # Default libraries
-from PyQt5.QtCore import QObject
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QObject, pyqtSignal
 
 # Custom libraries
 from commands import Commands
 
 class KeyPressHandler(QObject):
+    key_service_flag_changed = pyqtSignal(bool)
+
     def __init__(self, serial_handler = None, commands = None):
         super().__init__()
 
@@ -14,6 +15,15 @@ class KeyPressHandler(QObject):
 
         self.key_pressed = None # Store the key pressed for hold commands
         self.key_toggled = None # Store the key pressed for toggle commands
+
+        self.service_flag = False
+
+        self.key_action_map = {}
+        self.mapKeys()
+
+    def mapKeys(self):
+        for index, key in enumerate(Commands.TOGGLE_COMMANDS.keys()):
+            self.key_action_map[key] = index + 1
 
     def eventFilter(self, obj, event):
         if event.type() == event.KeyPress:
@@ -39,40 +49,39 @@ class KeyPressHandler(QObject):
             elif key in Commands.TOGGLE_COMMANDS:
                 print(f"\nUser key pressed: {key}")
 
-                # If drop delay is active, do not send any commands
-                if self.commands.get_drop_delay_active():
-                    print("Waiting for drop movement to finish")
-                    return
-                
-                # If a sweeping command is not currently active
-                if not self.commands.get_toggle_command_active():
+                # Get the command
+                command = Commands.TOGGLE_COMMANDS[key]
+
+                # If service is active
+                if self.service_flag & (key == self.key_toggled):
+
+                    # If Drop delay is active, return
+                    if self.commands.get_drop_delay_active():
+                        return
+                    
+                    # Otherwise, send the command
+                    self.serial_handler.send_command(command)
+                    print(f"Stop {command} command")
+
+                    # Toggle the flag and set the current action
+                    self.toggle_service_flag(False)
+                    self.key_service_flag_changed.emit(False)
+                    self.key_toggled = None
+                    
+                # If service is not active
+                elif not self.service_flag:
                     # Send the command
-                    command = Commands.TOGGLE_COMMANDS[key]
                     self.serial_handler.send_command(command)
                     print(f"Start {command} command")
-                    
-                    # If the Drop key was pressed, start the drop delay timer    
-                    if key == Qt.Key_3:
+
+                    # If Drop key was pressed, start the drop delay timer
+                    if command == "dd-70":
                         self.commands.drop_delay_timer()
 
-                    # Else if Elevation or Rotation was toggled
-                    else:
-                        self.key_toggled = key # Store the key
-                        self.commands.set_toggle_command_active(True) # Set the flag
-
-                elif self.commands.get_toggle_command_active():
-                    if key == self.key_toggled:
-                        # Send the command
-                        command = Commands.TOGGLE_COMMANDS[key]
-                        self.serial_handler.send_command(command)
-                        print(f"Stop {command} command")
-
-                        self.key_toggled = None # Reset the key
-                        self.commands.set_toggle_command_active(False) # Reset the flag
-
-                    else:
-                        command = Commands.TOGGLE_COMMANDS[self.key_toggled]
-                        print(f"Waiting for {command} command to be toggled off")
+                    # Toggle the flag and set the current action
+                    self.toggle_service_flag(True)
+                    self.key_service_flag_changed.emit(True)
+                    self.key_toggled = key
                 
             event.accept()
 
@@ -87,3 +96,11 @@ class KeyPressHandler(QObject):
                 self.key_pressed = None
 
             event.accept()
+
+    def toggle_service_flag(self, flag):
+        self.service_flag = flag
+        print(f"Key press service flag: {self.service_flag}")
+
+    def reset_flags(self):
+        self.service_flag = False
+        self.key_toggled = None

@@ -35,6 +35,9 @@ class MainWindow(QMainWindow):
         self.key_press_handler = KeyPressHandler(self.serial_handler, self.commands)
         self.key_press_handler.installEventFilter(self)
         self.installEventFilter(self.key_press_handler)
+        self.commands.set_key_press_handler(self.key_press_handler)
+
+        self.set_up_event_connections()
 
 
     def init_UI(self):
@@ -68,6 +71,11 @@ class MainWindow(QMainWindow):
         self.mainLayout.addWidget(self.serial_controls_widget)
         self.mainLayout.addWidget(self.operator_controls_widget)
         self.mainLayout.addWidget(self.user_controls_widget)
+
+
+    def set_up_event_connections(self):
+        self.key_press_handler.key_service_flag_changed.connect(self.user_controls_widget._on_key_toggled)
+        self.user_controls_widget.button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
 
 
     def closeEvent(self, event):

@@ -1,5 +1,5 @@
 # Standard libraries
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (
     QWidget,
     QHBoxLayout,    
@@ -14,6 +14,8 @@ from commands import Commands
 
 
 class UserControlsWidget(QWidget):
+    button_service_flag_changed = pyqtSignal(bool)
+
     def __init__(self, serial_handler = None, commands = None):
         super().__init__()
 
@@ -32,8 +34,7 @@ class UserControlsWidget(QWidget):
         self.main_layout.addWidget(self.controls_label)
         self.main_layout.addLayout(self.commands_section_layout)
 
-        # Dictionary to store timer
-        self.timers = {}
+        self.service_flag = False
 
     def _create_commands_section(self):
         # Create commands labels
@@ -72,18 +73,26 @@ class UserControlsWidget(QWidget):
         """ Handle the command button click """
         sender = self.sender()
         command = Commands.BUTTON_COMMANDS.get(sender.text())
+        print(f"\nUser button clicked: {sender.text()}")
 
         # If the command is in the list, send it
         if command:
             self.serial_handler.send_command(command)
+            print(f"Sent command: {command}")
 
         # If the command is "Drop", disable all buttons
         if sender.text() == "Drop":
-            self._toggle_buttons(False)
-            self.commands.drop_delay_timer()
+            self.service_flag = True # Set the service flag
+            self._send_service_flag(self.service_flag)
 
-        # If elevation or rotation, toggle the other buttons
+            self.commands.drop_delay_timer() # Start the drop delay timer
+            self._toggle_all_buttons(False)
+
+        # If elevation or rotation, toggle the service flag and the other buttons
         else:
+            self.service_flag = not self.service_flag # toggle the service flag
+            self._send_service_flag(self.service_flag)
+            
             for button in self.findChildren(QPushButton):
                 if button != sender:
                     button.setEnabled(not button.isEnabled())
@@ -97,7 +106,20 @@ class UserControlsWidget(QWidget):
         else:
             button.setStyleSheet(Styles.DISABLED_BUTTON)
     
-    def _toggle_buttons(self, value):
+    def _toggle_all_buttons(self, value):
         for button in self.findChildren(QPushButton):
             button.setEnabled(value)
             self._update_button_style(button)
+
+    def _on_key_toggled(self, flag: bool):
+        self.service_flag = flag # toggle the service flag
+        self._toggle_all_buttons(not flag) # toggle the buttons
+        print(f"User controls service flag: {self.service_flag}")
+
+    def _reset_buttons_and_flags(self):
+        self._toggle_all_buttons(True) # Re-enable the buttons
+        self.service_flag = False # Reset the service flag
+
+    def _send_service_flag(self, flag: bool):
+        print(f"User controls service flag: {flag}")
+        self.button_service_flag_changed.emit(flag)
