@@ -33,3 +33,5 @@ class Commands():
         "Rotation right": "rs1",
         "Drop": "dd-70",
         }
+    
+    HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
