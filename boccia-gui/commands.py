@@ -77,3 +77,4 @@ class Commands():
         return self.drop_delay_active
     
 
+    HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"

@@ -1,5 +1,5 @@
 # Default libraries
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, Qt, pyqtSignal
 
 # Custom libraries
 from commands import Commands
@@ -7,9 +7,9 @@ from commands import Commands
 class KeyPressHandler(QObject):
     key_service_flag_changed = pyqtSignal(bool)
 
-    def __init__(self, serial_handler = None, commands = None):
+    def __init__(self, parent=None, serial_handler = None, commands = None):
         super().__init__()
-
+        self.parent = parent
         self.serial_handler = serial_handler
         self.commands = commands
 
@@ -27,7 +27,11 @@ class KeyPressHandler(QObject):
 
     def eventFilter(self, obj, event):
         if event.type() == event.KeyPress:
-            self.keyPressEvent(event)
+            if event.key() == Qt.Key_F1:
+                self.parent.serial_controls_widget.open_help_url()
+                return True
+            else:
+                self.keyPressEvent(event)
             return True
         elif event.type() == event.KeyRelease:
             self.keyReleaseEvent(event)
