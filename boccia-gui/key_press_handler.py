@@ -99,7 +99,7 @@ class KeyPressHandler(QObject):
 
     def toggle_service_flag(self, flag):
         self.service_flag = flag
-        print(f"Key press service flag: {self.service_flag}")
+        # print(f"Key press service flag: {self.service_flag}")
 
     def reset_flags(self):
         self.service_flag = False
