@@ -44,7 +44,7 @@ class SerialControlsWidget(QWidget):
 
         self.help_button = QPushButton("Help")
         self.help_button.setStyleSheet(Styles.HOVER_BUTTON)
-        self.help_button.clicked.connect(self._open_help_url)
+        self.help_button.clicked.connect(self.open_help_url)
 
         self.main_label_layout = QHBoxLayout()
         self.main_label_layout.addWidget(self.main_label)
@@ -75,6 +75,10 @@ class SerialControlsWidget(QWidget):
         else:
             self.read_serial_button.setEnabled(True)
             self.read_serial_button.setStyleSheet(Styles.HOVER_BUTTON)
+
+
+    def open_help_url(self):
+        webbrowser.open(self.HELP_URL)
 
 
     def _create_connect_and_status_section(self):
@@ -213,7 +217,3 @@ class SerialControlsWidget(QWidget):
         self.read_serial_button.setEnabled(status)
         
         self.port_combo_box.setEnabled(not status)
-
-    def _open_help_url(self):
-        webbrowser.open(self.HELP_URL)
-        pass

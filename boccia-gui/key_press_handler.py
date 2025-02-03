@@ -16,7 +16,7 @@ class KeyPressHandler(QObject):
     def eventFilter(self, obj, event):
         if event.type() == event.KeyPress:
             if event.key() == Qt.Key_F1:
-                self.parent.help_widget.open_help_url()
+                self.parent.serial_controls_widget.open_help_url()
                 return True
             else:
                 self.keyPressEvent(event)
