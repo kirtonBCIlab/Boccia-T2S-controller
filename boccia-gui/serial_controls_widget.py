@@ -1,4 +1,5 @@
 # Import libraries
+import webbrowser
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QLabel,
@@ -18,6 +19,8 @@ from serial_read_window import SerialReadWindow
 
 
 class SerialControlsWidget(QWidget):
+    HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
+
     def __init__(self, parent = None, serial_handler = None):
         super().__init__()
         
@@ -38,6 +41,16 @@ class SerialControlsWidget(QWidget):
         # Main label section
         self.main_label = QLabel('SERIAL CONNECTION')
         self.main_label.setStyleSheet(Styles.MAIN_LABEL)
+
+        self.help_button = QPushButton("Help")
+        self.help_button.setStyleSheet(Styles.HOVER_BUTTON)
+        self.help_button.clicked.connect(self._open_help_url)
+
+        self.main_label_layout = QHBoxLayout()
+        self.main_label_layout.addWidget(self.main_label)
+        self.main_label_layout.addStretch()
+        self.main_label_layout.addWidget(self.help_button)
+        
         
         # Content section
         self._create_connect_and_status_section()
@@ -50,7 +63,7 @@ class SerialControlsWidget(QWidget):
 
         # Organize layout
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.addWidget(self.main_label)
+        self.main_layout.addLayout(self.main_label_layout)
         self.main_layout.addLayout(self.content_layout)
         self.main_layout.addLayout(self.serial_actions_container)
 
@@ -61,7 +74,7 @@ class SerialControlsWidget(QWidget):
             self.read_serial_button.setStyleSheet(Styles.DISABLED_BUTTON)
         else:
             self.read_serial_button.setEnabled(True)
-            self.read_serial_button.setStyleSheet(Styles.BUTTON_BASE)
+            self.read_serial_button.setStyleSheet(Styles.HOVER_BUTTON)
 
 
     def _create_connect_and_status_section(self):
@@ -200,3 +213,7 @@ class SerialControlsWidget(QWidget):
         self.read_serial_button.setEnabled(status)
         
         self.port_combo_box.setEnabled(not status)
+
+    def _open_help_url(self):
+        webbrowser.open(self.HELP_URL)
+        pass
