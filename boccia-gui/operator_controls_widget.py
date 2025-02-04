@@ -1,5 +1,5 @@
 # Standard libraries
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
     QLabel,
     QWidget,
@@ -17,6 +17,8 @@ from styles import Styles
 from commands import Commands
 
 class OperatorControlsWidget(QWidget):
+    hold_button_service_flag_changed = pyqtSignal(bool)
+    
     def __init__(self, serial_handler = None):
         super().__init__()
 
@@ -48,6 +50,8 @@ class OperatorControlsWidget(QWidget):
 
         for button in self.operator_buttons:
             button.installEventFilter(self)
+
+        self.service_flag = False
 
 
     def _create_operator_controls(self):
@@ -151,21 +155,22 @@ class OperatorControlsWidget(QWidget):
 
     def eventFilter(self, obj, event):
         if obj in self.operator_buttons:
-            if event.type() == QEvent.MouseButtonPress:
+            if event.type() == event.MouseButtonPress:
                 self._handle_button_event(obj, True)
                 return True
-            elif event.type() == QEvent.MouseButtonRelease:
+            elif event.type() == event.MouseButtonRelease:
                 self._handle_button_event(obj, False)
                 return True
         
         return super().eventFilter(obj, event)
     
-    def _handle_button_event(self, button, is_press):
+    def _handle_button_event(self, button, button_flag):
         button_text = button.text()
 
         if (button_text in Commands.OPERATOR_COMMANDS):
             command = Commands.OPERATOR_COMMANDS.get(button.text())
-            command_action = "Start" if is_press else "Stop"
+            self.hold_button_service_flag_changed.emit(button_flag)
+            command_action = "Start" if button_flag else "Stop"
             print(f"{command_action} {command} command")
 
     def _handle_drop_click(self):

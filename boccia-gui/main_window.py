@@ -82,6 +82,8 @@ class MainWindow(QMainWindow):
     def set_up_event_connections(self):
         self.key_press_handler.key_service_flag_changed.connect(self.user_controls_widget._on_key_toggled)
         self.user_controls_widget.button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
+        self.operator_controls_widget.hold_button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
+        self.operator_controls_widget.hold_button_service_flag_changed.connect(self.user_controls_widget._on_key_toggled)
 
 
     def closeEvent(self, event):
