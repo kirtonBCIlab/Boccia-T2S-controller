@@ -34,6 +34,8 @@ class Commands():
         "Drop": "dd-70",
         }
     
+    HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
+    
     def __init__(self):
         
         self.timer = None # Timer for the drop delay
@@ -75,6 +77,3 @@ class Commands():
 
     def get_drop_delay_active(self):
         return self.drop_delay_active
-    
-
-    HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
