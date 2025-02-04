@@ -80,8 +80,15 @@ class MainWindow(QMainWindow):
 
 
     def set_up_event_connections(self):
+        # KeyPressHandler sends service flag
         self.key_press_handler.key_service_flag_changed.connect(self.user_controls_widget._on_key_toggled)
+        self.key_press_handler.key_service_flag_changed.connect(self.operator_controls_widget._receive_service_flag)
+
+        # UserControlsWidget sends service flag  
         self.user_controls_widget.button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
+        self.user_controls_widget.button_service_flag_changed.connect(self.operator_controls_widget._receive_service_flag)
+
+         # OperatorControlsWidget sends service flag
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.user_controls_widget._on_key_toggled)
 

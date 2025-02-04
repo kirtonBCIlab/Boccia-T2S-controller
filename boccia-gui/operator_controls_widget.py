@@ -18,7 +18,7 @@ from commands import Commands
 
 class OperatorControlsWidget(QWidget):
     hold_button_service_flag_changed = pyqtSignal(bool)
-    
+
     def __init__(self, serial_handler = None):
         super().__init__()
 
@@ -193,6 +193,10 @@ class OperatorControlsWidget(QWidget):
             button_style = f"{Styles.DISABLED_BUTTON} width: 50px; height: 50px;"
             button.setStyleSheet(button_style)
 
+
+    def _receive_service_flag(self, flag):
+        self.service_flag = flag
+        self._toggle_all_buttons(not flag)
 
     def _change_slider_label(self, slider, label):
         """ Update the slider value label """
