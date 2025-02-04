@@ -1,5 +1,5 @@
 # Standard libraries
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtWidgets import (
     QLabel,
     QWidget,
@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import (
 
 # Custom libraries
 from styles import Styles
+from commands import Commands
 
 class OperatorControlsWidget(QWidget):
     def __init__(self, serial_handler = None):
@@ -25,6 +26,8 @@ class OperatorControlsWidget(QWidget):
             "elevation": 50,
             "rotation": 50
         }
+
+        self.operator_buttons = []
         
         # Main label section   
         self.controls_label = QLabel('OPERATOR CONTROLS')
@@ -43,16 +46,19 @@ class OperatorControlsWidget(QWidget):
         self.main_layout.addWidget(self.controls_label)
         self.main_layout.addLayout(self.content_layout)
 
+        for button in self.operator_buttons:
+            button.installEventFilter(self)
+
 
     def _create_operator_controls(self):
         """ Initialize UI elements for operator controls"""
 
         # Create buttons
-        up_button = self._create_static_button('W ↑')
-        down_button = self._create_static_button('S ↓')
-        left_button = self._create_static_button('A ←')
-        right_button = self._create_static_button('→ D')
-        drop_button = self._create_static_button('Drop \n(R)')
+        up_button = self._create_hold_button('W ↑')
+        down_button = self._create_hold_button('S ↓')
+        left_button = self._create_hold_button('A ←')
+        right_button = self._create_hold_button('→ D')
+        drop_button = self._create_drop_button('Drop \n(R)')
         
         # Organize buttons in grid layout
         spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -121,17 +127,50 @@ class OperatorControlsWidget(QWidget):
         return slider_layout
     
 
-    def _create_static_button(self, button_text):
-        """ Returns a static button """
+    def _create_hold_button(self, button_text:str = ""):
+        """ Returns the operator buttons for the hold commands """
 
-        button_style = f"{Styles.BUTTON_BASE} width: 50px; height: 50px;"
-
+        button_style = f"{Styles.HOVER_BUTTON} width: 50px; height: 50px;"
         button = QPushButton(button_text)
         button.setStyleSheet(button_style)
-        button.setEnabled(False)
+        self.operator_buttons.append(button)
+        # button.setEnabled(False)
 
         return button
     
+
+    def _create_drop_button(self, button_text:str = ""):
+        """ Returns the drop button for the operator controls """
+
+        button_style = f"{Styles.HOVER_BUTTON} width: 50px; height: 50px;"
+        button = QPushButton(button_text)
+        button.setStyleSheet(button_style)
+        button.clicked.connect(self._handle_drop_click)
+
+        return button
+
+    def eventFilter(self, obj, event):
+        if obj in self.operator_buttons:
+            if event.type() == QEvent.MouseButtonPress:
+                self._handle_button_event(obj, True)
+                return True
+            elif event.type() == QEvent.MouseButtonRelease:
+                self._handle_button_event(obj, False)
+                return True
+        
+        return super().eventFilter(obj, event)
+    
+    def _handle_button_event(self, button, is_press):
+        button_text = button.text()
+
+        if (button_text in Commands.OPERATOR_COMMANDS):
+            command = Commands.OPERATOR_COMMANDS.get(button.text())
+            command_action = "Start" if is_press else "Stop"
+            print(f"{command_action} {command} command")
+
+    def _handle_drop_click(self):
+        print("Drop button clicked")
+        # To Do: connect it to the drop timer
 
     def _change_slider_label(self, slider, label):
         """ Update the slider value label """

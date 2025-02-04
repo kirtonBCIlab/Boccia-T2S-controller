@@ -34,4 +34,12 @@ class Commands():
         "Drop": "dd-70",
         }
     
+    OPERATOR_COMMANDS = {
+        "A ←": "rs0",
+        "→ D": "rs1",
+        "W ↑": "es1",
+        "S ↓": "es0",
+        "Drop \n(R)": "dd-70",
+    }
+    
     HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
