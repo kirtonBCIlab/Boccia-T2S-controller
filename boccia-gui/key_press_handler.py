@@ -46,9 +46,21 @@ class KeyPressHandler(QObject):
             
             if (key in Commands.HOLD_COMMANDS):
                 print(f"\nOperator key pressed: {key}")
+
+                # Get the command
                 command = Commands.HOLD_COMMANDS[key]
+
+                # If service is active, return
+                if self.service_flag:
+                    return
+                
+                # Otherwise, send the command
                 self.serial_handler.send_command(command)
                 self.key_pressed = key
+                print(f"Start {command} command")
+
+                self.toggle_service_flag(True)
+                self.key_service_flag_changed.emit(True)
 
             elif key in Commands.TOGGLE_COMMANDS:
                 print(f"\nUser key pressed: {key}")
@@ -98,6 +110,10 @@ class KeyPressHandler(QObject):
                 command = Commands.HOLD_COMMANDS[key]
                 self.serial_handler.send_command(command)
                 self.key_pressed = None
+                print(f"Stop {command} command")
+                
+                self.toggle_service_flag(False)
+                self.key_service_flag_changed.emit(False)
 
             event.accept()
 
