@@ -52,6 +52,7 @@ class Commands():
 
         self.user_controls_widget = None
         self.key_press_handler = None
+        self.operator_controls_widget = None
 
         self.toggle_command_active = False
 
@@ -60,6 +61,9 @@ class Commands():
 
     def set_key_press_handler(self, key_press_handler):
         self.key_press_handler = key_press_handler
+
+    def set_operator_controls_widget(self, operator_controls_widget):
+        self.operator_controls_widget = operator_controls_widget
 
     def drop_delay_timer(self):
         
@@ -82,6 +86,7 @@ class Commands():
         self.drop_delay_active = False # Reset the drop delay flag
         self.key_press_handler.reset_flags()
         self.user_controls_widget._reset_buttons_and_flags()
+        self.operator_controls_widget._reset_buttons_and_flag()
 
     def get_drop_delay_active(self):
         return self.drop_delay_active

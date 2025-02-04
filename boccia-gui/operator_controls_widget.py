@@ -19,10 +19,11 @@ from commands import Commands
 class OperatorControlsWidget(QWidget):
     hold_button_service_flag_changed = pyqtSignal(bool)
 
-    def __init__(self, serial_handler = None):
+    def __init__(self, serial_handler = None, commands = None):
         super().__init__()
 
         self.serial_handler = serial_handler
+        self.commands = commands
 
         self.default_speeds = {
             "elevation": 50,
@@ -155,33 +156,60 @@ class OperatorControlsWidget(QWidget):
 
     def eventFilter(self, obj, event):
         if obj in self.operator_buttons:
-            if event.type() == event.MouseButtonPress:
+            # Block mouse events if buttons are disabled
+            if not obj.isEnabled():
+                if event.type() in {event.MouseButtonPress, event.MouseButtonRelease}:
+                    return True # Block mouse events if buttons are disabled
+                return False
+            
+            if (event.type() == event.MouseButtonPress):
+                # print(f"Operator button pressed: {obj.text()}")
                 self._handle_button_event(obj, True)
                 return True
-            elif event.type() == event.MouseButtonRelease:
+            elif (event.type() == event.MouseButtonRelease):
+                # print(f"Operator button released: {obj.text()}")
                 self._handle_button_event(obj, False)
                 return True
         
         return super().eventFilter(obj, event)
     
-    def _handle_button_event(self, button, button_flag):
+    def _handle_button_event(self, button, is_pressed):
         button_text = button.text()
 
         if (button_text in Commands.OPERATOR_COMMANDS):
+            # Send the command
             command = Commands.OPERATOR_COMMANDS.get(button.text())
-            self.hold_button_service_flag_changed.emit(button_flag)
-            command_action = "Start" if button_flag else "Stop"
+            self.serial_handler.send_command(command)
+
+            # Update service flag
+            self._update_service_flag(is_pressed)
+
+            command_action = "Start" if is_pressed else "Stop"
             print(f"{command_action} {command} command")
 
-    def _handle_drop_click(self):
-        print("Drop button clicked")
-        # To Do: connect it to the drop timer
 
+    def _handle_drop_click(self):
+        # print("Operator drop button clicked")
+        # Send the command
+        command = Commands.OPERATOR_COMMANDS.get("Drop \n(R)")
+        self.serial_handler.send_command(command)
+        # print(f"Sent command: {command}")
+
+        # Update service flag
+        self._update_service_flag(True)
+
+        self.commands.drop_delay_timer()
+        self._toggle_all_buttons(False)
+        
     
-    def _toggle_all_buttons(self, bool):
+    def _toggle_all_buttons(self, is_enable):
         for button in self.findChildren(QPushButton):
-            button.setEnabled(bool)
+            button.setEnabled(is_enable)
             self._update_button_style(button)
+
+    def _reset_buttons_and_flag(self):
+        self._toggle_all_buttons(True)
+        self._update_service_flag(False)
 
     
     def _update_button_style(self, button):
@@ -197,6 +225,11 @@ class OperatorControlsWidget(QWidget):
     def _receive_service_flag(self, flag):
         self.service_flag = flag
         self._toggle_all_buttons(not flag)
+
+    
+    def _update_service_flag(self, flag):
+        self.service_flag = flag
+        self.hold_button_service_flag_changed.emit(self.service_flag)
 
     def _change_slider_label(self, slider, label):
         """ Update the slider value label """

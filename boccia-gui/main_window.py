@@ -65,8 +65,9 @@ class MainWindow(QMainWindow):
         self.serial_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Create operator controls
-        self.operator_controls_widget = OperatorControlsWidget(self.serial_handler)
+        self.operator_controls_widget = OperatorControlsWidget(self.serial_handler, self.commands)
         self.operator_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.commands.set_operator_controls_widget(self.operator_controls_widget)
 
         # Create user controls
         self.user_controls_widget = UserControlsWidget(self.serial_handler, self.commands)
