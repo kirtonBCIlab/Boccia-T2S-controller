@@ -172,6 +172,23 @@ class OperatorControlsWidget(QWidget):
         print("Drop button clicked")
         # To Do: connect it to the drop timer
 
+    
+    def _toggle_all_buttons(self, bool):
+        for button in self.findChildren(QPushButton):
+            button.setEnabled(bool)
+            self._update_button_style(button)
+
+    
+    def _update_button_style(self, button):
+        """ Update the button style based on its enabled state """
+        if button.isEnabled():
+            button_style = f"{Styles.HOVER_BUTTON} width: 50px; height: 50px;"
+            button.setStyleSheet(button_style)
+        else:
+            button_style = f"{Styles.DISABLED_BUTTON} width: 50px; height: 50px;"
+            button.setStyleSheet(button_style)
+
+
     def _change_slider_label(self, slider, label):
         """ Update the slider value label """
         label.setText(f"{slider.value()} %")
