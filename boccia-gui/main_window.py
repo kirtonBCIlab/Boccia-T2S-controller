@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
 )
 
 # Custom libraries
+from commands import Commands
 from styles import Styles
 from serial_handler import SerialHandler
 from key_press_handler import KeyPressHandler
@@ -24,16 +25,24 @@ class MainWindow(QMainWindow):
         # Initialize serial handler
         self.serial_handler = SerialHandler()
 
+        # Initialize commands
+        self.commands = Commands()
+
         # Initialize user interface
         self.init_UI()
 
         # Install event filter for keyboard events
         self.key_press_handler = KeyPressHandler(
-            self,
-            self.serial_handler
-            )
+               self,
+               self.serial_handler, 
+               self.commands
+               )
+        
         self.key_press_handler.installEventFilter(self)
         self.installEventFilter(self.key_press_handler)
+        self.commands.set_key_press_handler(self.key_press_handler)
+
+        self.set_up_event_connections()
 
 
     def init_UI(self):
@@ -60,13 +69,19 @@ class MainWindow(QMainWindow):
         self.operator_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Create user controls
-        self.user_controls_widget = UserControlsWidget(self.serial_handler)
-        self.user_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) 
+        self.user_controls_widget = UserControlsWidget(self.serial_handler, self.commands)
+        self.user_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.commands.set_user_controls_widget(self.user_controls_widget) 
 
         # Organize main layout
         self.mainLayout.addWidget(self.serial_controls_widget)
         self.mainLayout.addWidget(self.operator_controls_widget)
         self.mainLayout.addWidget(self.user_controls_widget)
+
+
+    def set_up_event_connections(self):
+        self.key_press_handler.key_service_flag_changed.connect(self.user_controls_widget._on_key_toggled)
+        self.user_controls_widget.button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
 
 
     def closeEvent(self, event):
