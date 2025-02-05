@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
          # Create and set central widget once
         self.centralWidget = QWidget()
         self.setCentralWidget(self.centralWidget)
+        self.centralWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Create main layout
         self.mainLayout = QVBoxLayout()

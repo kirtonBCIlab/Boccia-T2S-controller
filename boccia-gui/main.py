@@ -5,7 +5,7 @@ from main_window import MainWindow
 def main():
     app = QApplication(sys.argv)
     mainWindow = MainWindow()
-    mainWindow.resize(600, 400)
+    mainWindow.resize(1200, 800) # Scaled up by 2x from the previous (600, 400)
     mainWindow.show()
     sys.exit(app.exec_())
 

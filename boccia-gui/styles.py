@@ -2,33 +2,36 @@ class Styles:
     # Backgrounds
     WINDOW_BACKGROUND = "background-color: #2d2d2d; color: #ffffff;"
 
+    # Scaling factor for app sizing
+    SCALE_FACTOR = 2 # USE AN INT VALUE
+
     # Labels
-    MAIN_LABEL = "QLabel { font: 20px Calibri; color: #b48ead; font-weight: bold;}"
-    SUB_LABEL = "QLabel { font: 20px Calibri; color: #b48ead;}"
-    VALUE_TEXT = "font-size: 16px; color: #ffffff;"
-    LABEL_TEXT = "font-size: 16px; color: #a9a9a9;"
+    MAIN_LABEL = f"QLabel {{ font: {20 * SCALE_FACTOR}px Calibri; color: #b48ead; font-weight: bold;}}"
+    SUB_LABEL = f"QLabel {{ font: {20 * SCALE_FACTOR}px Calibri; color: #b48ead;}}"
+    VALUE_TEXT = f"font-size: {16 * SCALE_FACTOR}px; color: #ffffff;"
+    LABEL_TEXT = f"font-size: {16 * SCALE_FACTOR}px; color: #a9a9a9;"
 
     # Buttons
-    BUTTON_BASE = """
-        QPushButton {
-            font-size: 16px;
+    BUTTON_BASE = f"""
+        QPushButton {{
+            font-size: {16 * SCALE_FACTOR}px;
             color: #ffffff;
-            padding: 5px;
-            border-radius: 5px;
-            border: 1px solid #ffffff;
-            }
-        """
+            padding: {5 * SCALE_FACTOR}px;
+            border-radius: {5 * SCALE_FACTOR}px;
+            border: {1 * SCALE_FACTOR}px solid #ffffff;
+        }}
+    """
     
-    DISABLED_BUTTON = """
-        QPushButton {
-            font-size: 16px;
+    DISABLED_BUTTON = f"""
+        QPushButton {{
+            font-size: {16 * SCALE_FACTOR}px;
             color: #a9a9a9;
-            padding: 5px;
-            border-radius: 5px;
-            border: 1px solid #a9a9a9;
+            padding: {5 * SCALE_FACTOR}px;
+            border-radius: {5 * SCALE_FACTOR}px;
+            border: {1 * SCALE_FACTOR}px solid #a9a9a9;
             background-color: #3c3c3c;
-            }
-        """
+        }}
+    """
 
     HOVER_BUTTON = f"""
         {BUTTON_BASE}
@@ -36,28 +39,29 @@ class Styles:
         """
 
     # Combobox
-    COMBOBOX_BASE = """
-        font-size: 16px; 
-        width: 130px; 
+    COMBOBOX_BASE = f"""
+        font-size: {16 * SCALE_FACTOR}px; 
+        width: {130 * SCALE_FACTOR}px; 
         background-color: #3c3c3c; 
         color: #ffffff; 
-        border-radius: 5px; 
-        border: 1px solid #ffffff; 
-        padding: 3px;
+        border-radius: {5 * SCALE_FACTOR}px; 
+        border: {1 * SCALE_FACTOR}px solid #ffffff; 
+        padding: {3 * SCALE_FACTOR}px;
         """
     
     # Slider
-    SLIDER = """
-        QSlider::groove:horizontal {
+    SLIDER = f"""
+        QSlider::groove:horizontal {{
             background: #3c3c3c;
-            height: 10px;
-            }
-        QSlider::handle:horizontal {
+            height: {10 * SCALE_FACTOR}px;  
+        }}
+        QSlider::handle:horizontal {{
             background: #b48ead;
-            width: 20px;
-            margin: -5px 0;
-            }
-        """
+            width: {20 * SCALE_FACTOR}px;  
+            margin: {-5 * SCALE_FACTOR}px 0;
+        }}
+"""
+
     
     @staticmethod
     def create_button_style(brackground_color:str):
