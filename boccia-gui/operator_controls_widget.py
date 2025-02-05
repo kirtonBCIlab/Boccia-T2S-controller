@@ -135,7 +135,7 @@ class OperatorControlsWidget(QWidget):
     def _create_hold_button(self, button_text:str = ""):
         """ Returns the operator buttons for the hold commands """
 
-        button_style = f"{Styles.HOVER_BUTTON} width: 50px; height: 50px;"
+        button_style = f"{Styles.HOVER_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
         button = QPushButton(button_text)
         button.setStyleSheet(button_style)
         self.operator_buttons.append(button)
@@ -147,7 +147,7 @@ class OperatorControlsWidget(QWidget):
     def _create_drop_button(self, button_text:str = ""):
         """ Returns the drop button for the operator controls """
 
-        button_style = f"{Styles.HOVER_BUTTON} width: 50px; height: 50px;"
+        button_style = f"{Styles.HOVER_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
         button = QPushButton(button_text)
         button.setStyleSheet(button_style)
         button.clicked.connect(self._handle_drop_click)
@@ -215,10 +215,10 @@ class OperatorControlsWidget(QWidget):
     def _update_button_style(self, button):
         """ Update the button style based on its enabled state """
         if button.isEnabled():
-            button_style = f"{Styles.HOVER_BUTTON} width: 50px; height: 50px;"
+            button_style = f"{Styles.HOVER_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
             button.setStyleSheet(button_style)
         else:
-            button_style = f"{Styles.DISABLED_BUTTON} width: 50px; height: 50px;"
+            button_style = f"{Styles.DISABLED_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
             button.setStyleSheet(button_style)
 
 

@@ -84,7 +84,9 @@ class SerialControlsWidget(QWidget):
         self.connect_button = QPushButton('Connect')
         self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
         self.connect_button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.connect_button.setContentsMargins(5, 5, 5, 5)  # Add small padding around text
+        self.scaled_margin = int(5 * Styles.SCALE_FACTOR)
+        # Add small padding around text
+        self.connect_button.setContentsMargins(self.scaled_margin, self.scaled_margin, self.scaled_margin, self.scaled_margin)
         self.connect_button.clicked.connect(self._toggle_connection_status)
 
         button_container = QHBoxLayout()
@@ -106,7 +108,7 @@ class SerialControlsWidget(QWidget):
         self.calibration_label.setStyleSheet(Styles.LABEL_TEXT)
 
         self.calibration_combo_box = QComboBox()
-        self.calibration_combo_box.setStyleSheet( f"{Styles.COMBOBOX_BASE} width: 130px;")
+        self.calibration_combo_box.setStyleSheet( f"{Styles.COMBOBOX_BASE} width: {130 * Styles.SCALE_FACTOR}px;")
         self.calibration_combo_box.addItems(Commands.CALIBRATION_COMMANDS.keys())
 
         self.calibration_section = QHBoxLayout()
@@ -118,7 +120,7 @@ class SerialControlsWidget(QWidget):
         self.port_label.setStyleSheet(Styles.LABEL_TEXT)
 
         self.port_combo_box = CustomComboBox()
-        self.port_combo_box.setStyleSheet( f"{Styles.COMBOBOX_BASE} width: 70px;")
+        self.port_combo_box.setStyleSheet( f"{Styles.COMBOBOX_BASE} width: {70 * Styles.SCALE_FACTOR}px;")
         self._populate_ports()
 
 

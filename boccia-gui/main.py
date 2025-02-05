@@ -5,7 +5,6 @@ from main_window import MainWindow
 def main():
     app = QApplication(sys.argv)
     mainWindow = MainWindow()
-    mainWindow.resize(600, 400)
     mainWindow.show()
     sys.exit(app.exec_())
 
