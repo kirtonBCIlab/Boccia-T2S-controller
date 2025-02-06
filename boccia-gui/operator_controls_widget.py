@@ -203,6 +203,7 @@ class OperatorControlsWidget(QWidget):
     def _toggle_sliders(self, is_enable):
         for slider in self.findChildren(QSlider):
             slider.setEnabled(is_enable)
+            self._update_slider_style(slider)
 
 
     def _update_button_style(self, button):
@@ -213,6 +214,14 @@ class OperatorControlsWidget(QWidget):
         else:
             button_style = f"{Styles.DISABLED_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
             button.setStyleSheet(button_style)
+
+
+    def _update_slider_style(self, slider):
+        """ Update the slider style based on its enabled state """
+        if slider.isEnabled():
+            slider.setStyleSheet(Styles.SLIDER)
+        else:
+            slider.setStyleSheet(Styles.DISABLED_SLIDER)
 
 
     def _receive_service_flag(self, flag: bool):
