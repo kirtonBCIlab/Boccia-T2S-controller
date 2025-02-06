@@ -177,6 +177,8 @@ class OperatorControlsWidget(QWidget):
 
             self._update_button_style(button)
 
+        self._toggle_sliders(not self.service_flag)
+
 
     def _handle_drop_click(self):
         # print("Operator drop button clicked")
@@ -190,12 +192,18 @@ class OperatorControlsWidget(QWidget):
 
         self.commands.drop_delay_timer()
         self._toggle_all_buttons(False)
+        self._toggle_sliders(False)
         
     
     def _toggle_all_buttons(self, is_enable):
         for button in self.findChildren(QPushButton):
             button.setEnabled(is_enable)
             self._update_button_style(button)
+
+    def _toggle_sliders(self, is_enable):
+        for slider in self.findChildren(QSlider):
+            slider.setEnabled(is_enable)
+            self._update_slider_style(slider)
 
 
     def _update_button_style(self, button):
@@ -208,14 +216,24 @@ class OperatorControlsWidget(QWidget):
             button.setStyleSheet(button_style)
 
 
+    def _update_slider_style(self, slider):
+        """ Update the slider style based on its enabled state """
+        if slider.isEnabled():
+            slider.setStyleSheet(Styles.SLIDER)
+        else:
+            slider.setStyleSheet(Styles.DISABLED_SLIDER)
+
+
     def _receive_service_flag(self, flag: bool):
         self.service_flag = flag # toggle the service flag
         self._toggle_all_buttons(not flag) # toggle the buttons
+        self._toggle_sliders(not flag) # toggle the sliders
         # print(f"Operator controls service flag: {self.service_flag}")
 
 
     def _reset_buttons_and_flag(self):
         self._toggle_all_buttons(True)
+        self._toggle_sliders(True)
         self._update_service_flag(False)
 
     
