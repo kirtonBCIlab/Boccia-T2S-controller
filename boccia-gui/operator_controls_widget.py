@@ -153,25 +153,7 @@ class OperatorControlsWidget(QWidget):
         button.clicked.connect(self._handle_drop_click)
 
         return button
-
-    # def eventFilter(self, obj, event):
-    #     if obj in self.operator_buttons:
-    #         # Block mouse events if buttons are disabled
-    #         if not obj.isEnabled():
-    #             if event.type() in {event.MouseButtonPress, event.MouseButtonRelease}:
-    #                 return True # Block mouse events if buttons are disabled
-    #             return False
-            
-    #         if (event.type() == event.MouseButtonPress):
-    #             # print(f"Operator button pressed: {obj.text()}")
-    #             self._handle_button_clicked(obj, True)
-    #             return True
-    #         elif (event.type() == event.MouseButtonRelease):
-    #             # print(f"Operator button released: {obj.text()}")
-    #             self._handle_button_clicked(obj, False)
-    #             return True
-        
-    #     return super().eventFilter(obj, event)
+    
     
     def _handle_button_clicked(self):
         """ Handle the operator button click """
@@ -215,11 +197,12 @@ class OperatorControlsWidget(QWidget):
             button.setEnabled(is_enable)
             self._update_button_style(button)
 
+
     def _reset_buttons_and_flag(self):
         self._toggle_all_buttons(True)
         self._update_service_flag(False)
 
-    
+
     def _update_button_style(self, button):
         """ Update the button style based on its enabled state """
         if button.isEnabled():
@@ -235,10 +218,11 @@ class OperatorControlsWidget(QWidget):
         self._toggle_all_buttons(not flag)
 
     
-    def _update_service_flag(self, flag):
+    def _update_service_flag(self, flag: bool):
         self.service_flag = flag
         self.hold_button_service_flag_changed.emit(self.service_flag)
         # print(f"Operator controls service flag: {self.service_flag}")
+
 
     def _change_slider_label(self, slider, label):
         """ Update the slider value label """
