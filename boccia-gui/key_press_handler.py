@@ -45,7 +45,7 @@ class KeyPressHandler(QObject):
             key = event.key()
             
             if (key in Commands.HOLD_COMMANDS):
-                print(f"\nOperator key pressed: {key}")
+                #print(f"\nOperator key pressed: {key}")
 
                 # Get the command
                 command = Commands.HOLD_COMMANDS[key]
@@ -57,13 +57,13 @@ class KeyPressHandler(QObject):
                 # Otherwise, send the command
                 self.serial_handler.send_command(command)
                 self.key_pressed = key
-                print(f"Start {command} command")
+                #print(f"Start {command} command")
 
                 self.toggle_service_flag(True)
                 self.key_service_flag_changed.emit(True)
 
             elif key in Commands.TOGGLE_COMMANDS:
-                print(f"\nUser key pressed: {key}")
+                #print(f"\nUser key pressed: {key}")
 
                 # Get the command
                 command = Commands.TOGGLE_COMMANDS[key]
@@ -77,7 +77,7 @@ class KeyPressHandler(QObject):
                     
                     # Otherwise, send the command
                     self.serial_handler.send_command(command)
-                    print(f"Stop {command} command")
+                    #print(f"Stop {command} command")
 
                     # Toggle the flag and set the current action
                     self.toggle_service_flag(False)
@@ -88,7 +88,7 @@ class KeyPressHandler(QObject):
                 elif not self.service_flag:
                     # Send the command
                     self.serial_handler.send_command(command)
-                    print(f"Start {command} command")
+                    #print(f"Start {command} command")
 
                     # If Drop key was pressed, start the drop delay timer
                     if command == "dd-70":
@@ -106,11 +106,11 @@ class KeyPressHandler(QObject):
         if not event.isAutoRepeat():
             key = event.key()
             if (key in Commands.HOLD_COMMANDS) and (key == self.key_pressed):
-                print(f"Operator key released: {key}")
+                #print(f"Operator key released: {key}")
                 command = Commands.HOLD_COMMANDS[key]
                 self.serial_handler.send_command(command)
                 self.key_pressed = None
-                print(f"Stop {command} command")
+                #print(f"Stop {command} command")
                 
                 self.toggle_service_flag(False)
                 self.key_service_flag_changed.emit(False)

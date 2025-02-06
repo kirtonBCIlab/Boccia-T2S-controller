@@ -39,7 +39,7 @@ class SerialReadWindow(QDialog):
 
 
     def update_output(self, data):
-        print(data)  # Print to terminal
+        #print(data)  # Print to terminal
         self.output_label.setText(self.output_label.text() + data + '\n')
 
 

@@ -73,25 +73,26 @@ class UserControlsWidget(QWidget):
         """ Handle the command button click """
         sender = self.sender()
         command = Commands.BUTTON_COMMANDS.get(sender.text())
-        print(f"\nUser button clicked: {sender.text()}")
+        # print(f"\nUser button clicked: {sender.text()}")
 
         # If the command is in the list, send it
         if command:
             self.serial_handler.send_command(command)
-            print(f"Sent command: {command}")
 
         # If the command is "Drop", disable all buttons
         if sender.text() == "Drop":
-            self.service_flag = True # Set the service flag
-            self._send_service_flag(self.service_flag)
+            # Update service flag
+            self._update_service_flag(True)
 
             self.commands.drop_delay_timer() # Start the drop delay timer
             self._toggle_all_buttons(False)
 
         # If elevation or rotation, toggle the service flag and the other buttons
         else:
-            self.service_flag = not self.service_flag # toggle the service flag
-            self._send_service_flag(self.service_flag)
+            self._update_service_flag(not self.service_flag)
+
+            command_action = "Start" if self.service_flag else "Stop"
+            #print(f"{command_action} {command} command")
             
             for button in self.findChildren(QPushButton):
                 if button != sender:
@@ -111,7 +112,7 @@ class UserControlsWidget(QWidget):
             button.setEnabled(value)
             self._update_button_style(button)
 
-    def _on_key_toggled(self, flag: bool):
+    def _receive_service_flag(self, flag: bool):
         self.service_flag = flag # toggle the service flag
         self._toggle_all_buttons(not flag) # toggle the buttons
         # print(f"User controls service flag: {self.service_flag}")
@@ -120,6 +121,7 @@ class UserControlsWidget(QWidget):
         self._toggle_all_buttons(True) # Re-enable the buttons
         self.service_flag = False # Reset the service flag
 
-    def _send_service_flag(self, flag: bool):
-        # print(f"User controls service flag: {flag}")
+    def _update_service_flag(self, flag: bool):
+        self.service_flag = flag
         self.button_service_flag_changed.emit(flag)
+        # print(f"User controls service flag: {self.service_flag}")

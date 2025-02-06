@@ -93,10 +93,10 @@ class SerialHandler(QThread):
             try:
                 code_str = command + "\n"
                 self._serial.write(code_str.encode("UTF-8"))
-                print(f"Sent serial: {code_str}")
+                #print(f"Sent serial: {code_str}")
                 self.command_sent = True
             except Exception as e:
-                print(f"Error sending data to serial: {str(e)}")
+                #print(f"Error sending data to serial: {str(e)}")
                 self.command_sent = False
 
     
@@ -127,7 +127,7 @@ class SerialHandler(QThread):
 
     def stop(self):
         """ Stop the thread to read from the serial port """
-        print("serial stopped")
+        #print("serial stopped")
         self._running = False
 
 
