@@ -44,11 +44,17 @@ class MainWindow(QMainWindow):
 
         self.set_up_event_connections()
 
+        # Set window size
+        width = 600 * Styles.SCALE_FACTOR
+        height = 400 * Styles.SCALE_FACTOR
+        self.resize(width, height)
+
 
     def init_UI(self):
          # Create and set central widget once
         self.centralWidget = QWidget()
         self.setCentralWidget(self.centralWidget)
+        self.centralWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Create main layout
         self.mainLayout = QVBoxLayout()
