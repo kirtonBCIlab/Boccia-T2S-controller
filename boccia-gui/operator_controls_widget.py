@@ -59,10 +59,10 @@ class OperatorControlsWidget(QWidget):
         """ Initialize UI elements for operator controls"""
 
         # Create buttons
-        up_button = self._create_hold_button('W ↑')
-        down_button = self._create_hold_button('S ↓')
-        left_button = self._create_hold_button('A ←')
-        right_button = self._create_hold_button('→ D')
+        up_button = self._create_operator_button('W ↑')
+        down_button = self._create_operator_button('S ↓')
+        left_button = self._create_operator_button('A ←')
+        right_button = self._create_operator_button('→ D')
         drop_button = self._create_drop_button('Drop \n(R)')
         
         # Organize buttons in grid layout
@@ -132,14 +132,14 @@ class OperatorControlsWidget(QWidget):
         return slider_layout
     
 
-    def _create_hold_button(self, button_text:str = ""):
+    def _create_operator_button(self, button_text:str = ""):
         """ Returns the operator buttons for the hold commands """
 
         button_style = f"{Styles.HOVER_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
         button = QPushButton(button_text)
         button.setStyleSheet(button_style)
+        button.clicked.connect(self._handle_button_clicked)
         self.operator_buttons.append(button)
-        # button.setEnabled(False)
 
         return button
     
@@ -154,38 +154,46 @@ class OperatorControlsWidget(QWidget):
 
         return button
 
-    def eventFilter(self, obj, event):
-        if obj in self.operator_buttons:
-            # Block mouse events if buttons are disabled
-            if not obj.isEnabled():
-                if event.type() in {event.MouseButtonPress, event.MouseButtonRelease}:
-                    return True # Block mouse events if buttons are disabled
-                return False
+    # def eventFilter(self, obj, event):
+    #     if obj in self.operator_buttons:
+    #         # Block mouse events if buttons are disabled
+    #         if not obj.isEnabled():
+    #             if event.type() in {event.MouseButtonPress, event.MouseButtonRelease}:
+    #                 return True # Block mouse events if buttons are disabled
+    #             return False
             
-            if (event.type() == event.MouseButtonPress):
-                # print(f"Operator button pressed: {obj.text()}")
-                self._handle_button_event(obj, True)
-                return True
-            elif (event.type() == event.MouseButtonRelease):
-                # print(f"Operator button released: {obj.text()}")
-                self._handle_button_event(obj, False)
-                return True
+    #         if (event.type() == event.MouseButtonPress):
+    #             # print(f"Operator button pressed: {obj.text()}")
+    #             self._handle_button_clicked(obj, True)
+    #             return True
+    #         elif (event.type() == event.MouseButtonRelease):
+    #             # print(f"Operator button released: {obj.text()}")
+    #             self._handle_button_clicked(obj, False)
+    #             return True
         
-        return super().eventFilter(obj, event)
+    #     return super().eventFilter(obj, event)
     
-    def _handle_button_event(self, button, is_pressed):
-        button_text = button.text()
+    def _handle_button_clicked(self):
+        """ Handle the operator button click """
+        sender = self.sender()
+        command = Commands.OPERATOR_COMMANDS.get(sender.text())
+        # print(f"\nOperator button clicked: {sender.text()}")
 
-        if (button_text in Commands.OPERATOR_COMMANDS):
-            # Send the command
-            command = Commands.OPERATOR_COMMANDS.get(button.text())
+        # If the command is in the list, send it
+        if command:
             self.serial_handler.send_command(command)
 
-            # Update service flag
-            self._update_service_flag(is_pressed)
+        # Update service flag
+        self._update_service_flag(not self.service_flag)
 
-            command_action = "Start" if is_pressed else "Stop"
-            print(f"{command_action} {command} command")
+        command_action = "Start" if self.service_flag else "Stop"
+        print(f"{command_action} {command} command")
+
+        for button in self.findChildren(QPushButton):
+            if button != sender:
+                button.setEnabled(not button.isEnabled())
+
+            self._update_button_style(button)
 
 
     def _handle_drop_click(self):
@@ -230,6 +238,7 @@ class OperatorControlsWidget(QWidget):
     def _update_service_flag(self, flag):
         self.service_flag = flag
         self.hold_button_service_flag_changed.emit(self.service_flag)
+        # print(f"Operator controls service flag: {self.service_flag}")
 
     def _change_slider_label(self, slider, label):
         """ Update the slider value label """
