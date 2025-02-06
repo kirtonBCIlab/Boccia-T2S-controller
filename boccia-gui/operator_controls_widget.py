@@ -154,7 +154,7 @@ class OperatorControlsWidget(QWidget):
 
         return button
     
-    
+
     def _handle_button_clicked(self):
         """ Handle the operator button click """
         sender = self.sender()
@@ -198,11 +198,6 @@ class OperatorControlsWidget(QWidget):
             self._update_button_style(button)
 
 
-    def _reset_buttons_and_flag(self):
-        self._toggle_all_buttons(True)
-        self._update_service_flag(False)
-
-
     def _update_button_style(self, button):
         """ Update the button style based on its enabled state """
         if button.isEnabled():
@@ -213,9 +208,15 @@ class OperatorControlsWidget(QWidget):
             button.setStyleSheet(button_style)
 
 
-    def _receive_service_flag(self, flag):
-        self.service_flag = flag
-        self._toggle_all_buttons(not flag)
+    def _receive_service_flag(self, flag: bool):
+        self.service_flag = flag # toggle the service flag
+        self._toggle_all_buttons(not flag) # toggle the buttons
+        # print(f"Operator controls service flag: {self.service_flag}")
+
+
+    def _reset_buttons_and_flag(self):
+        self._toggle_all_buttons(True)
+        self._update_service_flag(False)
 
     
     def _update_service_flag(self, flag: bool):

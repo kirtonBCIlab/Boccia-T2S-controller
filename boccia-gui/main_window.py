@@ -44,17 +44,11 @@ class MainWindow(QMainWindow):
 
         self.set_up_event_connections()
 
-        # Set window size
-        width = 600 * Styles.SCALE_FACTOR
-        height = 400 * Styles.SCALE_FACTOR
-        self.resize(width, height)
-
 
     def init_UI(self):
          # Create and set central widget once
         self.centralWidget = QWidget()
         self.setCentralWidget(self.centralWidget)
-        self.centralWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Create main layout
         self.mainLayout = QVBoxLayout()
@@ -88,7 +82,7 @@ class MainWindow(QMainWindow):
 
     def set_up_event_connections(self):
         # KeyPressHandler sends service flag
-        self.key_press_handler.key_service_flag_changed.connect(self.user_controls_widget._on_key_toggled)
+        self.key_press_handler.key_service_flag_changed.connect(self.user_controls_widget._receive_service_flag)
         self.key_press_handler.key_service_flag_changed.connect(self.operator_controls_widget._receive_service_flag)
 
         # UserControlsWidget sends service flag  
@@ -97,7 +91,7 @@ class MainWindow(QMainWindow):
 
          # OperatorControlsWidget sends service flag
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
-        self.operator_controls_widget.hold_button_service_flag_changed.connect(self.user_controls_widget._on_key_toggled)
+        self.operator_controls_widget.hold_button_service_flag_changed.connect(self.user_controls_widget._receive_service_flag)
 
 
     def closeEvent(self, event):
