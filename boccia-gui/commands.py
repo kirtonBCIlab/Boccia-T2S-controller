@@ -79,10 +79,10 @@ class Commands():
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(lambda: self.timer_over())
         self.timer.start(self.drop_delay)
-        print("Drop delay timer started")
+        #print("Drop delay timer started")
 
     def timer_over(self):
-        print("\nDrop delay over")
+        #print("\nDrop delay over")
         self.drop_delay_active = False # Reset the drop delay flag
         self.key_press_handler.reset_flags()
         self.user_controls_widget._reset_buttons_and_flags()

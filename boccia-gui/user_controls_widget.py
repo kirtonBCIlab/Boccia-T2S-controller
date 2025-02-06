@@ -92,7 +92,7 @@ class UserControlsWidget(QWidget):
             self._update_service_flag(not self.service_flag)
 
             command_action = "Start" if self.service_flag else "Stop"
-            print(f"{command_action} {command} command")
+            #print(f"{command_action} {command} command")
             
             for button in self.findChildren(QPushButton):
                 if button != sender:
