@@ -23,8 +23,8 @@ class BluetoothClient(QObject):
 
 if __name__ == "__main__":
     app = QCoreApplication([])
-    server_address = "E8:9C:25:5D:AA:42"
-    client = BluetoothClient(server_address)
+    address = "48:E7:DA:81:33:68"
+    client = BluetoothClient(address)
 
     QTimer.singleShot(60000, app.quit)  # Auto-quit after 60 seconds for testing purposes
     
