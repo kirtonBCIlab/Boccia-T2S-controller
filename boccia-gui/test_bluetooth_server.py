@@ -12,11 +12,12 @@ class BluetoothServer(QObject):
         self.bluetooth_server.newConnection.connect(self.handle_new_connection)
 
         self.service_info = QBluetoothServiceInfo()
-        self.service_info.setServiceUuid(QBluetoothUuid.SerialPort)
+        self.service_info.setServiceUuid(QBluetoothUuid(QBluetoothUuid.SerialPort))
         self.service_info.setServiceName("Bluetooth Test Server")
         self.service_info.setServiceDescription("Testing Bluetooth server")
         self.service_info.setServiceProvider("PyQt5")
         self.service_info.setDevice(self.local_device.address)
+        self.service_info.setServiceUuid(QBluetoothUuid(QBluetoothUuid.SerialPort))
         
         self.bluetooth_server.listen(self.local_device.address())
         self.service_info.registerService(self.local_device.address())
