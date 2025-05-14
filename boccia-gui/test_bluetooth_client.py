@@ -15,7 +15,7 @@ class BluetoothClient(QObject):
 
     def on_connected(self):
         print("Connected to server")
-        self.socket.write(b"Hello from client\n")
+        self.socket.write(b"Test message\n")
 
     def on_data_received(self):
         while self.socket.canReadLine():
