@@ -6,28 +6,26 @@ class BluetoothClient(QObject):
     def __init__(self, address):
         super().__init__()
         self.socket = QBluetoothSocket(QBluetoothServiceInfo.RfcommProtocol)
-        self.socket.readyRead.connect(self.on_data_received)
-        self.socket.connected.connect(self.on_connected)
-        self.socket.error.connect(lambda error: print(f"Socket error: {error}"))
+        self.socket.connected.connect(self.send_test_message)
+        self.socket.error.connect(self.handle_error)
 
-        bluetooth_address = QBluetoothAddress(address)
-        self.socket.connectToService(bluetooth_address, QBluetoothUuid.SerialPort)
-        print("Connecting to Bluetooth device...")
+        print(f"Connecting to {address}...")
+        self.socket.connectToService(address, QBluetoothUuid.SerialPort)
 
-    def on_connected(self):
-        print("Connected to server")
-        self.socket.write(b"Test message\n")
+    def send_test_message(self):
+        message = "Test message sent from client\n"
+        print(f"Sending: {message}")
+        QTimer.singleShot(2000, QCoreApplication.quit)  # Auto-quit after sending the message
 
-    def on_data_received(self):
-        while self.socket.canReadLine():
-            data = self.socket.readLine().data().decode().strip()
-            print(f"Received data: {data}")
+    def handle_error(self, error):
+        print(f"Error: {self.socket.errorString()}")
+        QCoreApplication.quit()
 
 if __name__ == "__main__":
     app = QCoreApplication([])
     server_address = "E8:9C:25:5D:AA:42"
     client = BluetoothClient(server_address)
 
-    QTimer.singleShot(10000, app.quit)  # Auto-quit after 10 seconds for testing purposes
+    QTimer.singleShot(60000, app.quit)  # Auto-quit after 60 seconds for testing purposes
     
     app.exec_()
