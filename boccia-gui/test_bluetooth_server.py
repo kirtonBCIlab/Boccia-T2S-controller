@@ -11,16 +11,17 @@ class BluetoothServer:
     def accept_client(self):
         self.client, self.client_address = self.server.accept()
         print(f"Accepted connection from client")
+        self.read_data()
 
-    def send_message(self, message):
+    def read_data(self):
         try:
-            data = self.client.recv(1024)
-            if not data:
-                return
-            print(f"Message: {data.decode('utf-8')}")
-            self.client.send(message.encode("utf-8"))
+            while True:
+                data = self.client.recv(1024)
+                if not data:
+                    break
+                print(f"Received message: {data.decode('utf-8')}")
         except OSError as e:
-            print(f"Error sending message: {e}")
+            print(f"Error receiving message: {e}")
 
     def close(self):
         if hasattr(self, 'client'):
@@ -29,12 +30,9 @@ class BluetoothServer:
 
 if __name__ == "__main__":
     server = BluetoothServer("E8:9C:25:5D:AA:42")
-    server.accept_client()
-
-    key = input("Press 1 to send message: ")
-    if key == '1':
-        server.send_message("Test message from server")
-    else:
-        print("Invalid key pressed")
-        
-    server.close()
+    try:
+        server.accept_client()
+    except KeyboardInterrupt:
+        print("\nServer stopped by user")
+    finally:
+        server.close()

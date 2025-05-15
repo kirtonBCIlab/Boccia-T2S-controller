@@ -12,10 +12,11 @@ class BluetoothClient:
     def send_message(self, message):
         try:
             self.client.send(message.encode("utf-8"))
-            data = self.client.recv(1024)
-            if not data:
-                return
-            print(f"Message: {data.decode('utf-8')}")
+            print(f"Sent message: {message}")
+            # data = self.client.recv(1024)
+            # if not data:
+            #     return
+            # print(f"Message: {data.decode('utf-8')}")
         except OSError as e:
             print(f"Error sending message: {e}")
 
@@ -27,12 +28,18 @@ if __name__ == "__main__":
     client = BluetoothClient("E8:9C:25:5D:AA:42")
     client.start_connection()
 
-    key = input("Press 1to send message: ")
-    if key == '1':
-        client.send_message("Test message from client")
-    else:
-        print("Invalid key pressed")
-
-    client.close()
+    try:
+        while True:
+            key = input("Press a key: ")
+            if key == "1":
+                client.send_message("Test message 1")
+            elif key == "2":
+                client.send_message("Test message 2")
+            elif key.lower() == "q":
+                break
+            else:
+                print("Invalid key")
+    finally:
+        client.close()
 
 
