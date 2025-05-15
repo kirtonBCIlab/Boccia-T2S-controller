@@ -1,44 +1,36 @@
-from PyQt5.QtCore import QObject, QCoreApplication, QTimer, pyqtSlot
-from PyQt5.QtBluetooth import QBluetoothServer, QBluetoothServiceInfo, QBluetoothUuid, QBluetoothLocalDevice
-from PyQt5.QtWidgets import QApplication
+import socket
 
-class BluetoothServer(QObject):
-    def __init__(self):
-        super().__init__()
-        self.local_device = QBluetoothLocalDevice()
-        self.local_device.powerOn()
 
-        self.bluetooth_server = QBluetoothServer(QBluetoothServiceInfo.RfcommProtocol)
-        self.bluetooth_server.newConnection.connect(self.handle_new_connection)
+class BluetoothServer:
+    def __init__(self, address):
+        self.address = address
+        self.server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+        self.server.bind((self.address, 4))
+        self.server.listen(1)
 
-        self.service_info = QBluetoothServiceInfo()
-        self.service_info.setServiceUuid(QBluetoothUuid(QBluetoothUuid.SerialPort))
-        self.service_info.setServiceName("Bluetooth Test Server")
-        self.service_info.setServiceDescription("Testing Bluetooth server")
-        self.service_info.setServiceProvider("PyQt5")
-        # self.service_info.setDevice(self.local_device.address())
-        self.service_info.setServiceUuid(QBluetoothUuid(QBluetoothUuid.SerialPort))
-        
-        self.bluetooth_server.listen(self.local_device.address())
-        self.service_info.registerService(self.local_device.address())
-        
-        print("Bluetooth server started...")
-        
-    @pyqtSlot()
-    def handle_new_connection(self):
-        self.socket = self.bluetooth_server.nextPendingConnection()
-        self.socket.readyRead.connect(self.read_data)
-        print("New connection established")
+    def accept_client(self):
+        self.client, self.client_address = self.server.accept()
+        print(f"Accepted connection from client")
+        self.run()
 
-    def read_data(self, socket):
-        while self.socket.canReadLine():
-            data = bytes(self.socket.readLine()).decode("utf-8").strip()
-            print(f"Received data: {data}")
-        
+    def run(self):
+        try:
+            while True:
+                data = self.client.recv(1024)
+                if not data:
+                    break
+                print(f"Message: {data.decode('utf-8')}")
+                message = input("Enter message:")
+                self.client.send(message.encode("utf-8"))
+        except OSError as e:
+            pass
+
+    def close(self):
+        if hasattr(self, 'client'):
+            self.client.close()
+        self.server.close()
+
 if __name__ == "__main__":
-    app = QApplication([])
-    server = BluetoothServer()
-
-    QTimer.singleShot(60000, app.quit)  # Auto-quit after 60 seconds for testing purposes
-
-    app.exec_()
+    server = BluetoothServer("E8:9C:25:5D:AA:42")
+    server.accept_client()
+    server.close()
