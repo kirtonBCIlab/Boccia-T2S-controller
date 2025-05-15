@@ -10,7 +10,10 @@ class BluetoothClient(QObject):
         self.socket.error.connect(self.handle_error)
 
         print(f"Connecting to {address}...")
-        self.socket.connectToService(address, QBluetoothUuid.SerialPort)
+        self.socket.connectToService(
+            QBluetoothAddress(address),
+            QBluetoothUuid(QBluetoothUuid.SerialPort)
+        )
 
     def send_test_message(self):
         message = "Test message sent from client\n"
