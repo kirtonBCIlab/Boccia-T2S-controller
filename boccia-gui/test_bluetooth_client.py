@@ -14,8 +14,8 @@ class BluetoothClient:
         try:
             while True:
                 message = input("Enter message:")
-                client.send(message.encode("utf-8"))
-                data = client.recv(1024)
+                self.client.send(message.encode("utf-8"))
+                data = self.client.recv(1024)
                 if not data:
                     break
                 print(f"Message: {data.decode('utf-8')}")
