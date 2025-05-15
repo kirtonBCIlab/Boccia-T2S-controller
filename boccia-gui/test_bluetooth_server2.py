@@ -12,7 +12,7 @@ try:
         if not data:
             break
         print(f"Message: {data.decode('utf-8')}")
-        message = "Test message from server\n"
+        message = input("Enter message:")
         client.send(message.encode("utf-8"))
 except OSError as e:
     pass

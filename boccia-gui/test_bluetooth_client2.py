@@ -6,7 +6,7 @@ client.connect(("E8:9C:25:5D:AA:42", 4))
 
 try:
     while True:
-        message = "Test message from client\n"
+        message = input("Enter message:")
         client.send(message.encode("utf-8"))
         data = client.recv(1024)
         if not data:
