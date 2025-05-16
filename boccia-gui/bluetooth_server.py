@@ -2,10 +2,15 @@ import socket
 import subprocess
 import re
 
+from commands import Commands
+
 class BluetoothServer:
-    def __init__(self):
+    def __init__(self, commands = None):
         # Initialize the class
+        self.address = None
         self.server = None
+
+        self.commands = commands
 
     def initialize_server(self, address):
         self.address = address
@@ -40,13 +45,17 @@ class BluetoothServer:
                 if "Bluetooth" in block:
                     match = re.search(r"Physical Address: ([\w-]+)", block)
                     if match:
-                        return match.group(1).replace("-", ":")
+                        address = match.group(1).replace("-", ":")
+                        self.commands.set_bluetooth_detail("address", address)
+                        return address
         except Exception as e:
             print(f"Error retrieving Bluetooth MAC address: {e}")
         return None
 
 if __name__ == "__main__":
-    server = BluetoothServer() 
+    
+    commands = Commands()
+    server = BluetoothServer(commands) 
     mac_address = server.get_bluetooth_mac_address()
     print(f"Bluetooth MAC address: {mac_address}")
 
@@ -54,6 +63,8 @@ if __name__ == "__main__":
         print("No Bluetooth MAC address found")
         exit(1)
 
+    address_from_commands = commands.get_bluetooth_detail("address")
+    print(f"Address from commands: {address_from_commands}")
     server.initialize_server(mac_address)
 
     try:

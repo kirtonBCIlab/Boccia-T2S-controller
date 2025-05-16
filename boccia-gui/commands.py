@@ -56,6 +56,15 @@ class Commands():
 
         self.toggle_command_active = False
 
+        # Dictionary to store Bluetooth details
+        # Initialize keys with empty values
+        self.bluetooth_details = {
+            "address": None,
+            "server_device_name": None,
+            "client_device_name": None,
+            "connected": False
+        }
+
     def set_user_controls_widget(self, user_controls_widget):
         self.user_controls_widget = user_controls_widget
 
@@ -90,3 +99,20 @@ class Commands():
 
     def get_drop_delay_active(self):
         return self.drop_delay_active
+    
+    def set_bluetooth_detail(self, key, value):
+        # Set the value for the specified key in the bluetooth_details dictionary
+        # Check if the key exists in the dictionary
+        if key in self.bluetooth_details:
+            self.bluetooth_details[key] = value
+        else:
+            print(f"Invalid dictionary key: {key}")
+
+    def get_bluetooth_detail(self, key):
+        # Get the value for the specified key in the bluetooth_details dictionary
+        # Check if the key exists in the dictionary
+        if key in self.bluetooth_details:
+            return self.bluetooth_details[key]
+        else:
+            print(f"Invalid dictionary key: {key}")
+            return None
