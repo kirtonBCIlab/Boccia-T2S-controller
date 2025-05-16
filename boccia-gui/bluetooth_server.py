@@ -64,7 +64,6 @@ if __name__ == "__main__":
         exit(1)
 
     address_from_commands = commands.get_bluetooth_detail("address")
-    print(f"Address from commands: {address_from_commands}")
     server.initialize_server(mac_address)
 
     try:

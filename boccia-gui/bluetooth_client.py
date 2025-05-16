@@ -1,17 +1,13 @@
 import socket
 
-from commands import Commands
-
 class BluetoothClient:
-    def __init__(self, commands = None):
+    def __init__(self):
         # Initialize the class
         self.address = None
         self.server = None
 
-        self.commands = commands
-
-    def initialize_client(self, address):
-        self.address = address
+    def initialize_client(self, server_address):
+        self.address = server_address
         self.client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 
     def start_connection(self):
@@ -35,14 +31,8 @@ class BluetoothClient:
 
 if __name__ == "__main__":
     
-    commands = Commands()
-    client = BluetoothClient(commands)
-    server_address = commands.get_bluetooth_detail("address")
-    if server_address is None:
-        print("Bluetooth server address not found")
-        exit(1)
-    
-    client.initialize_client(server_address)
+    client = BluetoothClient()
+    client.initialize_client("E8:9C:25:5D:AA:42") # Server address
     client.start_connection()
 
     try:
