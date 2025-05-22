@@ -10,7 +10,7 @@ class BluetoothDeviceDiscovery:
         cmd = [
             "powershell",
             "-Command",
-            "(Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select_Object FriendlyName, InstanceId"
+            "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select-Object FriendlyName, InstanceId"
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
         print(f"Result: {result}")
@@ -24,13 +24,17 @@ class BluetoothDeviceDiscovery:
             parts = line.strip().split("None", 1)
             if len(parts) == 2:
                 name, instance_id = parts
-                mac_match = re.search(r"([0-9A-F]{2}_){5}[0-9A-F]{2}", instance_id)
+                mac_match = re.search(r"([0-9A-F]{2}_){5}[0-9A-F]{2}", instance_id, re.I)
                 if mac_match:
                     mac_address = mac_match.group(0).replace("_", ":")
                     self.devices.append((name, mac_address))
         
-        for name, mac in self.devices:
-            print(f"Device Name: {name}, MAC Address: {mac}")
+        if not self.devices:
+            print("No paired Bluetooth devices found.")
+        else:
+            print("Paired Bluetooth devices:")
+            for name, mac in self.devices:
+                print(f"Device Name: {name}, MAC Address: {mac}")
     
 if __name__ == "__main__":
     discovery = BluetoothDeviceDiscovery()
