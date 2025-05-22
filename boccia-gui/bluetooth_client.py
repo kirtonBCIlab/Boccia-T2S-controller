@@ -38,11 +38,17 @@ if __name__ == "__main__":
     paired_devices = bluetooth_devices.get_paired_bluetooth_devices()
     if not paired_devices:
         print("No paired Bluetooth devices found.")
+        exit(1)
     else:
         print("Paired Bluetooth devices:")
-        for name, mac, desc in paired_devices:
-            print(f"Device Name: {name}, MAC Address: {mac}, Description: {desc}")
-            client.initialize_client(mac)
+        for index, (name, mac, desc) in enumerate(paired_devices):
+            print(f"{index + 1}. Device Name: {name}, MAC Address: {mac}, Description: {desc}")
+        
+        device_selection = input("Select a device by number: ")
+        selected_device_mac = paired_devices[device_selection][1]
+        client.initialize_client(str(selected_device_mac))
+        client.start_connection()
+        print(f"Connected to Device {selected_device_mac}")
 
     try:
         while True:

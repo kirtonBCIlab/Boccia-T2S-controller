@@ -47,7 +47,7 @@ if __name__ == "__main__":
         print("Local Bluetooth adapter:")
         for name, mac, desc in local_bluetooth_adapter:
             print(f"Adapter Name: {name}, MAC Address: {mac}, Description: {desc}")
-            server.initialize_server(mac)
+            server.initialize_server(str(mac))
 
     try:
         server.accept_client()
