@@ -44,7 +44,7 @@ if __name__ == "__main__":
         for index, (name, mac, desc) in enumerate(paired_devices):
             print(f"{index + 1}. Device Name: {name}, MAC Address: {mac}, Description: {desc}")
         
-        device_selection = input("Select a device by number: ")
+        device_selection = int(input("Select a device by number: "))
         selected_device_mac = paired_devices[device_selection][1]
         client.initialize_client(str(selected_device_mac))
         client.start_connection()
