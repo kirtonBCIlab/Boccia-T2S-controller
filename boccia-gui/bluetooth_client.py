@@ -45,7 +45,7 @@ if __name__ == "__main__":
             print(f"{index + 1}. Device Name: {name}, MAC Address: {mac}, Description: {desc}")
         
         device_selection = int(input("Select a device by number: "))
-        selected_device_mac = paired_devices[device_selection][1]
+        selected_device_mac = paired_devices[device_selection-1][1]
         client.initialize_client(str(selected_device_mac))
         client.start_connection()
         print(f"Connected to Device {selected_device_mac}")
