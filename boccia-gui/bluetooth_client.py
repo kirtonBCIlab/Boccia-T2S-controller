@@ -1,4 +1,5 @@
 import socket
+from bt_devices import BluetoothDevices
 
 class BluetoothClient:
     def __init__(self):
@@ -32,8 +33,16 @@ class BluetoothClient:
 if __name__ == "__main__":
     
     client = BluetoothClient()
-    client.initialize_client("E8:9C:25:5D:AA:42") # Server address
-    client.start_connection()
+    bluetooth_devices = BluetoothDevices()
+
+    paired_devices = bluetooth_devices.get_paired_bluetooth_devices()
+    if not paired_devices:
+        print("No paired Bluetooth devices found.")
+    else:
+        print("Paired Bluetooth devices:")
+        for name, mac, desc in paired_devices:
+            print(f"Device Name: {name}, MAC Address: {mac}, Description: {desc}")
+            client.initialize_client(mac)
 
     try:
         while True:

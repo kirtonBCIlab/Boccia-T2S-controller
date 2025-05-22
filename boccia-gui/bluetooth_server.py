@@ -1,16 +1,13 @@
 import socket
 import subprocess
 import re
-
-from commands import Commands
+from bt_devices import BluetoothDevices
 
 class BluetoothServer:
-    def __init__(self, commands = None):
+    def __init__(self):
         # Initialize the class
         self.address = None
         self.server = None
-
-        self.commands = commands
 
     def initialize_server(self, address):
         self.address = address
@@ -38,33 +35,19 @@ class BluetoothServer:
             self.client.close()
         self.server.close()
 
-    def get_bluetooth_mac_address(self):
-        try:
-            output = subprocess.check_output("getmac /v /fo list", shell=True, text=True)
-            for block in output.split("\n\n"):
-                if "Bluetooth" in block:
-                    match = re.search(r"Physical Address: ([\w-]+)", block)
-                    if match:
-                        address = match.group(1).replace("-", ":")
-                        self.commands.set_bluetooth_detail("address", address)
-                        return address
-        except Exception as e:
-            print(f"Error retrieving Bluetooth MAC address: {e}")
-        return None
-
 if __name__ == "__main__":
     
-    commands = Commands()
-    server = BluetoothServer(commands) 
-    mac_address = server.get_bluetooth_mac_address()
-    print(f"Bluetooth MAC address: {mac_address}")
+    server = BluetoothServer() 
+    bluetooth_devices = BluetoothDevices()
 
-    if not mac_address:
-        print("No Bluetooth MAC address found")
-        exit(1)
-
-    address_from_commands = commands.get_bluetooth_detail("address")
-    server.initialize_server(mac_address)
+    local_bluetooth_adapter = bluetooth_devices.get_local_bluetooth_adapter()
+    if not local_bluetooth_adapter:
+        print("No local Bluetooth adapters found.")
+    else:
+        print("Local Bluetooth adapter:")
+        for name, mac, desc in local_bluetooth_adapter:
+            print(f"Adapter Name: {name}, MAC Address: {mac}, Description: {desc}")
+            server.initialize_server(mac)
 
     try:
         server.accept_client()

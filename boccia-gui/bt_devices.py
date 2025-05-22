@@ -57,21 +57,21 @@ class BluetoothDevices:
         return local_adapters 
 
     
-if __name__ == "__main__":
-    bluetooth_devices = BluetoothDevices()
+# if __name__ == "__main__":
+#     bluetooth_devices = BluetoothDevices()
 
-    paired_devices = bluetooth_devices.get_paired_bluetooth_devices()
-    if not paired_devices:
-        print("No paired Bluetooth devices found.")
-    else:
-        print("Paired Bluetooth devices:")
-        for name, mac, desc in paired_devices:
-            print(f"Device Name: {name}, MAC Address: {mac}, Description: {desc}")
+    # paired_devices = bluetooth_devices.get_paired_bluetooth_devices()
+    # if not paired_devices:
+    #     print("No paired Bluetooth devices found.")
+    # else:
+    #     print("Paired Bluetooth devices:")
+    #     for name, mac, desc in paired_devices:
+    #         print(f"Device Name: {name}, MAC Address: {mac}, Description: {desc}")
 
-    local_bluetooth_adapter = bluetooth_devices.get_local_bluetooth_adapter()
-    if not local_bluetooth_adapter:
-        print("No local Bluetooth adapters found.")
-    else:
-        print("Local Bluetooth adapter:")
-        for name, mac, desc in local_bluetooth_adapter:
-            print(f"Adapter Name: {name}, MAC Address: {mac}, Description: {desc}")
+    # local_bluetooth_adapter = bluetooth_devices.get_local_bluetooth_adapter()
+    # if not local_bluetooth_adapter:
+    #     print("No local Bluetooth adapters found.")
+    # else:
+    #     print("Local Bluetooth adapter:")
+    #     for name, mac, desc in local_bluetooth_adapter:
+    #         print(f"Adapter Name: {name}, MAC Address: {mac}, Description: {desc}")
