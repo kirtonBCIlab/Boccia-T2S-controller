@@ -14,16 +14,18 @@ class BluetoothDevices:
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
         output = result.stdout
+        print(f"Command output: {output}")
 
         self.devices = []
         for line in output.splitlines():
             if "FriendlyName" in line or "InstanceId" in line or "Description" in line or not line.strip():
                 continue
-            # Split line into name and instance id (handle variable spacing)
-            parts = line.strip().split(None, 2)
-            if len(parts) == 3:
-                name, instance_id, description = parts
-                # Look for MAC in the InstanceId (12 hex digits)
+            # Use regex to extract fields: name, instance_id, description
+            match = re.match(r'^(.*?)\s+(\S+)\s+(.*)$', line.strip())
+            if match:
+                name = match.group(1).strip()
+                instance_id = match.group(2).strip()
+                description = match.group(3).strip()
                 mac_match = re.search(r'([0-9A-F]{12})', instance_id, re.I)
                 if mac_match:
                     mac_raw = mac_match.group(1).upper()
