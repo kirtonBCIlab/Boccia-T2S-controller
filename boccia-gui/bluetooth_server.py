@@ -62,12 +62,12 @@ class BluetoothServer(QThread):
         except OSError as e:
             print(f"Error receiving message: {e}")
 
-    def close(self):
+    def stop(self):
+        self._running = False
+        self.server_status_changed.emit("Disconnected")
+
         if hasattr(self, 'client'):
             self.client.close()
         self.server.close()
 
-    def stop(self):
-        self._running = False
-        self.server_status_changed.emit("Disconnected")
-        print("Server stopped")
+        print("Bluetooth server stopped")

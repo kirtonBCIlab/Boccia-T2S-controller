@@ -17,7 +17,7 @@ from bluetooth_server import BluetoothServer
 from user_controls_widget import UserControlsWidget
 from serial_controls_widget import SerialControlsWidget
 from operator_controls_widget import OperatorControlsWidget
-from multiplayer_controls_widget import MultiplayerControlsWidget
+from multiplayer_controls_widget import MultiplayerControlsDevice1
 
 
 class MainWindow(QMainWindow):
@@ -75,7 +75,8 @@ class MainWindow(QMainWindow):
         self.serial_controls_widget = SerialControlsWidget(self, self.serial_handler)
         self.serial_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        self.multiplayer_controls_widget = MultiplayerControlsWidget(self.bluetooth_server)
+        # Create multiplayer controls widget
+        self.multiplayer_controls_widget = MultiplayerControlsDevice1(self.bluetooth_server)
         self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Create operator controls

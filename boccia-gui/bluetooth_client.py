@@ -1,21 +1,69 @@
+from PyQt5.QtCore import QThread, pyqtSignal
 import socket
 from bt_devices import BluetoothDevices
 
-class BluetoothClient:
-    def __init__(self):
-        # Initialize the class
-        self.address = None
-        self.server = None
+class BluetoothClient(QThread):
+    message_received = pyqtSignal(str)
+    client_status_changed = pyqtSignal(str)
 
-    def initialize_client(self, server_address):
-        self.address = server_address
-        self.client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+    def __init__(self):
+        super().__init__()
+        self.bluetooth_devices = BluetoothDevices()
+        self._running = False
+
+    def run(self):
+        self._running = True
+        self.run_bluetooth_client()
+
+    def run_bluetooth_client(self):
+        self.client = self.initialize_client()
+
+        if not self.client:
+            self.client_status_changed.emit("Error")
+            print("Failed to initialize Bluetooth client")
+            return
+        
+        self.start_connection()
+
+        try:
+            while self._running:
+                key = input("Press a key: ")
+                if key == "1":
+                    self.send_data("Test message 1")
+                elif key == "2":
+                    self.send_data("Test message 2")
+                elif key.lower() == "q":
+                    break
+                else:
+                    print("Invalid key")
+        finally:
+            self.stop()
+
+    def get_paired_devices(self):
+        # Look for a server to connect to
+        self.paired_devices = self.bluetooth_devices.get_paired_bluetooth_devices()
+        if not self.paired_devices:
+            self.client_status_changed.emit("Error")
+            print("No paired Bluetooth devices found")
+            return
+        
+        self.paired_device_names = []
+        for name, mac, desc in self.paired_devices:
+            self.paired_device_names.append(name)
+
+    def get_selected_device_address(self, device_name):
+        # Get the MAC address of a device based on its name from the paired_devices list
+        self.server_address = self.paired_devices[self.paired_device_names.index(device_name)][1]
+    
+    def initialize_client(self):
+        client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+        return client
 
     def start_connection(self):
-        self.client.connect((self.address, 4))
-        print(f"Connected to server")
+        self.client.connect((self.server_address, 4))
+        self.client_status_changed.emit("Connected")
 
-    def send_message(self, message):
+    def send_data(self, message):
         try:
             self.client.send(message.encode("utf-8"))
             print(f"Sent message: {message}")
@@ -26,42 +74,10 @@ class BluetoothClient:
         except OSError as e:
             print(f"Error sending message: {e}")
 
-    def close(self):
-        self.client.close()
-        print("Connection closed")
-
-if __name__ == "__main__":
-    
-    client = BluetoothClient()
-    bluetooth_devices = BluetoothDevices()
-
-    paired_devices = bluetooth_devices.get_paired_bluetooth_devices()
-    if not paired_devices:
-        print("No paired Bluetooth devices found.")
-        exit(1)
-    else:
-        print("Paired Bluetooth devices:")
-        for index, (name, mac, desc) in enumerate(paired_devices):
-            print(f"{index + 1}. Device Name: {name}, MAC Address: {mac}, Description: {desc}")
-        
-        device_selection = int(input("Select a device by number: "))
-        selected_device_mac = paired_devices[device_selection-1][1]
-        client.initialize_client(str(selected_device_mac))
-        client.start_connection()
-        print(f"Connected to Device {selected_device_mac}")
-
-    try:
-        while True:
-            key = input("Press a key: ")
-            if key == "1":
-                client.send_message("Test message 1")
-            elif key == "2":
-                client.send_message("Test message 2")
-            elif key.lower() == "q":
-                break
-            else:
-                print("Invalid key")
-    finally:
-        client.close()
+    def stop(self):
+        self._running = False
+        self.client_status_changed.emit("Disconnected")
+        if self.client:
+            self.client.close()
 
 
