@@ -46,7 +46,7 @@ class BluetoothClient(QThread):
         # Look for a server to connect to
         self.paired_devices = self.bluetooth_devices.get_paired_bluetooth_devices()
         if not self.paired_devices:
-            self.client_status_changed.emit("Error")
+            self.client_status_changed.emit("No devices found")
             print("No paired Bluetooth devices found")
             return
         

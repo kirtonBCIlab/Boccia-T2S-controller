@@ -157,6 +157,7 @@ class MultiplayerControlsDevice2(QWidget):
         # Create custom combobox
         self.device_combo_box = CustomComboBox(parent=self, on_mouse_press=self._populate_devices)
         self.device_combo_box.setStyleSheet(f"{Styles.COMBOBOX_BASE} width: {130 * Styles.SCALE_FACTOR}px;")
+        self.device_combo_box.currentIndexChanged.connect(self._on_device_selected)
 
         self.device_selection_layout = QHBoxLayout()
         self.device_selection_layout.addWidget(self.device_dropdown_label)
@@ -188,16 +189,20 @@ class MultiplayerControlsDevice2(QWidget):
         self.device_combo_box.clear()
         self.bluetooth_client_thread.get_paired_devices()
         devices = self.bluetooth_client_thread.paired_device_names
-        self.device_combo_box.addItems(devices)
 
-        # Default to the first device if available
-        if devices:
+        if devices is not None:
+            self.device_combo_box.addItems(devices)
+            # Default to the first device if available
             self.device_combo_box.setCurrentIndex(0)
 
+    def _on_device_selected(self):
+        selected_device_name = self.device_combo_box.currentText()
+        self.bluetooth_client_thread.get_selected_device_address(selected_device_name)
+
+        self.connect_button.setEnabled(True)
+    
     def _toggle_connection_status(self):
         if self.connect_button.isChecked():
-            selected_device_name = self.device_combo_box.currentText()
-            self.bluetooth_client_thread.get_selected_device_address(selected_device_name)
             self.bluetooth_client_thread.start()
         else:
             self.bluetooth_client_thread.stop()

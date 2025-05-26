@@ -23,7 +23,7 @@ class Device2Window(QMainWindow):
 
         # Set window size
         width = 600 * Styles.SCALE_FACTOR
-        height = 200 * Styles.SCALE_FACTOR
+        height = 150 * Styles.SCALE_FACTOR
         self.resize(width, height)
 
     def init_UI(self):
