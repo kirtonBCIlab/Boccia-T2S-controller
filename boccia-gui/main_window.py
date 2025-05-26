@@ -13,9 +13,11 @@ from commands import Commands
 from styles import Styles
 from serial_handler import SerialHandler
 from key_press_handler import KeyPressHandler
+from bluetooth_server import BluetoothServer
 from user_controls_widget import UserControlsWidget
 from serial_controls_widget import SerialControlsWidget
 from operator_controls_widget import OperatorControlsWidget
+from multiplayer_controls_widget import MultiplayerControlsWidget
 
 
 class MainWindow(QMainWindow):
@@ -27,6 +29,9 @@ class MainWindow(QMainWindow):
 
         # Initialize commands
         self.commands = Commands()
+
+        # Initialize bluetooth classes
+        self.bluetooth_server = BluetoothServer()
 
         # Initialize user interface
         self.init_UI()
@@ -70,6 +75,9 @@ class MainWindow(QMainWindow):
         self.serial_controls_widget = SerialControlsWidget(self, self.serial_handler)
         self.serial_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
+        self.multiplayer_controls_widget = MultiplayerControlsWidget(self.bluetooth_server)
+        self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
         # Create operator controls
         self.operator_controls_widget = OperatorControlsWidget(self.serial_handler, self.commands)
         self.operator_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -82,6 +90,7 @@ class MainWindow(QMainWindow):
 
         # Organize main layout
         self.mainLayout.addWidget(self.serial_controls_widget)
+        self.mainLayout.addWidget(self.multiplayer_controls_widget)
         self.mainLayout.addWidget(self.operator_controls_widget)
         self.mainLayout.addWidget(self.user_controls_widget)
 
