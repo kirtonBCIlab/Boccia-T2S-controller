@@ -157,7 +157,6 @@ class MultiplayerControlsDevice2(QWidget):
         # Create custom combobox
         self.device_combo_box = CustomComboBox(parent=self, on_mouse_press=self._populate_devices)
         self.device_combo_box.setStyleSheet(f"{Styles.COMBOBOX_BASE} width: {130 * Styles.SCALE_FACTOR}px;")
-        self._populate_devices()
 
         self.device_selection_layout = QHBoxLayout()
         self.device_selection_layout.addWidget(self.device_dropdown_label)
@@ -187,6 +186,7 @@ class MultiplayerControlsDevice2(QWidget):
 
     def _populate_devices(self):
         self.device_combo_box.clear()
+        self.bluetooth_client_thread.get_paired_devices()
         devices = self.bluetooth_client_thread.paired_device_names
         self.device_combo_box.addItems(devices)
 

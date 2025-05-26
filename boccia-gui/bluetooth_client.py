@@ -11,6 +11,9 @@ class BluetoothClient(QThread):
         self.bluetooth_devices = BluetoothDevices()
         self._running = False
 
+        self.paired_devices = None
+        self.paired_device_names = None
+
     def run(self):
         self._running = True
         self.run_bluetooth_client()
