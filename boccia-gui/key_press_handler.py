@@ -45,62 +45,67 @@ class KeyPressHandler(QObject):
             key = event.key()
             
             if (key in Commands.HOLD_COMMANDS):
-                #print(f"\nOperator key pressed: {key}")
+                self.hold_key_pressed(key)
 
-                # Get the command
-                command = Commands.HOLD_COMMANDS[key]
-
-                # If service is active, return
-                if self.service_flag:
-                    return
-                
-                # Otherwise, send the command
-                self.serial_handler.send_command(command)
-                self.key_pressed = key
-                #print(f"Start {command} command")
-
-                self.toggle_service_flag(True)
-                self.key_service_flag_changed.emit(True)
-
-            elif key in Commands.TOGGLE_COMMANDS:
-                #print(f"\nUser key pressed: {key}")
-
-                # Get the command
-                command = Commands.TOGGLE_COMMANDS[key]
-
-                # If service is active
-                if self.service_flag & (key == self.key_toggled):
-
-                    # If Drop delay is active, return
-                    if self.commands.get_drop_delay_active():
-                        return
-                    
-                    # Otherwise, send the command
-                    self.serial_handler.send_command(command)
-                    #print(f"Stop {command} command")
-
-                    # Toggle the flag and set the current action
-                    self.toggle_service_flag(False)
-                    self.key_service_flag_changed.emit(False)
-                    self.key_toggled = None
-                    
-                # If service is not active
-                elif not self.service_flag:
-                    # Send the command
-                    self.serial_handler.send_command(command)
-                    #print(f"Start {command} command")
-
-                    # If Drop key was pressed, start the drop delay timer
-                    if command == "dd-70":
-                        self.commands.drop_delay_timer()
-
-                    # Toggle the flag and set the current action
-                    self.toggle_service_flag(True)
-                    self.key_service_flag_changed.emit(True)
-                    self.key_toggled = key
+            elif (key in Commands.TOGGLE_COMMANDS):
+                self.toggle_key_pressed(key)
                 
             event.accept()
 
+    def hold_key_pressed(self, key):
+        # print(f"\nOperator key pressed: {key}")
+
+        # Get the command
+        command = Commands.HOLD_COMMANDS[key]
+
+        # If service is active, return
+        if self.service_flag:
+            return
+        
+        # Otherwise, send the command
+        self.serial_handler.send_command(command)
+        self.key_pressed = key
+        # print(f"Start {command} command")
+
+        self.toggle_service_flag(True)
+        self.key_service_flag_changed.emit(True)
+
+    def toggle_key_pressed(self, key):
+        # print(f"\nUser key pressed: {key}")
+
+        # Get the command
+        command = Commands.TOGGLE_COMMANDS[key]
+
+        # If service is active
+        if self.service_flag & (key == self.key_toggled):
+
+            # If Drop delay is active, return
+            if self.commands.get_drop_delay_active():
+                return
+            
+            # Otherwise, send the command
+            self.serial_handler.send_command(command)
+            # print(f"Stop {command} command")
+
+            # Toggle the flag and set the current action
+            self.toggle_service_flag(False)
+            self.key_service_flag_changed.emit(False)
+            self.key_toggled = None
+            
+        # If service is not active
+        elif not self.service_flag:
+            # Send the command
+            self.serial_handler.send_command(command)
+            # print(f"Start {command} command")
+
+            # If Drop key was pressed, start the drop delay timer
+            if command == "dd-70":
+                self.commands.drop_delay_timer()
+
+            # Toggle the flag and set the current action
+            self.toggle_service_flag(True)
+            self.key_service_flag_changed.emit(True)
+            self.key_toggled = key
 
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
