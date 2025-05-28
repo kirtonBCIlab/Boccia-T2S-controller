@@ -33,14 +33,17 @@ class BluetoothServer(QThread):
             return
         
         try:
-            self.server_status_changed.emit("Waiting")
+            if self._running:
+                self.server_status_changed.emit("Waiting")
             self.accept_client()
             self.read_data()
         except Exception as e:
-            self.server_status_changed.emit("Error")
+            if self._running:
+                self.server_status_changed.emit("Error")
             print(f"Bluetooth Server Error: {e}")
         finally:
-            self.stop()
+            if self._running:
+                self.stop()
     
     def initialize_server(self, address):
         server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
@@ -49,8 +52,12 @@ class BluetoothServer(QThread):
         return server
 
     def accept_client(self):
-        self.client, self.client_address = self.server.accept()
-        self.server_status_changed.emit("Connected")
+        try:
+            if self._running:
+                self.client, self.client_address = self.server.accept()
+                self.server_status_changed.emit("Connected")
+        except OSError:
+            pass
 
     def read_data(self):
         try:
@@ -64,7 +71,6 @@ class BluetoothServer(QThread):
 
     def stop(self):
         self._running = False
-        self.server_status_changed.emit("Disconnected")
 
         if hasattr(self, 'client') and self.client:
             try:
@@ -80,4 +86,5 @@ class BluetoothServer(QThread):
                 print(f"Error closing server: {e}")
             self.server = None
 
+        self.server_status_changed.emit("Disconnected")
         print("Bluetooth server stopped")
