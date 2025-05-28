@@ -124,3 +124,30 @@ class KeyPressHandler(QObject):
     def reset_flags(self):
         self.service_flag = False
         self.key_toggled = None
+
+class KeyPressHandlerDevice2(QObject):
+    key_service_flag_changed = pyqtSignal(bool)
+
+    def __init__(self, parent=None, bluetooth_client = None, commands = None):
+        super().__init__()
+        self.parent = parent
+        self.bluetooth_client_thread = bluetooth_client
+        self.commands = commands
+
+    def eventFilter(self, obj, event):
+        if event.type() == event.KeyPress:
+            self.keyPressEvent(event)
+
+        return super().eventFilter(obj, event)
+    
+    def keyPressEvent(self, event):
+        if not event.isAutoRepeat():
+            key = event.key()
+            if (key in Commands.TOGGLE_COMMANDS):
+
+                # Get the command:
+                command = Commands.TOGGLE_COMMANDS[key]
+                self.bluetooth_client_thread.send_command(command)
+                print(f"Sent command: {command}")
+
+                

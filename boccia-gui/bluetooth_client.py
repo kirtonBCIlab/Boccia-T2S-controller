@@ -66,10 +66,10 @@ class BluetoothClient(QThread):
         self.client.connect((self.server_address, 4))
         self.client_status_changed.emit("Connected")
 
-    def send_data(self, message):
+    def send_command(self, command_text: str):
         try:
-            self.client.send(message.encode("utf-8"))
-            print(f"Sent message: {message}")
+            self.client.send(command_text.encode("utf-8"))
+            print(f"Sent message: {command_text}")
         except OSError as e:
             print(f"Error sending message: {e}")
 

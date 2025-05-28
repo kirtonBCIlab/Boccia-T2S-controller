@@ -13,12 +13,28 @@ from commands import Commands
 from styles import Styles
 from bluetooth_client import BluetoothClient
 from multiplayer_controls_widget import MultiplayerControlsDevice2
+from key_press_handler import KeyPressHandlerDevice2
 
 class Device2Window(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.bluetooth_client = BluetoothClient()        
+        # Initialize Bluetooth client
+        self.bluetooth_client = BluetoothClient()
+
+        # Initialize commands
+        self.commands = Commands()
+
+        # Initialize key press handler
+        self.key_press_handler = KeyPressHandlerDevice2(
+                self,
+                self.bluetooth_client,
+                self.commands
+                )
+
+        self.key_press_handler.installEventFilter(self)
+        self.installEventFilter(self.key_press_handler)
+
         self.init_UI()
 
         # Set window size
