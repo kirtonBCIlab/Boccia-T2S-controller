@@ -19,13 +19,16 @@ class Device2Window(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Initialize Bluetooth client
-        self.bluetooth_client = BluetoothClient()
-
         # Initialize commands
         self.commands = Commands()
 
-        # Initialize key press handler
+        # Initialize Bluetooth client
+        self.bluetooth_client = BluetoothClient()
+
+        # Initialize user interface
+        self.init_UI()
+
+        # Install event filter for keyboard events
         self.key_press_handler = KeyPressHandlerDevice2(
                 self,
                 self.bluetooth_client,
@@ -35,14 +38,14 @@ class Device2Window(QMainWindow):
         self.key_press_handler.installEventFilter(self)
         self.installEventFilter(self.key_press_handler)
 
+        # Set up event connections
         self.set_up_event_connections()
-
-        self.init_UI()
 
         # Set window size
         width = 600 * Styles.SCALE_FACTOR
         height = 150 * Styles.SCALE_FACTOR
         self.resize(width, height)
+
 
     def init_UI(self):
         # Create and set central widget once

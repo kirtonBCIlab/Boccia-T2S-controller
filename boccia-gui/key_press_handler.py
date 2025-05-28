@@ -78,7 +78,7 @@ class KeyPressHandler(QObject):
         if key == None:
             key = self.commands.get_key_from_toggle_command(command)
             
-        print(f"\nUser key pressed: {key}")
+        # print(f"\nUser key pressed: {key}")
 
         # If service is active
         if self.service_flag & (key == self.key_toggled):

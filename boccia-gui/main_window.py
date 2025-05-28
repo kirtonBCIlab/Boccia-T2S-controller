@@ -47,6 +47,7 @@ class MainWindow(QMainWindow):
         self.installEventFilter(self.key_press_handler)
         self.commands.set_key_press_handler(self.key_press_handler)
 
+        # Set up event connections
         self.set_up_event_connections()
 
         # Set window size
