@@ -69,9 +69,9 @@ class BluetoothClient(QThread):
     def send_command(self, command_text: str):
         try:
             self.client.send(command_text.encode("utf-8"))
-            print(f"Sent message: {command_text}")
+            print(f"Sent command: {command_text}")
         except OSError as e:
-            print(f"Error sending message: {e}")
+            print(f"Error sending command: {e}")
 
     def stop(self):
         self._running = False

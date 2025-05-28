@@ -5,6 +5,7 @@ from bt_devices import BluetoothDevices
 class BluetoothServer(QThread):
     
     server_status_changed = pyqtSignal(str)
+    command_received = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -36,7 +37,7 @@ class BluetoothServer(QThread):
             if self._running:
                 self.server_status_changed.emit("Waiting")
             self.accept_client()
-            self.read_data()
+            self.read_commands()
         except Exception as e:
             if self._running:
                 self.server_status_changed.emit("Error")
@@ -59,15 +60,17 @@ class BluetoothServer(QThread):
         except OSError:
             pass
 
-    def read_data(self):
+    def read_commands(self):
         try:
             while self._running:
                 data = self.client.recv(1024)
                 if not data:
                     break
-                print(f"Received message: {data.decode('utf-8')}")
+                command = data.decode('utf-8')
+                print(f"Received command: {command}")
+                self.command_received.emit(command)
         except OSError as e:
-            print(f"Error receiving message: {e}")
+            print(f"Error receiving command: {e}")
 
     def stop(self):
         self._running = False

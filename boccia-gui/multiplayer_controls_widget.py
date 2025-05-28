@@ -23,8 +23,6 @@ class MultiplayerControlsDevice1(QWidget):
         # Get access to Bluetooth server object
         self.bluetooth_server_thread = bluetooth_server
 
-        self.bluetooth_server_thread.server_status_changed.connect(self._handle_server_status_change)
-
         self.connect_button_styles = {
             "connect": Styles.create_button_style("green"),
             "disconnect": Styles.create_button_style("red"),
@@ -115,6 +113,10 @@ class MultiplayerControlsDevice1(QWidget):
             self.connect_button.setText("Connect")
             self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
             self.status_label.setText("Status: Disconnected")
+
+    def _received_command_from_device_2(self, command: str):
+        pass
+
 
 class MultiplayerControlsDevice2(QWidget):
     def __init__(self, bluetooth_client = None):

@@ -35,6 +35,8 @@ class Device2Window(QMainWindow):
         self.key_press_handler.installEventFilter(self)
         self.installEventFilter(self.key_press_handler)
 
+        self.set_up_event_connections()
+
         self.init_UI()
 
         # Set window size
@@ -63,3 +65,6 @@ class Device2Window(QMainWindow):
         self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.mainLayout.addWidget(self.multiplayer_controls_widget)
+    
+    def set_up_event_connections(self):
+        self.bluetooth_client.client_status_changed.connect(self.multiplayer_controls_widget._handle_client_status_change)

@@ -45,18 +45,22 @@ class KeyPressHandler(QObject):
             key = event.key()
             
             if (key in Commands.HOLD_COMMANDS):
-                self.hold_key_pressed(key)
+                # Get the command
+                command = Commands.HOLD_COMMANDS[key]
+                self.hold_key_pressed(command, key)
 
             elif (key in Commands.TOGGLE_COMMANDS):
-                self.toggle_key_pressed(key)
+                # Get the command
+                command = Commands.TOGGLE_COMMANDS[key]
+                self.toggle_key_pressed(command, key)
                 
             event.accept()
 
-    def hold_key_pressed(self, key):
-        # print(f"\nOperator key pressed: {key}")
+    def hold_key_pressed(self, command, key=None):
+        if key == None:
+            key = self.commands.get_key_from_hold_command(command)
 
-        # Get the command
-        command = Commands.HOLD_COMMANDS[key]
+        # print(f"\nOperator key pressed: {key}")
 
         # If service is active, return
         if self.service_flag:
@@ -70,11 +74,11 @@ class KeyPressHandler(QObject):
         self.toggle_service_flag(True)
         self.key_service_flag_changed.emit(True)
 
-    def toggle_key_pressed(self, key):
-        # print(f"\nUser key pressed: {key}")
-
-        # Get the command
-        command = Commands.TOGGLE_COMMANDS[key]
+    def toggle_key_pressed(self, command, key=None):
+        if key == None:
+            key = self.commands.get_key_from_toggle_command(command)
+            
+        print(f"\nUser key pressed: {key}")
 
         # If service is active
         if self.service_flag & (key == self.key_toggled):
@@ -153,6 +157,5 @@ class KeyPressHandlerDevice2(QObject):
                 # Get the command:
                 command = Commands.TOGGLE_COMMANDS[key]
                 self.bluetooth_client_thread.send_command(command)
-                print(f"Sent command: {command}")
 
                 
