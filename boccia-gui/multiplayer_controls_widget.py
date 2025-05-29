@@ -23,6 +23,8 @@ class MultiplayerControlsDevice1(QWidget):
         # Get access to Bluetooth server object
         self.bluetooth_server_thread = bluetooth_server
 
+        self.connection_status = "Disconnected"
+
         self.connect_button_styles = {
             "connect": Styles.create_button_style("green"),
             "disconnect": Styles.create_button_style("red"),
@@ -58,7 +60,6 @@ class MultiplayerControlsDevice1(QWidget):
         self.scaled_margin = int(5 * Styles.SCALE_FACTOR)
         self.connect_button.setContentsMargins(self.scaled_margin, self.scaled_margin, self.scaled_margin, self.scaled_margin)
         self.connect_button.clicked.connect(self._toggle_connection_status)
-        self.connect_button.setCheckable(True)
         self.connect_button.setEnabled(False)
 
         button_container = QHBoxLayout()
@@ -83,7 +84,7 @@ class MultiplayerControlsDevice1(QWidget):
             self.status_label.setText("Status: Off")
 
     def _toggle_connection_status(self):
-        if self.connect_button.isChecked():
+        if self.connection_status == "Disconnected":
             self.bluetooth_server_thread.start()
         else:
             self.bluetooth_server_thread.stop()
@@ -93,30 +94,31 @@ class MultiplayerControlsDevice1(QWidget):
             self.connect_button.setText("Error")
             self.connect_button.setStyleSheet(self.connect_button_styles["error"])
             self.status_label.setText("Status: Error")
+            self.connection_status = "Error"
 
         if message == "Initializing":
             self.connect_button.setText("Cancel")
             self.connect_button.setStyleSheet(self.connect_button_styles["disconnect"])
             self.status_label.setText("Status: Setting up Device 1...")
+            self.connection_status = "Initializing"
 
         if message == "Waiting":
             self.connect_button.setText("Cancel")
             self.connect_button.setStyleSheet(self.connect_button_styles["disconnect"])
             self.status_label.setText("Status: Waiting for Device 2...")
+            self.connection_status = "Waiting"
         
         if message == "Connected":
             self.connect_button.setText("Disconnect")
             self.connect_button.setStyleSheet(self.connect_button_styles["disconnect"])
             self.status_label.setText("Status: Connected")
+            self.connection_status = "Connected"
 
         if message == "Disconnected":
             self.connect_button.setText("Connect")
             self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
             self.status_label.setText("Status: Disconnected")
-
-    def _received_command_from_device_2(self, command: str):
-        pass
-
+            self.connection_status = "Disconnected"
 
 class MultiplayerControlsDevice2(QWidget):
     def __init__(self, bluetooth_client = None):

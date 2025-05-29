@@ -3,7 +3,6 @@ import socket
 from bt_devices import BluetoothDevices
 
 class BluetoothClient(QThread):
-    message_received = pyqtSignal(str)
     client_status_changed = pyqtSignal(str)
 
     def __init__(self):
@@ -32,7 +31,14 @@ class BluetoothClient(QThread):
 
         try:
             while self._running:
-                self.msleep(100)
+                data = self.client.recv(1024)
+                if not data:
+                    break
+                command = data.decode('utf-8')
+
+                if command == "Disconnect":
+                    break
+                print(f"Received command: {command}")
         finally:
             self.stop()
 
@@ -71,12 +77,14 @@ class BluetoothClient(QThread):
             self.client.send(command_text.encode("utf-8"))
             print(f"Sent command: {command_text}")
         except OSError as e:
-            print(f"Error sending command: {e}")
+            if self._running:
+                print(f"Error sending command: {e}")
 
     def stop(self):
         self._running = False
         self.client_status_changed.emit("Disconnected")
         if self.client:
+            self.send_command("Disconnect")
             self.client.close()
 
 

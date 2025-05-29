@@ -30,7 +30,7 @@ class BluetoothServer(QThread):
 
         if not self.server:
             self.server_status_changed.emit("Error")
-            # print("Failed to initialize Bluetooth server")
+            print("Failed to initialize Bluetooth server")
             return
         
         try:
@@ -53,7 +53,7 @@ class BluetoothServer(QThread):
             server.listen(1)
             return server
         except OSError:
-            self.server_status_changed.emit("Error")
+            return # None
 
     def accept_client(self):
         try:
@@ -61,7 +61,7 @@ class BluetoothServer(QThread):
                 self.client, self.client_address = self.server.accept()
                 self.server_status_changed.emit("Connected")
         except OSError:
-            self.server_status_changed.emit("Error")
+            pass
 
     def read_commands(self):
         try:
@@ -70,26 +70,44 @@ class BluetoothServer(QThread):
                 if not data:
                     break
                 command = data.decode('utf-8')
+
+                if command == "Disconnect":
+                    break
                 print(f"Received command: {command}")
                 self.command_received.emit(command)
         except OSError as e:
-            print(f"Error receiving command: {e}")
+            if self._running:
+                print(f"Error receiving command: {e}")
+
+    def send_command(self, command_text: str):
+        if hasattr(self, 'client') and self.client:
+            try:
+                self.client.send(command_text.encode("utf-8"))
+                print(f"Sent command: {command_text}")
+            except OSError as e:
+                print(f"Error sending command: {e}")
 
     def stop(self):
         self._running = False
 
         if hasattr(self, 'client') and self.client:
+            # Send disconnect command
+            try:
+                self.client.send("Disconnect".encode("utf-8"))
+            except Exception:
+                print("Failed to send disconnect command")
+            # Close client
             try:
                 self.client.close()
-            except Exception as e:
-                print(f"Error closing client: {e}")
+            except Exception:
+                print("Failed to close client")
             self.client = None
         
         if hasattr(self, 'server') and self.server:
             try:
                 self.server.close()
-            except Exception as e:
-                print(f"Error closing server: {e}")
+            except Exception:
+                print("Failed to close server")
             self.server = None
 
         self.server_status_changed.emit("Disconnected")
