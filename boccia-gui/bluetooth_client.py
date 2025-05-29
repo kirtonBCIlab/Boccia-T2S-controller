@@ -63,8 +63,15 @@ class BluetoothClient(QThread):
         return client
 
     def start_connection(self):
-        self.client.connect((self.server_address, 4))
-        self.client_status_changed.emit("Connected")
+        try:
+            self.client.connect((self.server_address, 4))
+            self.client_status_changed.emit("Connected")
+        except OSError as e:
+            self.client_status_changed.emit("Error")
+            print(f"Error connecting to Device 1: {e}")
+        except TimeoutError as e:
+            self.client_status_changed.emit("Error")
+            print(f"Connection timed out: {e}")
 
     def send_command(self, command_text: str):
         try:

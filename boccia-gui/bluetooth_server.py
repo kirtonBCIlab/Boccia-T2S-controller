@@ -30,7 +30,7 @@ class BluetoothServer(QThread):
 
         if not self.server:
             self.server_status_changed.emit("Error")
-            print("Failed to initialize Bluetooth server")
+            # print("Failed to initialize Bluetooth server")
             return
         
         try:
@@ -47,10 +47,13 @@ class BluetoothServer(QThread):
                 self.stop()
     
     def initialize_server(self, address):
-        server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-        server.bind((address, 4))
-        server.listen(1)
-        return server
+        try:
+            server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+            server.bind((address, 4))
+            server.listen(1)
+            return server
+        except OSError:
+            self.server_status_changed.emit("Error")
 
     def accept_client(self):
         try:
@@ -58,7 +61,7 @@ class BluetoothServer(QThread):
                 self.client, self.client_address = self.server.accept()
                 self.server_status_changed.emit("Connected")
         except OSError:
-            pass
+            self.server_status_changed.emit("Error")
 
     def read_commands(self):
         try:
