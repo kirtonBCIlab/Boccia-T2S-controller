@@ -30,17 +30,11 @@ class BluetoothClient(QThread):
             return
 
         try:
-            while self._running:
-                data = self.client.recv(1024)
-                if not data:
-                    break
-                command = data.decode('utf-8')
-
-                if command == "Disconnect":
-                    break
-                print(f"Received command: {command}")
-        finally:
-            self.stop()
+            self.read_commands()
+        except Exception as e:
+            if self._running:
+                self.client_status_changed.emit("Error")
+            print(f"Bluetooth Client Error: {e}")
 
     def get_paired_devices(self):
         # Look for a server to connect to
@@ -71,6 +65,24 @@ class BluetoothClient(QThread):
             self.client_status_changed.emit("Error")
             print(f"Error connecting to Device 1: {e}")
             return False
+        
+    def read_commands(self):
+        try:
+            while self._running:
+                try:
+                    data = self.client.recv(1024)
+                    if not data:
+                        break
+                    command = data.decode('utf-8')
+
+                    if command == "Disconnect":
+                        break
+                except (OSError, ConnectionAbortedError) as e:
+                    print(f"Error receiving command: {e}")
+                    break
+
+        except Exception as e:
+            print(f"Unexpected error receiving command: {e}")
 
     def send_command(self, command_text: str):
         try:
@@ -84,7 +96,14 @@ class BluetoothClient(QThread):
         self._running = False
         self.client_status_changed.emit("Disconnected")
         if self.client:
-            self.send_command("Disconnect")
-            self.client.close()
+            try:
+                self.send_command("Disconnect")
+            except Exception:
+                pass
+            try:
+                self.client.close()
+            except Exception:
+                pass
+            self.client = None
 
 
