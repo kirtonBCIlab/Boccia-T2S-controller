@@ -26,19 +26,13 @@ class BluetoothClient(QThread):
             print("Failed to initialize Bluetooth client")
             return
         
-        self.start_connection()
+        connection = self.start_connection()
+        if not connection:
+            return
 
         try:
             while self._running:
-                # Receive data from the server
-                try:
-                    data = self.client.recv(1024)
-                    if not data:
-                        break
-                    print(f"Received message: {data.decode('utf-8')}")
-                    # self.message_received.emit(data.decode('utf-8'))
-                except OSError as e:
-                    print(f"Error receiving message: {e}")
+                self.msleep(100)
         finally:
             self.stop()
 
@@ -66,12 +60,11 @@ class BluetoothClient(QThread):
         try:
             self.client.connect((self.server_address, 4))
             self.client_status_changed.emit("Connected")
-        except OSError as e:
+            return True
+        except (OSError, TimeoutError) as e:
             self.client_status_changed.emit("Error")
             print(f"Error connecting to Device 1: {e}")
-        except TimeoutError as e:
-            self.client_status_changed.emit("Error")
-            print(f"Connection timed out: {e}")
+            return False
 
     def send_command(self, command_text: str):
         try:
