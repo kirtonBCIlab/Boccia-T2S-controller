@@ -18,6 +18,8 @@ class KeyPressHandler(QObject):
 
         self.service_flag = False
 
+        self.current_player = None
+
         self.key_action_map = {}
         self.mapKeys()
 
@@ -52,7 +54,7 @@ class KeyPressHandler(QObject):
             elif (key in Commands.TOGGLE_COMMANDS):
                 # Get the command
                 command = Commands.TOGGLE_COMMANDS[key]
-                self.toggle_key_pressed(command, key)
+                self.toggle_key_pressed("Player 1", command, key)
                 
             event.accept()
 
@@ -74,7 +76,7 @@ class KeyPressHandler(QObject):
         self.toggle_service_flag(True)
         self.key_service_flag_changed.emit(True)
 
-    def toggle_key_pressed(self, command, key=None):
+    def toggle_key_pressed(self, player, command, key=None):
         if key == None:
             key = self.commands.get_key_from_toggle_command(command)
             
@@ -85,6 +87,10 @@ class KeyPressHandler(QObject):
 
             # If Drop delay is active, return
             if self.commands.get_drop_delay_active():
+                return
+            
+            # Return if the player is not the current player
+            if player != self.current_player:
                 return
             
             # Otherwise, send the command
@@ -110,6 +116,9 @@ class KeyPressHandler(QObject):
             self.toggle_service_flag(True)
             self.key_service_flag_changed.emit(True)
             self.key_toggled = key
+
+            # Set the current player
+            self.current_player = player
 
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
@@ -157,5 +166,7 @@ class KeyPressHandlerDevice2(QObject):
                 # Get the command:
                 command = Commands.TOGGLE_COMMANDS[key]
                 self.bluetooth_client_thread.send_command(command)
+                
+            event.accept()
 
                 
