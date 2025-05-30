@@ -35,6 +35,9 @@ class BluetoothClient(QThread):
             if self._running:
                 self.client_status_changed.emit("Error")
             print(f"Bluetooth Client Error: {e}")
+        finally:
+            if self._running:
+                self.stop()
 
     def get_paired_devices(self):
         # Look for a server to connect to

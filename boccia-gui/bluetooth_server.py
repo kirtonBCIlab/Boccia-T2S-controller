@@ -42,6 +42,9 @@ class BluetoothServer(QThread):
             if self._running:
                 self.server_status_changed.emit("Error")
             print(f"Bluetooth Server Error: {e}")
+        finally:
+            if self._running:
+                self.stop()
     
     def initialize_server(self, address):
         try:
@@ -69,8 +72,11 @@ class BluetoothServer(QThread):
                         break
                     command = data.decode('utf-8')
 
+                    # Stop if disconnect command is received
                     if command == "Disconnect":
                         break
+                    
+                    # Otherwise emit the command
                     print(f"Received command: {command}")
                     self.command_received.emit(command)
                 except (OSError, ConnectionAbortedError) as e:
