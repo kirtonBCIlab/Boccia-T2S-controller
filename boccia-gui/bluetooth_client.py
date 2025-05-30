@@ -7,6 +7,8 @@ class BluetoothClient(QThread):
 
     def __init__(self):
         super().__init__()
+
+        # Initialize BluetoothDevices object
         self.bluetooth_devices = BluetoothDevices()
         self._running = False
 
@@ -78,14 +80,16 @@ class BluetoothClient(QThread):
                         break
                     command = data.decode('utf-8')
 
+                    # Stop if disconnect command is received
                     if command == "Disconnect":
                         break
                 except (OSError, ConnectionAbortedError) as e:
-                    print(f"Error receiving command: {e}")
+                    if self._running:
+                        print(f"Could not receive command: {e}")
                     break
-
         except Exception as e:
-            print(f"Unexpected error receiving command: {e}")
+            if self._running:
+                print(f"Error receiving command: {e}")
 
     def send_command(self, command_text: str):
         try:
@@ -96,6 +100,9 @@ class BluetoothClient(QThread):
                 print(f"Error sending command: {e}")
 
     def stop(self):
+        if not self._running:
+            return
+        
         self._running = False
         self.client_status_changed.emit("Disconnected")
         if self.client:

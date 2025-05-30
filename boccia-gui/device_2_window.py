@@ -42,7 +42,7 @@ class Device2Window(QMainWindow):
         self.set_up_event_connections()
 
         # Set window size
-        width = 600 * Styles.SCALE_FACTOR
+        width = 450 * Styles.SCALE_FACTOR
         height = 150 * Styles.SCALE_FACTOR
         self.resize(width, height)
 

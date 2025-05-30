@@ -4,16 +4,12 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QGridLayout,
     QPushButton,
-    QSpacerItem,
     QSizePolicy,
-    QComboBox,
 )
 
 # Custom libraries
 from styles import Styles
-from commands import Commands
 from custom_combo_box import CustomComboBox
 
 class MultiplayerControlsDevice1(QWidget):
@@ -23,6 +19,9 @@ class MultiplayerControlsDevice1(QWidget):
         # Get access to Bluetooth server object
         self.bluetooth_server_thread = bluetooth_server
 
+        # Initialize multiplayer mode indicator
+        self.multiplayer_mode = False
+        # Initialize connection status
         self.connection_status = "Disconnected"
 
         self.connect_button_styles = {
@@ -35,6 +34,7 @@ class MultiplayerControlsDevice1(QWidget):
         self.main_label = QLabel('MULTIPLAYER CONTROLS')
         self.main_label.setStyleSheet(Styles.MAIN_LABEL)
 
+        # Content section
         self._create_multiplayer_mode_section()
         self._create_connection_section()
 
@@ -44,18 +44,18 @@ class MultiplayerControlsDevice1(QWidget):
         self.main_layout.addLayout(self.connection_section_layout)
 
     def _create_multiplayer_mode_section(self):
+        # Create button to toggle multiplayer mode on/off
         self.multiplayer_mode_button = QPushButton("Turn ON Multiplayer Mode")
         self.multiplayer_mode_button.setStyleSheet(Styles.HOVER_BUTTON)
         self.multiplayer_mode_button.clicked.connect(self._multiplayer_mode_clicked)
-        self.multiplayer_mode_button.setCheckable(True)
 
         self.multiplayer_mode_section_layout = QVBoxLayout()
         self.multiplayer_mode_section_layout.addWidget(self.multiplayer_mode_button)
     
     def _create_connection_section(self):
-        # Create the Connect button
+        # Create the Connect button, initialized as disabled
         self.connect_button = QPushButton("Connect")
-        self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
+        self.connect_button.setStyleSheet(Styles.DISABLED_BUTTON)
         self.connect_button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.scaled_margin = int(5 * Styles.SCALE_FACTOR)
         self.connect_button.setContentsMargins(self.scaled_margin, self.scaled_margin, self.scaled_margin, self.scaled_margin)
@@ -74,13 +74,23 @@ class MultiplayerControlsDevice1(QWidget):
         self.connection_section_layout.addWidget(self.status_label)
 
     def _multiplayer_mode_clicked(self):
-        if self.multiplayer_mode_button.isChecked():
+        if self.multiplayer_mode == False:
+            self.multiplayer_mode = True
             self.multiplayer_mode_button.setText("Turn OFF Multiplayer Mode")
+            # Enable the connect button
             self.connect_button.setEnabled(True)
+            self.connect_button.setText("Connect") # Make sure button says "Connect"
+            self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
             self.status_label.setText("Status: Ready to setup")
         else:
+            self.multiplayer_mode = False
             self.multiplayer_mode_button.setText("Turn ON Multiplayer Mode")
+            self.bluetooth_server_thread.stop() # Stop the thread
+            self.connection_status = "Disconnected" # Reset connection status
+            # Enable the connect button
             self.connect_button.setEnabled(False)
+            self.connect_button.setStyleSheet(Styles.DISABLED_BUTTON)
+            self.connect_button.setText("Connect") # Make sure button says "Connect"
             self.status_label.setText("Status: Off")
 
     def _toggle_connection_status(self):
@@ -127,7 +137,8 @@ class MultiplayerControlsDevice2(QWidget):
         # Get access to Bluetooth client object
         self.bluetooth_client_thread = bluetooth_client
 
-        self.bluetooth_client_thread.client_status_changed.connect(self._handle_client_status_change)
+        # Initialize connection status
+        self.connection_status = "Disconnected"
 
         self.connect_button_styles = {
             "connect": Styles.create_button_style("green"),
@@ -139,6 +150,7 @@ class MultiplayerControlsDevice2(QWidget):
         self.main_label = QLabel('MULTIPLAYER CONTROLS')
         self.main_label.setStyleSheet(Styles.MAIN_LABEL)
 
+        # Content section
         self._create_device_selection_section()
         self._create_connection_section()
 
@@ -149,11 +161,6 @@ class MultiplayerControlsDevice2(QWidget):
         self.main_layout.addLayout(self.connection_section_layout)
     
     def _create_device_selection_section(self):
-        # Create the Get Devices button
-        self.get_devices_button = QPushButton("Get paired devices")
-        self.get_devices_button.setStyleSheet(Styles.HOVER_BUTTON)
-        self.get_devices_button.clicked.connect(self.bluetooth_client_thread.get_paired_devices)
-
         # Create combobox label
         self.device_dropdown_label = QLabel("Select device to connect to:")
         self.device_dropdown_label.setStyleSheet(Styles.LABEL_TEXT)
@@ -168,14 +175,13 @@ class MultiplayerControlsDevice2(QWidget):
         self.device_selection_layout.addWidget(self.device_combo_box)
 
     def _create_connection_section(self):
-        # Create the Connect button
+        # Create the Connect button, initialized as disabled
         self.connect_button = QPushButton("Connect")
-        self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
+        self.connect_button.setStyleSheet(Styles.DISABLED_BUTTON)
         self.connect_button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.scaled_margin = int(5 * Styles.SCALE_FACTOR)
         self.connect_button.setContentsMargins(self.scaled_margin, self.scaled_margin, self.scaled_margin, self.scaled_margin)
         self.connect_button.clicked.connect(self._toggle_connection_status)
-        self.connect_button.setCheckable(True)
         self.connect_button.setEnabled(False)
 
         button_container = QHBoxLayout()
@@ -191,6 +197,8 @@ class MultiplayerControlsDevice2(QWidget):
 
     def _populate_devices(self):
         self.device_combo_box.clear()
+
+        # Get the list of Bluetooth devices paired with this device
         self.bluetooth_client_thread.get_paired_devices()
         devices = self.bluetooth_client_thread.paired_device_names
 
@@ -201,12 +209,14 @@ class MultiplayerControlsDevice2(QWidget):
 
     def _on_device_selected(self):
         selected_device_name = self.device_combo_box.currentText()
+        # Set the address of the selected device
         self.bluetooth_client_thread.get_selected_device_address(selected_device_name)
-
+        # Enable the connect button
         self.connect_button.setEnabled(True)
+        self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
     
     def _toggle_connection_status(self):
-        if self.connect_button.isChecked():
+        if self.connection_status == "Disconnected":
             self.bluetooth_client_thread.start()
         else:
             self.bluetooth_client_thread.stop()
@@ -216,13 +226,16 @@ class MultiplayerControlsDevice2(QWidget):
             self.connect_button.setText("Error")
             self.connect_button.setStyleSheet(self.connect_button_styles["error"])
             self.status_label.setText("Status: Error")
+            self.connection_status = "Error"
         
         if message == "Connected":
             self.connect_button.setText("Disconnect")
             self.connect_button.setStyleSheet(self.connect_button_styles["disconnect"])
             self.status_label.setText("Status: Connected")
+            self.connection_status = "Connected"
 
         if message == "Disconnected":
             self.connect_button.setText("Connect")
             self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
             self.status_label.setText("Status: Disconnected")
+            self.connection_status = "Disconnected"

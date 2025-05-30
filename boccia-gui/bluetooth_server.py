@@ -25,8 +25,10 @@ class BluetoothServer(QThread):
             print("No local Bluetooth adapters found")
             return
         
-        for name, mac, desc in self.local_bluetooth_adapter:
-            self.server = self.initialize_server(str(mac))
+        # Initialize the server with the first item of the list
+        # Note: There should only be one adapter if get_local_bluetooth_adapter() worked correctly
+        name, mac, desc = self.local_bluetooth_adapter[0]
+        self.server = self.initialize_server(str(mac))
 
         if not self.server:
             self.server_status_changed.emit("Error")
@@ -52,7 +54,8 @@ class BluetoothServer(QThread):
             server.bind((address, 4))
             server.listen(1)
             return server
-        except OSError:
+        except OSError as e:
+            print(f"Error initializing Bluetooth server: {e}")
             return # None
 
     def accept_client(self):
@@ -80,10 +83,12 @@ class BluetoothServer(QThread):
                     print(f"Received command: {command}")
                     self.command_received.emit(command)
                 except (OSError, ConnectionAbortedError) as e:
-                    print(f"Error receiving command: {e}")
+                    if self._running:
+                        print(f"Could not receive commands: {e}")
                     break
         except Exception as e:
-            print(f"Error receiving command: {e}")
+            if self._running:
+                print(f"Error receiving command: {e}")
 
     def send_command(self, command_text: str):
         if hasattr(self, 'client') and self.client:
@@ -94,6 +99,9 @@ class BluetoothServer(QThread):
                 print(f"Error sending command: {e}")
 
     def stop(self):
+        if not self._running:
+            return
+        
         self._running = False
 
         if hasattr(self, 'client') and self.client:
