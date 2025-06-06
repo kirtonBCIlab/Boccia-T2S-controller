@@ -24,7 +24,7 @@ class BluetoothClient(QThread):
 
         if not self.client:
             self.client_status_changed.emit("Error")
-            print("Failed to initialize Bluetooth client")
+            # print("Failed to initialize Bluetooth client")
             return
         
         connection = self.start_connection()
@@ -36,7 +36,7 @@ class BluetoothClient(QThread):
         except Exception as e:
             if self._running:
                 self.client_status_changed.emit("Error")
-            print(f"Bluetooth Client Error: {e}")
+            # print(f"Bluetooth Client Error: {e}")
         finally:
             if self._running:
                 self.stop()
@@ -46,7 +46,7 @@ class BluetoothClient(QThread):
         self.paired_devices = self.bluetooth_devices.get_paired_bluetooth_devices()
         if not self.paired_devices:
             self.client_status_changed.emit("No devices found")
-            print("No paired Bluetooth devices found")
+            # print("No paired Bluetooth devices found.")
             return
         
         self.paired_device_names = []
@@ -68,7 +68,7 @@ class BluetoothClient(QThread):
             return True
         except (OSError, TimeoutError) as e:
             self.client_status_changed.emit("Error")
-            print(f"Error connecting to Device 1: {e}")
+            # print(f"Error connecting to Device 1: {e}")
             return False
         
     def read_commands(self):
@@ -85,19 +85,22 @@ class BluetoothClient(QThread):
                         break
                 except (OSError, ConnectionAbortedError) as e:
                     if self._running:
-                        print(f"Could not receive command: {e}")
+                        self.client_status_changed.emit("Error")
+                        # print(f"Could not receive command: {e}")
                     break
         except Exception as e:
             if self._running:
-                print(f"Error receiving command: {e}")
+                self.client_status_changed.emit("Error")
+                # print(f"Error receiving command: {e}")
 
     def send_command(self, command_text: str):
         try:
             self.client.send(command_text.encode("utf-8"))
-            print(f"Sent command: {command_text}")
+            # print(f"Sent command: {command_text}")
         except OSError as e:
             if self._running:
-                print(f"Error sending command: {e}")
+                self.client_status_changed.emit("Error")
+                # print(f"Error sending command: {e}")
 
     def stop(self):
         if not self._running:
