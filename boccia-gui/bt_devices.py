@@ -19,6 +19,7 @@ class BluetoothDevices:
         output = result.stdout
 
         devices = []
+        debug_lines = []
         for line in output.splitlines():
             if (
                 "FriendlyName" in line or
@@ -39,7 +40,15 @@ class BluetoothDevices:
                     mac_raw = mac_match.group(1).upper()
                     mac_address = ':'.join(mac_raw[i:i+2] for i in range(0, 12, 2))
                     devices.append((name, mac_address, description))
+                    debug_lines.append(f"ADDED: {name} | {mac_address} | {description}")
+                else:
+                    debug_lines.append(f"SKIPPED (no MAC): {name} | {instance_id} | {description}")
+            else:
+                debug_lines.append(f"NO MATCH: {line.strip()}")
         
+        with open("debug_log.txt", "w") as f:
+            f.write("\n".join(debug_lines))
+
         # Return the list of paired Bluetooth devices
         return devices
 
