@@ -29,6 +29,10 @@ class BluetoothDevices:
             ):
                 continue
 
+            # Filter out unnecessary items
+            if any(x in line for x in ["Service", "Enumerator", "Adapter", "Transport", "RFCOMM"]):
+                continue
+
             # Try to match three columns first, then two columns
             match = re.match(r'^(.*?)\s{2,}(\S+)\s{2,}(.*)$', line.strip())
             if not match:
