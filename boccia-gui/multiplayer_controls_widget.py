@@ -167,7 +167,14 @@ class MultiplayerControlsDevice2(QWidget):
 
         # Create custom combobox
         self.device_combo_box = CustomComboBox(parent=self, on_mouse_press=self._populate_devices)
-        self.device_combo_box.setStyleSheet(f"{Styles.COMBOBOX_BASE} width: {130 * Styles.SCALE_FACTOR}px;")
+        self.device_combo_box.setStyleSheet(f"""
+            {Styles.COMBOBOX_BASE} 
+            min-width: {130 * Styles.SCALE_FACTOR}px; 
+            QComboBox QAbstractItemView QScrollBar:vertical {{
+                width: {10 * Styles.SCALE_FACTOR}px;
+                background: #f0f0f0;
+            }}
+        """)
         self.device_combo_box.currentIndexChanged.connect(self._on_device_selected)
 
         self.device_selection_layout = QHBoxLayout()
@@ -207,8 +214,13 @@ class MultiplayerControlsDevice2(QWidget):
             # Default to the first device if available
             self.device_combo_box.setCurrentIndex(0)
 
-    def _on_device_selected(self):
+    def _on_device_selected(self):        
         selected_device_name = self.device_combo_box.currentText()
+
+        # Return if no device is selected
+        if selected_device_name == "":
+            return
+        
         # Set the address of the selected device
         self.bluetooth_client_thread.get_selected_device_address(selected_device_name)
         # Enable the connect button
@@ -217,8 +229,10 @@ class MultiplayerControlsDevice2(QWidget):
     
     def _toggle_connection_status(self):
         if self.connection_status == "Disconnected":
+            self.device_combo_box.setEnabled(False) # Disable the combobox while connected
             self.bluetooth_client_thread.start()
         else:
+            self.device_combo_box.setEnabled(True)
             self.bluetooth_client_thread.stop()
     
     def _handle_client_status_change(self, message: str):
