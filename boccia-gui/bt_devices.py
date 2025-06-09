@@ -9,7 +9,7 @@ class BluetoothDevices:
         cmd = [
             "powershell",
             "-Command",
-            "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' -and $_.FriendlyName } | Select-Object FriendlyName, InstanceId, Description"
+            "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select-Object FriendlyName, InstanceId, Description"
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
         output = result.stdout
@@ -29,7 +29,7 @@ class BluetoothDevices:
                 "Service", "Enumerator", "Adapter", "Transport", "RFCOMM", "Microsoft"
             ]):
                 continue
-            
+
             # Extract fields from the output using regex
             match = re.match(r'^(.*?)\s+(\S+)\s+(.*)$', line.strip())
             if match:
