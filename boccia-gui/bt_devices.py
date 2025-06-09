@@ -1,17 +1,21 @@
 import subprocess
 from subprocess import CREATE_NO_WINDOW
 import re
+import sys
 
 class BluetoothDevices:
 
     def get_paired_bluetooth_devices(self):
         # Run PowerShell command to get devices paired with this device with Bluetooth
+        powershell_path = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
         cmd = [
-            "powershell",
+            powershell_path,
             "-Command",
             "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select-Object FriendlyName, InstanceId, Description"
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        is_frozen = getattr(sys, 'frozen', False)
+        creationflags = CREATE_NO_WINDOW if is_frozen else 0
+        result = subprocess.run(cmd, capture_output=True, text=True, creationflags=creationflags)
         output = result.stdout
 
         devices = []
@@ -23,12 +27,6 @@ class BluetoothDevices:
                 not line.strip()
             ):
                 continue
-
-            # Filter out devices
-            # if any(x in line for x in [
-            #     "Service", "Enumerator", "Adapter", "Transport", "RFCOMM", "Microsoft"
-            # ]):
-            #     continue
 
             # Extract fields from the output using regex
             match = re.match(r'^(.*?)\s+(\S+)\s+(.*)$', line.strip())
