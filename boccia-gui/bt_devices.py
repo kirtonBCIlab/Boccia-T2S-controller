@@ -14,14 +14,22 @@ class BluetoothDevices:
         result = subprocess.run(cmd, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
         output = result.stdout
 
-        with open("debug.txt", "w") as f:
-            f.write("STDOUT:\n" + output)
-            f.write("STDERR:\n" + result.stderr)
-
         devices = []
         for line in output.splitlines():
-            if "FriendlyName" in line or "InstanceId" in line or "Description" in line or not line.strip():
+            if (
+                "FriendlyName" in line or
+                "InstanceId" in line or
+                "Description" in line or
+                not line.strip()
+            ):
                 continue
+
+            # Filter out devices
+            if any(x in line for x in [
+                "Service", "Enumerator", "Adapter", "Transport", "RFCOMM", "Microsoft"
+            ]):
+                continue
+            
             # Extract fields from the output using regex
             match = re.match(r'^(.*?)\s+(\S+)\s+(.*)$', line.strip())
             if match:
