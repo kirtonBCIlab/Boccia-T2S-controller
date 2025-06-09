@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QSizePolicy,
+    QListWidget,
+    QListWidgetItem
 )
 
 # Custom libraries
@@ -146,19 +148,54 @@ class MultiplayerControlsDevice2(QWidget):
             "error": Styles.create_button_style("orange")
         }
 
-        # Main label section
+        # Multiplayer mode section
         self.main_label = QLabel('MULTIPLAYER CONTROLS')
         self.main_label.setStyleSheet(Styles.MAIN_LABEL)
 
-        # Content section
+        # Multiplayer controls content section
         self._create_device_selection_section()
         self._create_connection_section()
 
+        # Instructions section
+        self.instructions_section_label = QLabel("INSTRUCTIONS")
+        self.instructions_section_label.setStyleSheet(Styles.MAIN_LABEL)
+
+        # Instructions content section
+        self._create_instructions_section()
+
+        # Organize layout
         self.main_layout = QVBoxLayout(self)
         self.main_layout.addWidget(self.main_label)
-
         self.main_layout.addLayout(self.device_selection_layout)
         self.main_layout.addLayout(self.connection_section_layout)
+        self.main_layout.addSpacing(20)
+        self.main_layout.addWidget(self.instructions_section_label)
+        self.main_layout.addLayout(self.instructions_section_layout)
+
+    def _create_instructions_section(self):
+        self.instructions_title = QLabel("Follow these steps to setup Bluetooth connection for Multiplayer Mode:")
+        self.instructions_title.setStyleSheet(Styles.INSTRUCTIONS_TEXT)
+
+        instructions_text = (
+            "1. Pair the devices in Bluetooth settings.<br>"
+            "2. Make sure Bluetooth remains turned on for both devices.<br>"
+            "3. On the Device 1 app:<br>"
+            "&nbsp;&nbsp;&nbsp;a) Click 'Turn ON Multiplayer Mode'.<br>"
+            "&nbsp;&nbsp;&nbsp;b) Click 'Connect'.<br>"
+            "&nbsp;&nbsp;&nbsp;c) Wait until the status says 'Waiting for Device 2'.<br>"
+            "4. On the Device 2 app:<br>"
+            "&nbsp;&nbsp;&nbsp;a) Click the dropdown menu to see the list of paired devices.<br>"
+            "&nbsp;&nbsp;&nbsp;b) Select the name of Device 1.<br>"
+            "&nbsp;&nbsp;&nbsp;c) Click 'Connect'."
+        )
+        self.instructions = QLabel(instructions_text)
+        self.instructions.setStyleSheet(Styles.INSTRUCTIONS_TEXT)
+        self.instructions.setTextFormat(Qt.RichText)
+        self.instructions.setWordWrap(True)
+
+        self.instructions_section_layout = QVBoxLayout()
+        self.instructions_section_layout.addWidget(self.instructions_title)
+        self.instructions_section_layout.addWidget(self.instructions)
     
     def _create_device_selection_section(self):
         # Create combobox label

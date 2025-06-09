@@ -10,6 +10,7 @@ class Styles:
     SUB_LABEL = f"QLabel {{ font: {20 * SCALE_FACTOR}px Calibri; color: #b48ead;}}"
     VALUE_TEXT = f"font-size: {16 * SCALE_FACTOR}px; color: #ffffff;"
     LABEL_TEXT = f"font-size: {16 * SCALE_FACTOR}px; color: #a9a9a9;"
+    INSTRUCTIONS_TEXT = f"font-size: {12 * SCALE_FACTOR}px; color: #a9a9a9;"
 
     # Buttons
     BUTTON_BASE = f"""
