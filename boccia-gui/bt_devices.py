@@ -11,7 +11,7 @@ class BluetoothDevices:
             "-Command",
             "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select-Object FriendlyName, InstanceId, Description"
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
+        result = subprocess.run(cmd, capture_output=True, text=True)
         output = result.stdout
 
         devices = []
