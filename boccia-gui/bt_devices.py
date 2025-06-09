@@ -1,4 +1,5 @@
 import subprocess
+from subprocess import CREATE_NO_WINDOW
 import re
 
 class BluetoothDevices:
@@ -10,7 +11,7 @@ class BluetoothDevices:
             "-Command",
             "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select-Object FriendlyName, InstanceId, Description"
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
         output = result.stdout
 
         devices = []
@@ -39,7 +40,7 @@ class BluetoothDevices:
             "-Command",
             "Get-NetAdapter | Where-Object { $_.InterfaceDescription -like '*Bluetooth*' } | Select-Object Name, MacAddress, InterfaceDescription"
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
         output = result.stdout
 
         local_adapters = []
