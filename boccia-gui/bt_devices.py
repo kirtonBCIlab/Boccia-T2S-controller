@@ -9,7 +9,7 @@ class BluetoothDevices:
         cmd = [
             "powershell",
             "-Command",
-            "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select-Object FriendlyName, InstanceId, Description"
+            "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' -and $_.FriendlyName } | Select-Object FriendlyName, InstanceId, Description"
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
         output = result.stdout
