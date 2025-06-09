@@ -25,10 +25,10 @@ class BluetoothDevices:
                 continue
 
             # Filter out devices
-            if any(x in line for x in [
-                "Service", "Enumerator", "Adapter", "Transport", "RFCOMM", "Microsoft"
-            ]):
-                continue
+            # if any(x in line for x in [
+            #     "Service", "Enumerator", "Adapter", "Transport", "RFCOMM", "Microsoft"
+            # ]):
+            #     continue
 
             # Extract fields from the output using regex
             match = re.match(r'^(.*?)\s+(\S+)\s+(.*)$', line.strip())
