@@ -6,8 +6,6 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QSizePolicy,
-    QListWidget,
-    QListWidgetItem
 )
 
 # Custom libraries
@@ -179,11 +177,11 @@ class MultiplayerControlsDevice2(QWidget):
         instructions_text = (
             "1. Pair the devices in Bluetooth settings.<br>"
             "2. Make sure Bluetooth remains turned on for both devices.<br>"
-            "3. On the Device 1 app:<br>"
+            "3. On the Device 1 app (the main device):<br>"
             "&nbsp;&nbsp;&nbsp;a) Click 'Turn ON Multiplayer Mode'.<br>"
             "&nbsp;&nbsp;&nbsp;b) Click 'Connect'.<br>"
             "&nbsp;&nbsp;&nbsp;c) Wait until the status says 'Waiting for Device 2'.<br>"
-            "4. On the Device 2 app:<br>"
+            "4. On the Device 2 app (this device):<br>"
             "&nbsp;&nbsp;&nbsp;a) Click the dropdown menu to see the list of paired devices.<br>"
             "&nbsp;&nbsp;&nbsp;b) Select the name of Device 1.<br>"
             "&nbsp;&nbsp;&nbsp;c) Click 'Connect'."
