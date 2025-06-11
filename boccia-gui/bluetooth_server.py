@@ -89,10 +89,15 @@ class BluetoothServer(QThread):
         # Add client and client address to the list
         self.connected_clients.append((client, client_address))
         
+        # Double-check that there are not too many clients connected
+        if len(self.connected_clients) > self.num_clients:
+            client.close()
+            return
+        
         # Increment player count
         self.player_count += 1
         player_number = "Player " + str(self.player_count)
-        print(f"{player_number} connected")
+        # print(f"{player_number} connected")
         self.server_status_changed.emit("Connected")
 
         try:
@@ -110,7 +115,6 @@ class BluetoothServer(QThread):
 
                 # Otherwise emit the player number and command
                 self.command_received.emit(player_number, command)
-
 
         except Exception as e:
             self.server_status_changed.emit("Error")
@@ -159,4 +163,4 @@ class BluetoothServer(QThread):
             self.server = None
 
         self.server_status_changed.emit("Disconnected")
-        print("Bluetooth server stopped")
+        # print("Bluetooth server stopped")
