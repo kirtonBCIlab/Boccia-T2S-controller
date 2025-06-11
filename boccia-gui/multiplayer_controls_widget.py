@@ -156,6 +156,8 @@ class MultiplayerControlsMainDevice(QWidget):
                 self.connection_status = "Connected"
 
         if message == "Disconnected":
+            # Reset number of connected devices
+            self.connected_devices_count = 0
             self.connect_button.setText("Connect")
             self.connect_button.setStyleSheet(self.connect_button_styles["connect"])
             self.status_label.setText("Status: Disconnected")
