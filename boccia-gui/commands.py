@@ -41,6 +41,10 @@ class Commands():
         "S ↓": "es0",
         "Drop \n(R)": "dd-70",
     }
+
+    # Min and max number of players for multiplayer mode
+    MIN_MULTIPLAYERS = 2
+    MAX_MULTIPLAYERS = 4
     
     HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
     

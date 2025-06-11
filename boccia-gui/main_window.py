@@ -114,8 +114,8 @@ class MainWindow(QMainWindow):
         self.bluetooth_server.server_status_changed.connect(self.multiplayer_controls_widget._handle_server_status_change)
         self.bluetooth_server.command_received.connect(self.command_received_from_device_2)
 
-    def command_received_from_device_2(self, command_text):
-        self.key_press_handler.toggle_key_pressed("Player 2", command_text)
+    def command_received_from_device_2(self, player_number, command_text):
+        self.key_press_handler.toggle_key_pressed(player_number, command_text)
 
     def closeEvent(self, event):
         # Safely disconnect from serial port
