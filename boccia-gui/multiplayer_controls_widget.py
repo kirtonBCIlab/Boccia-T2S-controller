@@ -54,7 +54,7 @@ class MultiplayerControlsMainDevice(QWidget):
         self.multiplayer_mode_button.clicked.connect(self._multiplayer_mode_clicked)
 
         # Create setting for number of players
-        self.num_players_label = QLabel("Select number of players:")
+        self.num_players_label = QLabel("Number of players:")
         self.num_players_label.setStyleSheet(Styles.LABEL_TEXT)
 
         self.num_players_box = QComboBox()
@@ -212,8 +212,9 @@ class MultiplayerControlsSecondaryDevices(QWidget):
             "2. Make sure Bluetooth remains turned on for both devices.<br>"
             "3. In the Main Device app:<br>"
             "&nbsp;&nbsp;&nbsp;a) Click 'Turn ON Multiplayer Mode'.<br>"
-            "&nbsp;&nbsp;&nbsp;b) Click 'Connect'.<br>"
-            "&nbsp;&nbsp;&nbsp;c) Wait until the status says 'Waiting for other devices'.<br>"
+            "&nbsp;&nbsp;&nbsp;b) Select the number of players in the dropdown menu.<br>"
+            "&nbsp;&nbsp;&nbsp;c) Click 'Connect'.<br>"
+            "&nbsp;&nbsp;&nbsp;d) Wait until the status says 'Waiting for other devices'.<br>"
             "4. In the Multiplayer Device app (this app):<br>"
             "&nbsp;&nbsp;&nbsp;a) Click the dropdown menu to see the list of paired devices.<br>"
             "&nbsp;&nbsp;&nbsp;b) Select the name of the Main Device.<br>"
