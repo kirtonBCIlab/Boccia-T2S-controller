@@ -148,7 +148,6 @@ class BluetoothServer(QThread):
                 client.close()
             except Exception:
                 self.server_status_changed.emit("Error")
-                # print("Failed to disconnect clients")
         self.connected_clients.clear()
         
         # Close the server
@@ -157,7 +156,6 @@ class BluetoothServer(QThread):
                 self.server.close()
             except Exception:
                 self.server_status_changed.emit("Error")
-                # print("Failed to close server")
             self.server = None
 
         self.server_status_changed.emit("Disconnected")

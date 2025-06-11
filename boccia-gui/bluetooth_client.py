@@ -66,7 +66,7 @@ class BluetoothClient(QThread):
             self.client.connect((self.server_address, 4))
             self.client_status_changed.emit("Connected")
             return True
-        except (OSError, TimeoutError) as e:
+        except Exception as e:
             self.client_status_changed.emit("Error")
             # print(f"Error connecting to main device: {e}")
             return False
@@ -74,7 +74,7 @@ class BluetoothClient(QThread):
     def read_commands(self):
         try:
             while self._running:
-                try:
+                # Receive message from server
                     data = self.client.recv(1024)
                     if not data:
                         break
@@ -82,12 +82,9 @@ class BluetoothClient(QThread):
 
                     # Stop if disconnect command is received
                     if command == "Disconnect":
-                        break
-                except (OSError, ConnectionAbortedError) as e:
-                    if self._running:
-                        self.client_status_changed.emit("Error")
-                        # print(f"Could not receive command: {e}")
-                    break
+                        self.stop()
+                        return
+                    
         except Exception as e:
             if self._running:
                 self.client_status_changed.emit("Error")
@@ -97,7 +94,7 @@ class BluetoothClient(QThread):
         try:
             self.client.send(command_text.encode("utf-8"))
             # print(f"Sent command: {command_text}")
-        except OSError as e:
+        except Exception as e:
             if self._running:
                 self.client_status_changed.emit("Error")
                 # print(f"Error sending command: {e}")
@@ -107,16 +104,17 @@ class BluetoothClient(QThread):
             return
         
         self._running = False
+
         self.client_status_changed.emit("Disconnected")
         if self.client:
             try:
                 self.send_command("Disconnect")
             except Exception:
-                pass
+                self.client_status_changed.emit("Error")
             try:
                 self.client.close()
             except Exception:
-                pass
+                self.client_status_changed.emit("Error")
             self.client = None
 
 
