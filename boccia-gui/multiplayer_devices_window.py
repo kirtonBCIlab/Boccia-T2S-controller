@@ -12,10 +12,10 @@ from PyQt5.QtWidgets import (
 from commands import Commands
 from styles import Styles
 from bluetooth_client import BluetoothClient
-from multiplayer_controls_widget import MultiplayerControlsDevice2
-from key_press_handler import KeyPressHandlerDevice2
+from multiplayer_controls_widget import MultiplayerControlsSecondaryDevices
+from key_press_handler import KeyPressHandlerMultiplayer
 
-class Device2Window(QMainWindow):
+class MultiplayerDevicesWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -29,7 +29,7 @@ class Device2Window(QMainWindow):
         self.init_UI()
 
         # Install event filter for keyboard events
-        self.key_press_handler = KeyPressHandlerDevice2(
+        self.key_press_handler = KeyPressHandlerMultiplayer(
                 self,
                 self.bluetooth_client,
                 self.commands
@@ -60,11 +60,11 @@ class Device2Window(QMainWindow):
         # Set window properties
         current_file_path = os.path.dirname(os.path.abspath(__file__))
         self.setWindowIcon(QIcon(fr"{current_file_path}/brain.png"))
-        self.setWindowTitle('Boccia T2S Controller: Device 2')
+        self.setWindowTitle('Boccia T2S Controller: Multiplayer App')
         self.setStyleSheet(Styles.WINDOW_BACKGROUND)
 
         # Create multiplayer controls widget
-        self.multiplayer_controls_widget = MultiplayerControlsDevice2(self.bluetooth_client)
+        self.multiplayer_controls_widget = MultiplayerControlsSecondaryDevices(self.bluetooth_client)
         self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.mainLayout.addWidget(self.multiplayer_controls_widget)

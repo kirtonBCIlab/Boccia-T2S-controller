@@ -1,10 +1,10 @@
 import sys
 from PyQt5.QtWidgets import QApplication
-from device_2_window import Device2Window
+from multiplayer_devices_window import MultiplayerDevicesWindow
 
 def main():
     app = QApplication(sys.argv)
-    mainWindow = Device2Window()
+    mainWindow = MultiplayerDevicesWindow()
     mainWindow.show()
     sys.exit(app.exec_())
 

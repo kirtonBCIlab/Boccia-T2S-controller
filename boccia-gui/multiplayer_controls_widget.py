@@ -14,7 +14,7 @@ from styles import Styles
 from commands import Commands
 from custom_combo_box import CustomComboBox
 
-class MultiplayerControlsDevice1(QWidget):
+class MultiplayerControlsMainDevice(QWidget):
     def __init__(self, bluetooth_server = None):
         super().__init__()
         
@@ -135,13 +135,13 @@ class MultiplayerControlsDevice1(QWidget):
         if message == "Initializing":
             self.connect_button.setText("Cancel")
             self.connect_button.setStyleSheet(self.connect_button_styles["disconnect"])
-            self.status_label.setText("Status: Setting up Device 1...")
+            self.status_label.setText("Status: Setting up this device...")
             self.connection_status = "Initializing"
 
         if message == "Waiting":
             self.connect_button.setText("Cancel")
             self.connect_button.setStyleSheet(self.connect_button_styles["disconnect"])
-            self.status_label.setText("Status: Waiting for Device 2...")
+            self.status_label.setText("Status: Waiting for other devices...")
             self.connection_status = "Waiting"
         
         if message == "Connected":
@@ -161,7 +161,7 @@ class MultiplayerControlsDevice1(QWidget):
             self.status_label.setText("Status: Disconnected")
             self.connection_status = "Disconnected"
 
-class MultiplayerControlsDevice2(QWidget):
+class MultiplayerControlsSecondaryDevices(QWidget):
     def __init__(self, bluetooth_client = None):
         super().__init__()
 
@@ -208,13 +208,13 @@ class MultiplayerControlsDevice2(QWidget):
         instructions_text = (
             "1. Pair the devices in Bluetooth settings.<br>"
             "2. Make sure Bluetooth remains turned on for both devices.<br>"
-            "3. On the Device 1 app (the main device):<br>"
+            "3. In the Main Device app:<br>"
             "&nbsp;&nbsp;&nbsp;a) Click 'Turn ON Multiplayer Mode'.<br>"
             "&nbsp;&nbsp;&nbsp;b) Click 'Connect'.<br>"
-            "&nbsp;&nbsp;&nbsp;c) Wait until the status says 'Waiting for Device 2'.<br>"
-            "4. On the Device 2 app (this device):<br>"
+            "&nbsp;&nbsp;&nbsp;c) Wait until the status says 'Waiting for other devices'.<br>"
+            "4. In the Multiplayer Device app (this app):<br>"
             "&nbsp;&nbsp;&nbsp;a) Click the dropdown menu to see the list of paired devices.<br>"
-            "&nbsp;&nbsp;&nbsp;b) Select the name of Device 1.<br>"
+            "&nbsp;&nbsp;&nbsp;b) Select the name of the Main Device.<br>"
             "&nbsp;&nbsp;&nbsp;c) Click 'Connect'."
         )
         self.instructions = QLabel(instructions_text)

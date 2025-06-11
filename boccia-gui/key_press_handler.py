@@ -143,7 +143,7 @@ class KeyPressHandler(QObject):
         self.service_flag = False
         self.key_toggled = None
 
-class KeyPressHandlerDevice2(QObject):
+class KeyPressHandlerMultiplayer(QObject):
     key_service_flag_changed = pyqtSignal(bool)
 
     def __init__(self, parent=None, bluetooth_client = None, commands = None):

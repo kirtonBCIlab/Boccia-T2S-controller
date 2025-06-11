@@ -68,7 +68,7 @@ class BluetoothClient(QThread):
             return True
         except (OSError, TimeoutError) as e:
             self.client_status_changed.emit("Error")
-            # print(f"Error connecting to Device 1: {e}")
+            # print(f"Error connecting to main device: {e}")
             return False
         
     def read_commands(self):

@@ -17,7 +17,7 @@ from bluetooth_server import BluetoothServer
 from user_controls_widget import UserControlsWidget
 from serial_controls_widget import SerialControlsWidget
 from operator_controls_widget import OperatorControlsWidget
-from multiplayer_controls_widget import MultiplayerControlsDevice1
+from multiplayer_controls_widget import MultiplayerControlsMainDevice
 
 
 class MainWindow(QMainWindow):
@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         self.serial_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Create multiplayer controls widget
-        self.multiplayer_controls_widget = MultiplayerControlsDevice1(self.bluetooth_server)
+        self.multiplayer_controls_widget = MultiplayerControlsMainDevice(self.bluetooth_server)
         self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Create operator controls
@@ -112,9 +112,9 @@ class MainWindow(QMainWindow):
 
         # Bluetooth events
         self.bluetooth_server.server_status_changed.connect(self.multiplayer_controls_widget._handle_server_status_change)
-        self.bluetooth_server.command_received.connect(self.command_received_from_device_2)
+        self.bluetooth_server.command_received.connect(self.command_received_from_multiplayer_device)
 
-    def command_received_from_device_2(self, player_number, command_text):
+    def command_received_from_multiplayer_device(self, player_number, command_text):
         self.key_press_handler.toggle_key_pressed(player_number, command_text)
 
     def closeEvent(self, event):
