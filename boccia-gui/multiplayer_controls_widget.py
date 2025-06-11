@@ -236,14 +236,9 @@ class MultiplayerControlsSecondaryDevices(QWidget):
 
         # Create custom combobox
         self.device_combo_box = CustomComboBox(parent=self, on_mouse_press=self._populate_devices)
-        self.device_combo_box.setStyleSheet(f"""
-            {Styles.COMBOBOX_BASE} 
-            min-width: {130 * Styles.SCALE_FACTOR}px; 
-            QComboBox QAbstractItemView QScrollBar:vertical {{
-                width: {10 * Styles.SCALE_FACTOR}px;
-                background: #f0f0f0;
-            }}
-        """)
+        self.device_combo_box.setStyleSheet(f"{Styles.COMBOBOX_BASE}")
+        self.device_combo_box.setMinimumWidth(130 * Styles.SCALE_FACTOR)
+        self.device_combo_box.view().setMinimumWidth(130 * Styles.SCALE_FACTOR)
         self.device_combo_box.currentIndexChanged.connect(self._on_device_selected)
 
         self.device_selection_layout = QHBoxLayout()
