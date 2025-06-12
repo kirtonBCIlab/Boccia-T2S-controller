@@ -17,7 +17,7 @@ from bluetooth_server import BluetoothServer
 from user_controls_widget import UserControlsWidget
 from serial_controls_widget import SerialControlsWidget
 from operator_controls_widget import OperatorControlsWidget
-from multiplayer_controls_widget import MultiplayerControlsMainDevice
+from multiplayer_controls_widget_main_device import MultiplayerControlsMainDevice
 
 
 class MainWindow(QMainWindow):

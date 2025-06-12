@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
 from commands import Commands
 from styles import Styles
 from bluetooth_client import BluetoothClient
-from multiplayer_controls_widget import MultiplayerControlsSecondaryDevices
+from multiplayer_controls_widget_secondary_devices import MultiplayerControlsSecondaryDevices
 from key_press_handler import KeyPressHandlerMultiplayer
 
 class MultiplayerDevicesWindow(QMainWindow):
