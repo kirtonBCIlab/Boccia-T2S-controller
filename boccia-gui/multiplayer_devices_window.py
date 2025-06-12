@@ -13,6 +13,7 @@ from commands import Commands
 from styles import Styles
 from bluetooth_client import BluetoothClient
 from multiplayer_controls_widget_secondary_devices import MultiplayerControlsSecondaryDevices
+from multiplayer_instructions_widget import MultiplayerInstructionsWidget
 from key_press_handler import KeyPressHandlerMultiplayer
 
 class MultiplayerDevicesWindow(QMainWindow):
@@ -67,7 +68,13 @@ class MultiplayerDevicesWindow(QMainWindow):
         self.multiplayer_controls_widget = MultiplayerControlsSecondaryDevices(self.bluetooth_client)
         self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+        # Create instructions widget
+        self.multiplayer_instructions_widget = MultiplayerInstructionsWidget()
+        self.multiplayer_instructions_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        # Organize main layout
         self.mainLayout.addWidget(self.multiplayer_controls_widget)
+        self.mainLayout.addWidget(self.multiplayer_instructions_widget)
     
     def set_up_event_connections(self):
         self.bluetooth_client.client_status_changed.connect(self.multiplayer_controls_widget._handle_client_status_change)
