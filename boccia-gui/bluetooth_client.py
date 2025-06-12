@@ -14,7 +14,7 @@ class BluetoothClient(QThread):
         self._running = False
 
         self._paired_devices = None
-        self._paired_device_names = None
+        self.paired_device_names = None
 
     def run(self):
         self._running = True
@@ -50,13 +50,13 @@ class BluetoothClient(QThread):
             # print("No paired Bluetooth devices found.")
             return
         
-        self._paired_device_names = []
+        self.paired_device_names = []
         for name, mac, desc in self._paired_devices:
-            self._paired_device_names.append(name)
+            self.paired_device_names.append(name)
 
     def get_selected_device_address(self, device_name):
         # Get the MAC address of a device based on its name from the paired_devices list
-        self.server_address = self._paired_devices[self._paired_device_names.index(device_name)][1]
+        self.server_address = self._paired_devices[self.paired_device_names.index(device_name)][1]
     
     def _initialize_client(self):
         client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
