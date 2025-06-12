@@ -238,7 +238,10 @@ class MultiplayerControlsSecondaryDevices(QWidget):
         self.device_combo_box = CustomComboBox(parent=self, on_mouse_press=self._populate_devices)
         self.device_combo_box.setStyleSheet(f"{Styles.COMBOBOX_BASE}")
         self.device_combo_box.setMinimumWidth(130 * Styles.SCALE_FACTOR)
-        self.device_combo_box.view().setMinimumWidth(130 * Styles.SCALE_FACTOR)
+        dropdown_view = self.device_combo_box.view()
+        dropdown_view.setStyleSheet(f"{Styles.COMBOBOX_DROPDOWN}")
+        
+        # Connect combobox signal
         self.device_combo_box.currentIndexChanged.connect(self._on_device_selected)
 
         self.device_selection_layout = QHBoxLayout()

@@ -50,6 +50,16 @@ class Styles:
         padding: {3 * SCALE_FACTOR}px;
         """
     
+    COMBOBOX_DROPDOWN = f"""
+        QListView {{
+            background-color: #3c3c3c;
+            color: #ffffff;
+            font-size: {16 * SCALE_FACTOR}px;
+            padding: {3 * SCALE_FACTOR}px;
+            min-width: {130 * SCALE_FACTOR}px;
+        }}
+        """
+    
     # Slider
     SLIDER = f"""
         QSlider::groove:horizontal {{
