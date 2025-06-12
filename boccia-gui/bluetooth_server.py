@@ -13,32 +13,25 @@ class BluetoothServer(QThread):
         super().__init__()
         self.bluetooth_devices = BluetoothDevices()
         self._running = False
-        self.connected_clients = [] # List of tuples (client, client_address)
+        self._connected_clients = [] # List of tuples (client, client_address)
         
         # Number of players (i.e. additional devices connected)
-        self.player_count = 1 # Start at 1 since Player 1 is the local device (server)
+        self._player_count = 1 # Start at 1 since Player 1 is the local device (server)
 
         # Number of clients allowed to connect
-        self.num_clients = 1 # Default to 1 (for a minimum 2 players total)
-
-        # Bluetooth variables
-        self.rfcomm_channel = Commands.BLUETOOTH_VARIABLES["RFCOMM_channel"]
-        self.bytes = Commands.BLUETOOTH_VARIABLES["bytes"]
-        self.data_format = Commands.BLUETOOTH_VARIABLES["data_format"]
-        self.disconnect_command = Commands.BLUETOOTH_VARIABLES["disconnect_command"]
-        self.max_clients_message = Commands.BLUETOOTH_VARIABLES["max_clients_message"]
+        self._num_clients = 1 # Default to 1 (for a minimum 2 players total)
     
     def set_num_clients(self, num_players: int):
         # Equals 1 less than the total number of players
-        self.num_clients = num_players - 1
-        # print(f"Number of clients set to {self.num_clients}")
+        self._num_clients = num_players - 1
+        # print(f"Number of clients set to {self._num_clients}")
 
     def run(self):
         self._running = True
-        self.run_bluetooth_server()
+        self._run_bluetooth_server()
 
-    def run_bluetooth_server(self):
-        self.server = self.initialize_server()
+    def _run_bluetooth_server(self):
+        self.server = self._initialize_server()
 
         if not self.server:
             self.server_status_changed.emit("Error")
@@ -48,7 +41,7 @@ class BluetoothServer(QThread):
         try:
             if self._running:
                 self.server_status_changed.emit("Waiting")
-            connection_thread = threading.Thread(target=self.accept_clients)
+            connection_thread = threading.Thread(target=self._accept_clients)
             connection_thread.start()
             connection_thread.join()
         except Exception as e:
@@ -56,7 +49,7 @@ class BluetoothServer(QThread):
                 self.server_status_changed.emit("Error")
                 # print(f"Bluetooth Server Error: {e}")
     
-    def initialize_server(self):
+    def _initialize_server(self):
         self.server_status_changed.emit("Initializing")
 
         # Get the address of the Bluetooth adapter of the local machine
@@ -73,10 +66,10 @@ class BluetoothServer(QThread):
 
         try:
             server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-            server.bind((address, self.rfcomm_channel))
+            server.bind((address, Commands.BLUETOOTH_VARIABLES["RFCOMM_channel"]))
 
             # Set max number of connections that can be queued
-            server.listen(self.num_clients)
+            server.listen(self._num_clients)
             return server
         
         except Exception as e:
@@ -84,41 +77,41 @@ class BluetoothServer(QThread):
             # print(f"Error initializing Bluetooth server: {e}")
             return
 
-    def accept_clients(self):
+    def _accept_clients(self):
         while self._running:
             try:
                 client, client_address = self.server.accept()
                 # Check if the max number of clients has been reached
-                if len(self.connected_clients) >= self.num_clients:
-                    self.send_to_client(client, self.max_clients_message)
+                if len(self._connected_clients) >= self._num_clients:
+                    self._send_to_client(client, Commands.BLUETOOTH_VARIABLES["max_clients_message"])
                     client.close()
                     continue
-                self.send_to_client(client, "Connected")
-                client_thread = threading.Thread(target=self.handle_client, args=(client, client_address))
+                self._send_to_client(client, "Connected")
+                client_thread = threading.Thread(target=self._handle_client, args=(client, client_address))
                 client_thread.start()
             except Exception:
                 break
 
-    def handle_client(self, client, client_address):
+    def _handle_client(self, client, client_address):
         # Add client and client address to the list
-        self.connected_clients.append((client, client_address))
+        self._connected_clients.append((client, client_address))
         
         # Increment player count
-        self.player_count += 1
-        player_number = "Player " + str(self.player_count)
+        self._player_count += 1
+        player_number = "Player " + str(self._player_count)
         # print(f"{player_number} connected")
         self.server_status_changed.emit("Connected")
 
         try:
             while self._running:
                 # Receive message from client
-                data = client.recv(self.bytes)
+                data = client.recv(Commands.BLUETOOTH_VARIABLES["bytes"])
                 if not data:
                     break
-                command = data.decode(self.data_format)
+                command = data.decode(Commands.BLUETOOTH_VARIABLES["data_format"])
 
                 # Stop if disconnect command is received
-                if command == self.disconnect_command:
+                if command == Commands.BLUETOOTH_VARIABLES["disconnect_command"]:
                     self.stop()
                     return
 
@@ -132,12 +125,12 @@ class BluetoothServer(QThread):
         finally:
             # Close the client
             client.close()
-            if (client, client_address) in self.connected_clients:
-                self.connected_clients.remove((client, client_address))
-            if not self.connected_clients:
+            if (client, client_address) in self._connected_clients:
+                self._connected_clients.remove((client, client_address))
+            if not self._connected_clients:
                 self.server_status_changed.emit("Disconnected")
 
-    def send_to_client(self, client, command_text: str):
+    def _send_to_client(self, client, command_text: str):
         # Sends a command to a specific client
 
         # Make sure server is running
@@ -145,7 +138,7 @@ class BluetoothServer(QThread):
             return
         
         try:
-            client.send(command_text.encode(self.data_format))
+            client.send(command_text.encode(Commands.BLUETOOTH_VARIABLES["data_format"]))
             # print(f"Sent command: {command_text}")
         except Exception as e:
             self.server_status_changed.emit("Error")
@@ -156,16 +149,17 @@ class BluetoothServer(QThread):
             return
         
         self._running = False
-        self.player_count = 1 # Reset player count
+        self._player_count = 1 # Reset player count
 
         # Make sure all clients are closed
-        for client, _ in self.connected_clients:
+        for client, _ in self._connected_clients:
             try:
-                client.send(self.disconnect_command.encode(self.data_format))
+                disconnect_command = Commands.BLUETOOTH_VARIABLES["disconnect_command"]
+                client.send(disconnect_command.encode(Commands.BLUETOOTH_VARIABLES["data_format"]))
                 client.close()
             except Exception:
                 self.server_status_changed.emit("Error")
-        self.connected_clients.clear()
+        self._connected_clients.clear()
         
         # Close the server
         if hasattr(self, 'server') and self.server:
