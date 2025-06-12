@@ -64,6 +64,7 @@ class MultiplayerControlsMainDevice(QWidget):
             self.num_players_box.addItem(str(i))
         self.num_players_box.setEnabled(False)
         self.num_players_box.currentIndexChanged.connect(self._set_num_players)
+        self._set_num_players()
 
         self.multiplayer_mode_section_layout = QHBoxLayout()
         self.multiplayer_mode_section_layout.addWidget(self.multiplayer_mode_button)

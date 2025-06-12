@@ -67,7 +67,7 @@ class BluetoothServer(QThread):
             server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
             server.bind((address, 4))
 
-            # Listen for incoming connections for a max of num_clients
+            # Set max number of connections that can be queued
             server.listen(self.num_clients)
             return server
         
@@ -77,9 +77,15 @@ class BluetoothServer(QThread):
             return
 
     def accept_clients(self):
-        while self._running and len(self.connected_clients) < self.num_clients:
+        while self._running:
             try:
                 client, client_address = self.server.accept()
+                # Check if the max number of clients has been reached
+                if len(self.connected_clients) >= self.num_clients:
+                    self.send_to_client(client, "Max clients reached")
+                    client.close()
+                    continue
+                self.send_to_client(client, "Connected")
                 client_thread = threading.Thread(target=self.handle_client, args=(client, client_address))
                 client_thread.start()
             except Exception:
@@ -88,11 +94,6 @@ class BluetoothServer(QThread):
     def handle_client(self, client, client_address):
         # Add client and client address to the list
         self.connected_clients.append((client, client_address))
-        
-        # Double-check that there are not too many clients connected
-        if len(self.connected_clients) > self.num_clients:
-            client.close()
-            return
         
         # Increment player count
         self.player_count += 1
@@ -128,15 +129,19 @@ class BluetoothServer(QThread):
             if not self.connected_clients:
                 self.server_status_changed.emit("Disconnected")
 
-    def send_command(self, command_text: str):
-        # Sends a command to all connected clients
-        for client, _ in self.connected_clients:
-            try:
-                client.send(command_text.encode("utf-8"))
-                # print(f"Sent command: {command_text}")
-            except Exception as e:
-                self.server_status_changed.emit("Error")
-                # print(f"Error sending command: {e}")
+    def send_to_client(self, client, command_text: str):
+        # Sends a command to a specific client
+
+        # Make sure server is running
+        if not self._running:
+            return
+        
+        try:
+            client.send(command_text.encode("utf-8"))
+            # print(f"Sent command: {command_text}")
+        except Exception as e:
+            self.server_status_changed.emit("Error")
+            # print(f"Error sending command: {e}")
 
     def stop(self):
         if not self._running:

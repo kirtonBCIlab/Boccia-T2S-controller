@@ -32,7 +32,7 @@ class BluetoothClient(QThread):
             return
 
         try:
-            self.read_commands()
+            self.read_from_server()
         except Exception as e:
             if self._running:
                 self.client_status_changed.emit("Error")
@@ -64,15 +64,32 @@ class BluetoothClient(QThread):
     def start_connection(self):
         try:
             self.client.connect((self.server_address, 4))
-            self.client_status_changed.emit("Connected")
             return True
         except Exception as e:
             self.client_status_changed.emit("Error")
             # print(f"Error connecting to main device: {e}")
             return False
         
-    def read_commands(self):
+    def read_from_server(self):
         try:
+            # Check the initial message from the server to verify connection was successful
+            data = self.client.recv(1024)
+            if data:
+                message = data.decode('utf-8')
+                if message == "Max clients reached":
+                    self.client_status_changed.emit("Error")
+                    self.client.close()
+                    return
+                elif message == "Connected":
+                    self.client_status_changed.emit("Connected")
+            
+            elif not data:
+                self.client_status_changed.emit("Error")
+                # print("Could not connect to server")
+                self.client.close()
+                return
+            
+            # Start listening for commands
             while self._running:
                 # Receive message from server
                     data = self.client.recv(1024)
