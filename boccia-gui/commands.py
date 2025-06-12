@@ -45,6 +45,14 @@ class Commands():
     # Min and max number of players for multiplayer mode
     MIN_MULTIPLAYERS = 2
     MAX_MULTIPLAYERS = 4
+
+    BLUETOOTH_VARIABLES = {
+        "RFCOMM_channel": 4,
+        "bytes": 1024,
+        "data_format": "utf-8",
+        "disconnect_command": "Disconnect",
+        "max_clients_message": "Max clients reached",
+    }
     
     HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
     

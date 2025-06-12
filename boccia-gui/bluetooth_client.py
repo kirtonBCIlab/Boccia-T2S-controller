@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 import socket
 from bt_devices import BluetoothDevices
+from commands import Commands
 
 class BluetoothClient(QThread):
     client_status_changed = pyqtSignal(str)
@@ -14,6 +15,14 @@ class BluetoothClient(QThread):
 
         self.paired_devices = None
         self.paired_device_names = None
+
+        # Bluetooth variables
+        self.rfcomm_channel = Commands.BLUETOOTH_VARIABLES["RFCOMM_channel"]
+        self.bytes = Commands.BLUETOOTH_VARIABLES["bytes"]
+        self.data_format = Commands.BLUETOOTH_VARIABLES["data_format"]
+        self.disconnect_command = Commands.BLUETOOTH_VARIABLES["disconnect_command"]
+        self.max_clients_message = Commands.BLUETOOTH_VARIABLES["max_clients_message"]
+
 
     def run(self):
         self._running = True
@@ -63,7 +72,7 @@ class BluetoothClient(QThread):
 
     def start_connection(self):
         try:
-            self.client.connect((self.server_address, 4))
+            self.client.connect((self.server_address, self.rfcomm_channel))
             return True
         except Exception as e:
             self.client_status_changed.emit("Error")
@@ -73,10 +82,10 @@ class BluetoothClient(QThread):
     def read_from_server(self):
         try:
             # Check the initial message from the server to verify connection was successful
-            data = self.client.recv(1024)
+            data = self.client.recv(self.bytes)
             if data:
-                message = data.decode('utf-8')
-                if message == "Max clients reached":
+                message = data.decode(self.data_format)
+                if message == self.max_clients_message:
                     self.client_status_changed.emit("Error")
                     self.client.close()
                     return
@@ -92,13 +101,13 @@ class BluetoothClient(QThread):
             # Start listening for commands
             while self._running:
                 # Receive message from server
-                    data = self.client.recv(1024)
+                    data = self.client.recv(self.bytes)
                     if not data:
                         break
-                    command = data.decode('utf-8')
+                    command = data.decode(self.data_format)
 
                     # Stop if disconnect command is received
-                    if command == "Disconnect":
+                    if command == self.disconnect_command:
                         self.stop()
                         return
                     
@@ -109,7 +118,7 @@ class BluetoothClient(QThread):
 
     def send_command(self, command_text: str):
         try:
-            self.client.send(command_text.encode("utf-8"))
+            self.client.send(command_text.encode(self.data_format))
             # print(f"Sent command: {command_text}")
         except Exception as e:
             if self._running:
@@ -125,7 +134,7 @@ class BluetoothClient(QThread):
         self.client_status_changed.emit("Disconnected")
         if self.client:
             try:
-                self.send_command("Disconnect")
+                self.send_command(self.disconnect_command)
             except Exception:
                 self.client_status_changed.emit("Error")
             try:

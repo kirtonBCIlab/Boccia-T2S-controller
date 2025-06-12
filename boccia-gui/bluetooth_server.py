@@ -2,6 +2,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 import socket
 import threading
 from bt_devices import BluetoothDevices
+from commands import Commands
 
 class BluetoothServer(QThread):
     
@@ -19,6 +20,13 @@ class BluetoothServer(QThread):
 
         # Number of clients allowed to connect
         self.num_clients = 1 # Default to 1 (for a minimum 2 players total)
+
+        # Bluetooth variables
+        self.rfcomm_channel = Commands.BLUETOOTH_VARIABLES["RFCOMM_channel"]
+        self.bytes = Commands.BLUETOOTH_VARIABLES["bytes"]
+        self.data_format = Commands.BLUETOOTH_VARIABLES["data_format"]
+        self.disconnect_command = Commands.BLUETOOTH_VARIABLES["disconnect_command"]
+        self.max_clients_message = Commands.BLUETOOTH_VARIABLES["max_clients_message"]
     
     def set_num_clients(self, num_players: int):
         # Equals 1 less than the total number of players
@@ -65,7 +73,7 @@ class BluetoothServer(QThread):
 
         try:
             server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-            server.bind((address, 4))
+            server.bind((address, self.rfcomm_channel))
 
             # Set max number of connections that can be queued
             server.listen(self.num_clients)
@@ -82,7 +90,7 @@ class BluetoothServer(QThread):
                 client, client_address = self.server.accept()
                 # Check if the max number of clients has been reached
                 if len(self.connected_clients) >= self.num_clients:
-                    self.send_to_client(client, "Max clients reached")
+                    self.send_to_client(client, self.max_clients_message)
                     client.close()
                     continue
                 self.send_to_client(client, "Connected")
@@ -104,13 +112,13 @@ class BluetoothServer(QThread):
         try:
             while self._running:
                 # Receive message from client
-                data = client.recv(1024)
+                data = client.recv(self.bytes)
                 if not data:
                     break
-                command = data.decode('utf-8')
+                command = data.decode(self.data_format)
 
                 # Stop if disconnect command is received
-                if command == "Disconnect":
+                if command == self.disconnect_command:
                     self.stop()
                     return
 
@@ -137,7 +145,7 @@ class BluetoothServer(QThread):
             return
         
         try:
-            client.send(command_text.encode("utf-8"))
+            client.send(command_text.encode(self.data_format))
             # print(f"Sent command: {command_text}")
         except Exception as e:
             self.server_status_changed.emit("Error")
@@ -153,7 +161,7 @@ class BluetoothServer(QThread):
         # Make sure all clients are closed
         for client, _ in self.connected_clients:
             try:
-                client.send("Disconnect".encode("utf-8"))
+                client.send(self.disconnect_command.encode(self.data_format))
                 client.close()
             except Exception:
                 self.server_status_changed.emit("Error")
