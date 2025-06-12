@@ -14,7 +14,7 @@ class BluetoothClient(QThread):
         self._running = False
 
         self._paired_devices = None
-        self.paired_device_names = None
+        self.paired_device_names = []
 
     def run(self):
         self._running = True
@@ -50,7 +50,6 @@ class BluetoothClient(QThread):
             # print("No paired Bluetooth devices found.")
             return
         
-        self.paired_device_names = []
         for name, mac, desc in self._paired_devices:
             self.paired_device_names.append(name)
 
