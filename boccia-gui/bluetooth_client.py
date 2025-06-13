@@ -135,7 +135,7 @@ class BluetoothClient(QThread):
         # Clear the variables used to store paired devices
         self._paired_devices = None
         self.paired_device_names = []
-        
+
         # Retrieve the list of paired Bluetooth devices
         self._paired_devices = self.bluetooth_devices.get_paired_bluetooth_devices()
 
@@ -230,7 +230,6 @@ class BluetoothClient(QThread):
                 # (which means enough devices are connected to correspond to the selected number of players)
                 # If so, close the client
                 if message == Commands.BLUETOOTH_VARIABLES["max_clients_message"]:
-                    self.client_status_changed.emit("Error") # Emit signal to indicate an error
                     self.client.close() # Close the client socket
                     return
                 # Or, check if connection was successful and emit signal
