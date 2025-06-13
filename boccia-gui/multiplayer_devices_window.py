@@ -17,25 +17,32 @@ from multiplayer_instructions_widget import MultiplayerInstructionsWidget
 from key_press_handler import KeyPressHandlerMultiplayer
 
 class MultiplayerDevicesWindow(QMainWindow):
+    """ Class for the main window of the app for the multiplayer devices.
+    
+    This class is for the app running on the other devices (the devices NOT connected to the ramp).
+    """
     def __init__(self):
+        """ Initializes the MultiplayerDevicesWindow class. """
         super().__init__()
 
-        # Initialize commands
+        # Initialize instance of the Commands class
         self.commands = Commands()
 
-        # Initialize Bluetooth client
+        # Initialize instance of the Bluetooth client class
         self.bluetooth_client = BluetoothClient()
 
         # Initialize user interface
         self.init_UI()
 
-        # Install event filter for keyboard events
+        # Initialize key press handler
+        # (Specifically the multiplayer key press handler)
         self.key_press_handler = KeyPressHandlerMultiplayer(
                 self,
                 self.bluetooth_client,
                 self.commands
                 )
 
+        # Install event filter for keyboard events
         self.key_press_handler.installEventFilter(self)
         self.installEventFilter(self.key_press_handler)
 
@@ -47,8 +54,8 @@ class MultiplayerDevicesWindow(QMainWindow):
         height = 150 * Styles.SCALE_FACTOR
         self.resize(width, height)
 
-
     def init_UI(self):
+        """ Initializes the user interface. """
         # Create and set central widget once
         self.centralWidget = QWidget()
         self.setCentralWidget(self.centralWidget)
@@ -77,4 +84,6 @@ class MultiplayerDevicesWindow(QMainWindow):
         self.mainLayout.addWidget(self.multiplayer_instructions_widget)
     
     def set_up_event_connections(self):
+        """ Sets up event connections. """
+        # Connect the client status changed signal
         self.bluetooth_client.client_status_changed.connect(self.multiplayer_controls_widget._handle_client_status_change)

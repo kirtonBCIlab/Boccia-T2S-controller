@@ -144,27 +144,38 @@ class KeyPressHandler(QObject):
         self.key_toggled = None
 
 class KeyPressHandlerMultiplayer(QObject):
-    key_service_flag_changed = pyqtSignal(bool)
+    """ Class to handle key presses for the multiplayer devices.
+
+    To clarify: 
+        - The main device still uses the original KeyPressHandler class, even in multiplayer mode.
+        - The multiplayer devices (i.e. the devices NOT connected to the ramp) use this class.
+    """
 
     def __init__(self, parent=None, bluetooth_client = None, commands = None):
+        """ Initializes the KeyPressHandlerMultiplayer class. """
         super().__init__()
         self.parent = parent
         self.bluetooth_client_thread = bluetooth_client
         self.commands = commands
 
     def eventFilter(self, obj, event):
+        """ Event filter for key presses. """
         if event.type() == event.KeyPress:
             self.keyPressEvent(event)
 
         return super().eventFilter(obj, event)
     
     def keyPressEvent(self, event):
+        """ Handles key presses. """
         if not event.isAutoRepeat():
             key = event.key()
+
+            # If the key is a toggle command
             if (key in Commands.TOGGLE_COMMANDS):
 
                 # Get the command:
                 command = Commands.TOGGLE_COMMANDS[key]
+                # Tell the Bluetooth client to send the command
                 self.bluetooth_client_thread.send_command(command)
                 
             event.accept()

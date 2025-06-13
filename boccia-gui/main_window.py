@@ -110,11 +110,12 @@ class MainWindow(QMainWindow):
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.user_controls_widget._receive_service_flag)
 
-        # Bluetooth events
+        # Bluetooth server events
         self.bluetooth_server.server_status_changed.connect(self.multiplayer_controls_widget._handle_server_status_change)
         self.bluetooth_server.command_received.connect(self.command_received_from_multiplayer_device)
 
     def command_received_from_multiplayer_device(self, player_number, command_text):
+        """ Handles a command received from a multiplayer device. """
         self.key_press_handler.toggle_key_pressed(player_number, command_text)
 
     def closeEvent(self, event):
