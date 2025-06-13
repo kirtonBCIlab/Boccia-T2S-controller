@@ -132,6 +132,10 @@ class BluetoothClient(QThread):
         -------
         None
         """
+        # Clear the variables used to store paired devices
+        self._paired_devices = None
+        self.paired_device_names = []
+        
         # Retrieve the list of paired Bluetooth devices
         self._paired_devices = self.bluetooth_devices.get_paired_bluetooth_devices()
 
