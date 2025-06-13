@@ -21,7 +21,7 @@ from multiplayer_controls_widget_main_device import MultiplayerControlsMainDevic
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, include_multiplayer_controls = False):
         super().__init__()        
 
         # Initialize serial handler
@@ -30,8 +30,14 @@ class MainWindow(QMainWindow):
         # Initialize commands
         self.commands = Commands()
 
-        # Initialize bluetooth classes
-        self.bluetooth_server = BluetoothServer()
+        # Set the multiplayer version flag
+        # This determines whether or not the window will include the multiplayer functionality
+        self.include_multiplayer_controls = include_multiplayer_controls
+
+        # If including multiplayer functionality, 
+        # initialize instance of the Bluetooth server class
+        if self.include_multiplayer_controls:
+            self.bluetooth_server = BluetoothServer()
 
         # Initialize user interface
         self.init_UI()
@@ -77,8 +83,9 @@ class MainWindow(QMainWindow):
         self.serial_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Create multiplayer controls widget
-        self.multiplayer_controls_widget = MultiplayerControlsMainDevice(self.bluetooth_server)
-        self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        if self.include_multiplayer_controls:
+            self.multiplayer_controls_widget = MultiplayerControlsMainDevice(self.bluetooth_server)
+            self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         # Create operator controls
         self.operator_controls_widget = OperatorControlsWidget(self.serial_handler, self.commands)
@@ -92,7 +99,8 @@ class MainWindow(QMainWindow):
 
         # Organize main layout
         self.mainLayout.addWidget(self.serial_controls_widget)
-        self.mainLayout.addWidget(self.multiplayer_controls_widget)
+        if self.include_multiplayer_controls:
+            self.mainLayout.addWidget(self.multiplayer_controls_widget)
         self.mainLayout.addWidget(self.operator_controls_widget)
         self.mainLayout.addWidget(self.user_controls_widget)
 
@@ -110,9 +118,10 @@ class MainWindow(QMainWindow):
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.user_controls_widget._receive_service_flag)
 
-        # Bluetooth server events
-        self.bluetooth_server.server_status_changed.connect(self.multiplayer_controls_widget._handle_server_status_change)
-        self.bluetooth_server.command_received.connect(self.command_received_from_multiplayer_device)
+        # Set up Bluetooth server events if multiplayer controls are included
+        if self.include_multiplayer_controls:
+            self.bluetooth_server.server_status_changed.connect(self.multiplayer_controls_widget._handle_server_status_change)
+            self.bluetooth_server.command_received.connect(self.command_received_from_multiplayer_device)
 
     def command_received_from_multiplayer_device(self, player_number, command_text):
         """ Handles a command received from a multiplayer device. """
