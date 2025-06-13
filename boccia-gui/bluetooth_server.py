@@ -98,6 +98,8 @@ class BluetoothServer(QThread):
 
         Calls the method to initialize the Bluetooth server.
         Starts a thread to run separately to accept client connections.
+
+        Initializes the Bluetooth server socket.
         
         Parameters
         ----------
@@ -106,11 +108,6 @@ class BluetoothServer(QThread):
         Returns
         -------
         None
-
-        Attributes
-        ----------
-        server : socket.socket
-            The Bluetooth server socket.
         """
         # Initialize the Bluetooth server
         self.server = self._initialize_server()

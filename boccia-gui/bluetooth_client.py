@@ -81,6 +81,8 @@ class BluetoothClient(QThread):
         Calls the method to connect to a server device.
         Calls the method to read information from the server.
 
+        Initializes the Bluetooth client socket.
+
         Parameters
         ----------
         None
@@ -88,11 +90,6 @@ class BluetoothClient(QThread):
         Returns
         -------
         None
-
-        Attributes
-        ----------
-        client : socket.socket
-            The Bluetooth client socket.
         """
         # Initialize the Bluetooth client
         self.client = self._initialize_client()
