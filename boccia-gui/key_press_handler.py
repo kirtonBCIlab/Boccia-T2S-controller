@@ -18,6 +18,8 @@ class KeyPressHandler(QObject):
 
         self.service_flag = False
 
+        self.current_player = None
+
         self.key_action_map = {}
         self.mapKeys()
 
@@ -45,62 +47,78 @@ class KeyPressHandler(QObject):
             key = event.key()
             
             if (key in Commands.HOLD_COMMANDS):
-                #print(f"\nOperator key pressed: {key}")
-
                 # Get the command
                 command = Commands.HOLD_COMMANDS[key]
+                self.hold_key_pressed(command, key)
 
-                # If service is active, return
-                if self.service_flag:
-                    return
-                
-                # Otherwise, send the command
-                self.serial_handler.send_command(command)
-                self.key_pressed = key
-                #print(f"Start {command} command")
-
-                self.toggle_service_flag(True)
-                self.key_service_flag_changed.emit(True)
-
-            elif key in Commands.TOGGLE_COMMANDS:
-                #print(f"\nUser key pressed: {key}")
-
+            elif (key in Commands.TOGGLE_COMMANDS):
                 # Get the command
                 command = Commands.TOGGLE_COMMANDS[key]
-
-                # If service is active
-                if self.service_flag & (key == self.key_toggled):
-
-                    # If Drop delay is active, return
-                    if self.commands.get_drop_delay_active():
-                        return
-                    
-                    # Otherwise, send the command
-                    self.serial_handler.send_command(command)
-                    #print(f"Stop {command} command")
-
-                    # Toggle the flag and set the current action
-                    self.toggle_service_flag(False)
-                    self.key_service_flag_changed.emit(False)
-                    self.key_toggled = None
-                    
-                # If service is not active
-                elif not self.service_flag:
-                    # Send the command
-                    self.serial_handler.send_command(command)
-                    #print(f"Start {command} command")
-
-                    # If Drop key was pressed, start the drop delay timer
-                    if command == "dd-70":
-                        self.commands.drop_delay_timer()
-
-                    # Toggle the flag and set the current action
-                    self.toggle_service_flag(True)
-                    self.key_service_flag_changed.emit(True)
-                    self.key_toggled = key
+                self.toggle_key_pressed("Player 1", command, key)
                 
             event.accept()
 
+    def hold_key_pressed(self, command, key=None):
+        if key == None:
+            key = self.commands.get_key_from_hold_command(command)
+
+        # print(f"\nOperator key pressed: {key}")
+
+        # If service is active, return
+        if self.service_flag:
+            return
+        
+        # Otherwise, send the command
+        self.serial_handler.send_command(command)
+        self.key_pressed = key
+        # print(f"Start {command} command")
+
+        self.toggle_service_flag(True)
+        self.key_service_flag_changed.emit(True)
+
+    def toggle_key_pressed(self, player, command, key=None):
+        if key == None:
+            key = self.commands.get_key_from_toggle_command(command)
+            
+        # print(f"\nUser key pressed: {key}")
+
+        # If service is active
+        if self.service_flag & (key == self.key_toggled):
+
+            # If Drop delay is active, return
+            if self.commands.get_drop_delay_active():
+                return
+            
+            # Return if the player is not the current player
+            if player != self.current_player:
+                return
+            
+            # Otherwise, send the command
+            self.serial_handler.send_command(command)
+            # print(f"Stop {command} command")
+
+            # Toggle the flag and set the current action
+            self.toggle_service_flag(False)
+            self.key_service_flag_changed.emit(False)
+            self.key_toggled = None
+            
+        # If service is not active
+        elif not self.service_flag:
+            # Send the command
+            self.serial_handler.send_command(command)
+            # print(f"Start {command} command")
+
+            # If Drop key was pressed, start the drop delay timer
+            if command == "dd-70":
+                self.commands.drop_delay_timer()
+
+            # Toggle the flag and set the current action
+            self.toggle_service_flag(True)
+            self.key_service_flag_changed.emit(True)
+            self.key_toggled = key
+
+            # Set the current player
+            self.current_player = player
 
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
@@ -124,3 +142,42 @@ class KeyPressHandler(QObject):
     def reset_flags(self):
         self.service_flag = False
         self.key_toggled = None
+
+class KeyPressHandlerMultiplayer(QObject):
+    """ Class to handle key presses for the multiplayer devices.
+
+    To clarify: 
+        - The main device still uses the original KeyPressHandler class, even in multiplayer mode.
+        - The multiplayer devices (i.e. the devices NOT connected to the ramp) use this class.
+    """
+
+    def __init__(self, parent=None, bluetooth_client = None, commands = None):
+        """ Initializes the KeyPressHandlerMultiplayer class. """
+        super().__init__()
+        self.parent = parent
+        self.bluetooth_client_thread = bluetooth_client
+        self.commands = commands
+
+    def eventFilter(self, obj, event):
+        """ Event filter for key presses. """
+        if event.type() == event.KeyPress:
+            self.keyPressEvent(event)
+
+        return super().eventFilter(obj, event)
+    
+    def keyPressEvent(self, event):
+        """ Handles key presses. """
+        if not event.isAutoRepeat():
+            key = event.key()
+
+            # If the key is a toggle command
+            if (key in Commands.TOGGLE_COMMANDS):
+
+                # Get the command:
+                command = Commands.TOGGLE_COMMANDS[key]
+                # Tell the Bluetooth client to send the command
+                self.bluetooth_client_thread.send_command(command)
+                
+            event.accept()
+
+                

@@ -13,13 +13,15 @@ from commands import Commands
 from styles import Styles
 from serial_handler import SerialHandler
 from key_press_handler import KeyPressHandler
+from bluetooth_server import BluetoothServer
 from user_controls_widget import UserControlsWidget
 from serial_controls_widget import SerialControlsWidget
 from operator_controls_widget import OperatorControlsWidget
+from multiplayer_controls_widget_main_device import MultiplayerControlsMainDevice
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, include_multiplayer_controls = False):
         super().__init__()        
 
         # Initialize serial handler
@@ -27,6 +29,15 @@ class MainWindow(QMainWindow):
 
         # Initialize commands
         self.commands = Commands()
+
+        # Set the multiplayer version flag
+        # This determines whether or not the window will include the multiplayer functionality
+        self.include_multiplayer_controls = include_multiplayer_controls
+
+        # If including multiplayer functionality, 
+        # initialize instance of the Bluetooth server class
+        if self.include_multiplayer_controls:
+            self.bluetooth_server = BluetoothServer()
 
         # Initialize user interface
         self.init_UI()
@@ -42,6 +53,7 @@ class MainWindow(QMainWindow):
         self.installEventFilter(self.key_press_handler)
         self.commands.set_key_press_handler(self.key_press_handler)
 
+        # Set up event connections
         self.set_up_event_connections()
 
         # Set window size
@@ -70,6 +82,11 @@ class MainWindow(QMainWindow):
         self.serial_controls_widget = SerialControlsWidget(self, self.serial_handler)
         self.serial_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
+        # Create multiplayer controls widget
+        if self.include_multiplayer_controls:
+            self.multiplayer_controls_widget = MultiplayerControlsMainDevice(self.bluetooth_server)
+            self.multiplayer_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
         # Create operator controls
         self.operator_controls_widget = OperatorControlsWidget(self.serial_handler, self.commands)
         self.operator_controls_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -82,6 +99,8 @@ class MainWindow(QMainWindow):
 
         # Organize main layout
         self.mainLayout.addWidget(self.serial_controls_widget)
+        if self.include_multiplayer_controls:
+            self.mainLayout.addWidget(self.multiplayer_controls_widget)
         self.mainLayout.addWidget(self.operator_controls_widget)
         self.mainLayout.addWidget(self.user_controls_widget)
 
@@ -99,6 +118,14 @@ class MainWindow(QMainWindow):
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.user_controls_widget._receive_service_flag)
 
+        # Set up Bluetooth server events if multiplayer controls are included
+        if self.include_multiplayer_controls:
+            self.bluetooth_server.server_status_changed.connect(self.multiplayer_controls_widget._handle_server_status_change)
+            self.bluetooth_server.command_received.connect(self.command_received_from_multiplayer_device)
+
+    def command_received_from_multiplayer_device(self, player_number, command_text):
+        """ Handles a command received from a multiplayer device. """
+        self.key_press_handler.toggle_key_pressed(player_number, command_text)
 
     def closeEvent(self, event):
         # Safely disconnect from serial port

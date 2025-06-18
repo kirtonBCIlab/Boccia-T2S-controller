@@ -119,7 +119,7 @@ class SerialControlsWidget(QWidget):
         self.port_label = QLabel('COM Port')
         self.port_label.setStyleSheet(Styles.LABEL_TEXT)
 
-        self.port_combo_box = CustomComboBox()
+        self.port_combo_box = CustomComboBox(parent=self, on_mouse_press=self._populate_ports)
         self.port_combo_box.setStyleSheet( f"{Styles.COMBOBOX_BASE} width: {70 * Styles.SCALE_FACTOR}px;")
         self._populate_ports()
 

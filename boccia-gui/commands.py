@@ -41,6 +41,18 @@ class Commands():
         "S ↓": "es0",
         "Drop \n(R)": "dd-70",
     }
+
+    # Min and max number of players for multiplayer mode
+    MIN_MULTIPLAYERS = 2
+    MAX_MULTIPLAYERS = 4
+
+    BLUETOOTH_VARIABLES = {
+        "RFCOMM_channel": 4,
+        "bytes": 1024,
+        "data_format": "utf-8",
+        "disconnect_command": "Disconnect",
+        "max_clients_message": "Max clients reached",
+    }
     
     HELP_URL = "https://github.com/kirtonBCIlab/Boccia-T2S-controller/wiki"
     
@@ -90,3 +102,15 @@ class Commands():
 
     def get_drop_delay_active(self):
         return self.drop_delay_active
+
+    def get_key_from_hold_command(self, command):
+        for key, value in self.HOLD_COMMANDS.items():
+            if value == command:
+                # print(f"Key from hold command: {key}")
+                return key
+            
+    def get_key_from_toggle_command(self, command):
+        for key, value in self.TOGGLE_COMMANDS.items():
+            if value == command:
+                # print(f"Key from toggle command: {key}")
+                return key

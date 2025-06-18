@@ -10,6 +10,7 @@ class Styles:
     SUB_LABEL = f"QLabel {{ font: {20 * SCALE_FACTOR}px Calibri; color: #b48ead;}}"
     VALUE_TEXT = f"font-size: {16 * SCALE_FACTOR}px; color: #ffffff;"
     LABEL_TEXT = f"font-size: {16 * SCALE_FACTOR}px; color: #a9a9a9;"
+    INSTRUCTIONS_TEXT = f"font-size: {14 * SCALE_FACTOR}px; color: #a9a9a9;"
 
     # Buttons
     BUTTON_BASE = f"""
@@ -47,6 +48,16 @@ class Styles:
         border-radius: {5 * SCALE_FACTOR}px; 
         border: {1 * SCALE_FACTOR}px solid #ffffff; 
         padding: {3 * SCALE_FACTOR}px;
+        """
+    
+    COMBOBOX_DROPDOWN = f"""
+        QListView {{
+            background-color: #3c3c3c;
+            color: #ffffff;
+            font-size: {16 * SCALE_FACTOR}px;
+            padding: {3 * SCALE_FACTOR}px;
+            min-width: {130 * SCALE_FACTOR}px;
+        }}
         """
     
     # Slider
