@@ -71,7 +71,19 @@ class Styles:
             width: {20 * SCALE_FACTOR}px;  
             margin: {-5 * SCALE_FACTOR}px 0;
         }}
-"""
+    """
+
+    DISABLED_SLIDER = f"""
+        QSlider::groove:horizontal {{
+            background: #3c3c3c;
+            height: {10 * SCALE_FACTOR}px;  
+        }}
+        QSlider::handle:horizontal {{
+            background: #a9a9a9;
+            width: {20 * SCALE_FACTOR}px;  
+            margin: {-5 * SCALE_FACTOR}px 0;
+        }}
+    """
 
     
     @staticmethod
