@@ -1,5 +1,7 @@
 # Standard libraries
 import os
+import sys
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QWidget,
@@ -29,6 +31,18 @@ class MainWindow(QMainWindow):
 
         # Initialize commands
         self.commands = Commands()
+
+        # Check if app is Python or EXE and set controls config path accordingly
+        if getattr(sys, "frozen", False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        self.controls_config_path = os.path.join(base_dir, "controls_config.json")
+        self.commands.load_key_config(self.controls_config_path)
+
+        self.remap_mode_active = False
+        self.remap_target = None
 
         # Set the multiplayer version flag
         # This determines whether or not the window will include the multiplayer functionality
@@ -118,6 +132,11 @@ class MainWindow(QMainWindow):
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.key_press_handler.toggle_service_flag)
         self.operator_controls_widget.hold_button_service_flag_changed.connect(self.user_controls_widget._receive_service_flag)
 
+        # Remapping controls
+        self.operator_controls_widget.remap_mode_requested.connect(self.toggle_remap_mode)
+        self.operator_controls_widget.remap_target_selected.connect(self.set_remap_target)
+        self.user_controls_widget.remap_target_selected.connect(self.set_remap_target)
+
         # Set up Bluetooth server events if multiplayer controls are included
         if self.include_multiplayer_controls:
             self.bluetooth_server.server_status_changed.connect(self.multiplayer_controls_widget._handle_server_status_change)
@@ -133,3 +152,47 @@ class MainWindow(QMainWindow):
             self.serial_handler.disconnect()
 
         event.accept()
+
+    def toggle_remap_mode(self):
+        self.remap_mode_active = not self.remap_mode_active
+        self.remap_target = None
+        self.operator_controls_widget.set_remap_mode_active(self.remap_mode_active)
+        self.user_controls_widget.set_remap_mode_active(self.remap_mode_active)
+
+    def is_remap_mode_active(self):
+        return self.remap_mode_active
+
+    def set_remap_target(self, group, action):
+        if not self.remap_mode_active:
+            return
+        self.remap_target = (group, action)
+
+    def handle_remap_key(self, event):
+        if not self.remap_mode_active:
+            return False
+
+        if event.isAutoRepeat():
+            return True
+
+        key = event.key()
+        if key == Qt.Key_Escape:
+            self.remap_target = None
+            self.remap_mode_active = False
+            self.operator_controls_widget.set_remap_mode_active(False)
+            self.user_controls_widget.set_remap_mode_active(False)
+            return True
+
+        if not self.remap_target:
+            return True
+
+        group, action = self.remap_target
+        if group == "hold":
+            self.commands.set_hold_key(action, key)
+        elif group == "toggle":
+            self.commands.set_toggle_key(action, key)
+
+        self.commands.save_key_config(self.controls_config_path)
+        self.operator_controls_widget.refresh_key_labels()
+        self.user_controls_widget.refresh_key_labels()
+        self.remap_target = None
+        return True

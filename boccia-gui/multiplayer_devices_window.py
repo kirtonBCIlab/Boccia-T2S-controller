@@ -1,5 +1,6 @@
 # Standard libraries
 import os
+import sys
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QWidget,
@@ -26,7 +27,15 @@ class MultiplayerDevicesWindow(QMainWindow):
         super().__init__()
 
         # Initialize instance of the Commands class
+        # - Check if app is Python or EXE and set controls config path accordingly
         self.commands = Commands()
+        if getattr(sys, "frozen", False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        self.controls_config_path = os.path.join(base_dir, "controls_config.json")
+        self.commands.load_key_config(self.controls_config_path)
 
         # Initialize instance of the Bluetooth client class
         self.bluetooth_client = BluetoothClient()

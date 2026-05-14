@@ -1,5 +1,8 @@
 # Standard libraries
+import json
+import os
 from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QKeySequence
 
 class Commands():
     CALIBRATION = "calibration"
@@ -14,18 +17,30 @@ class Commands():
         "Elevation - auto": "ec1",
         }
 
-    HOLD_COMMANDS = {
-        Qt.Key_A: "rs0",    # Rotation Left
-        Qt.Key_D: "rs1",    # Rotation Right
-        Qt.Key_W: "es1",    # Elevation Up
-        Qt.Key_S: "es0",    # Elevation Down
+    HOLD_ACTION_COMMANDS = {
+        "rotation_left": "rs0",
+        "rotation_right": "rs1",
+        "elevation_up": "es1",
+        "elevation_down": "es0",
         }
 
-    TOGGLE_COMMANDS = {
-        Qt.Key_1: "es1",    # Elevation up
-        Qt.Key_2: "rs1",    # Rotation right
-        Qt.Key_3: "dd-70",  # Drop - T2S activated
-        Qt.Key_R: "dd-70",  # Drop - Keyboard activated
+    TOGGLE_ACTION_COMMANDS = {
+        "elevation_up": "es1",
+        "rotation_right": "rs1",
+        "drop": "dd-70",
+        }
+
+    DEFAULT_HOLD_KEYS = {
+        "rotation_left": Qt.Key_A,
+        "rotation_right": Qt.Key_D,
+        "elevation_up": Qt.Key_W,
+        "elevation_down": Qt.Key_S,
+        }
+
+    DEFAULT_TOGGLE_KEYS = {
+        "elevation_up": Qt.Key_1,
+        "rotation_right": Qt.Key_2,
+        "drop": Qt.Key_3,
         }
     
     BUTTON_COMMANDS = {
@@ -68,6 +83,9 @@ class Commands():
 
         self.toggle_command_active = False
 
+        self.hold_key_map = dict(self.DEFAULT_HOLD_KEYS)
+        self.toggle_key_map = dict(self.DEFAULT_TOGGLE_KEYS)
+
     def set_user_controls_widget(self, user_controls_widget):
         self.user_controls_widget = user_controls_widget
 
@@ -104,13 +122,95 @@ class Commands():
         return self.drop_delay_active
 
     def get_key_from_hold_command(self, command):
-        for key, value in self.HOLD_COMMANDS.items():
+        for action, value in self.HOLD_ACTION_COMMANDS.items():
             if value == command:
-                # print(f"Key from hold command: {key}")
-                return key
+                return self.hold_key_map.get(action)
             
     def get_key_from_toggle_command(self, command):
-        for key, value in self.TOGGLE_COMMANDS.items():
+        for action, value in self.TOGGLE_ACTION_COMMANDS.items():
             if value == command:
-                # print(f"Key from toggle command: {key}")
-                return key
+                return self.toggle_key_map.get(action)
+
+    def get_hold_command_for_key(self, key):
+        for action, mapped_key in self.hold_key_map.items():
+            if mapped_key == key:
+                return self.HOLD_ACTION_COMMANDS.get(action)
+
+    def get_toggle_command_for_key(self, key):
+        for action, mapped_key in self.toggle_key_map.items():
+            if mapped_key == key:
+                return self.TOGGLE_ACTION_COMMANDS.get(action)
+
+    def get_hold_command_for_action(self, action):
+        return self.HOLD_ACTION_COMMANDS.get(action)
+
+    def get_toggle_command_for_action(self, action):
+        return self.TOGGLE_ACTION_COMMANDS.get(action)
+
+    def get_hold_key_for_action(self, action):
+        return self.hold_key_map.get(action)
+
+    def get_toggle_key_for_action(self, action):
+        return self.toggle_key_map.get(action)
+
+    def get_key_text(self, key):
+        if key is None:
+            return "?"
+        text = QKeySequence(key).toString()
+        return text if text else "?"
+
+    def set_hold_key(self, action, key):
+        self._swap_key(self.hold_key_map, action, key)
+
+    def set_toggle_key(self, action, key):
+        self._swap_key(self.toggle_key_map, action, key)
+
+    def _swap_key(self, key_map, action, new_key):
+        if action not in key_map:
+            return
+
+        current_key = key_map[action]
+        if current_key == new_key:
+            return
+
+        swap_action = None
+        for action_name, mapped_key in key_map.items():
+            if mapped_key == new_key:
+                swap_action = action_name
+                break
+
+        key_map[action] = new_key
+        if swap_action and swap_action != action:
+            key_map[swap_action] = current_key
+
+    def load_key_config(self, file_path):
+        if not os.path.exists(file_path):
+            return False
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+        except (OSError, json.JSONDecodeError):
+            return False
+
+        hold_keys = data.get("hold_keys", {})
+        toggle_keys = data.get("toggle_keys", {})
+
+        for action, key_value in hold_keys.items():
+            if isinstance(key_value, int):
+                self.set_hold_key(action, key_value)
+
+        for action, key_value in toggle_keys.items():
+            if isinstance(key_value, int):
+                self.set_toggle_key(action, key_value)
+
+        return True
+
+    def save_key_config(self, file_path):
+        data = {
+            "hold_keys": self.hold_key_map,
+            "toggle_keys": self.toggle_key_map,
+            }
+
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump(data, file, indent=2)

@@ -14,10 +14,11 @@ from PyQt5.QtWidgets import (
 
 # Custom libraries
 from styles import Styles
-from commands import Commands
 
 class OperatorControlsWidget(QWidget):
     hold_button_service_flag_changed = pyqtSignal(bool)
+    remap_mode_requested = pyqtSignal()
+    remap_target_selected = pyqtSignal(str, str)
 
     def __init__(self, serial_handler = None, commands = None):
         super().__init__()
@@ -30,7 +31,9 @@ class OperatorControlsWidget(QWidget):
             "rotation": 50
         }
 
-        self.operator_buttons = []
+        self.action_buttons = []
+        self.operator_button_actions = {}
+        self.remap_mode_active = False
         
         # Main label section   
         self.controls_label = QLabel('OPERATOR CONTROLS')
@@ -49,7 +52,7 @@ class OperatorControlsWidget(QWidget):
         self.main_layout.addWidget(self.controls_label)
         self.main_layout.addLayout(self.content_layout)
 
-        for button in self.operator_buttons:
+        for button in self.action_buttons:
             button.installEventFilter(self)
 
         self.service_flag = False
@@ -59,11 +62,11 @@ class OperatorControlsWidget(QWidget):
         """ Initialize UI elements for operator controls"""
 
         # Create buttons
-        up_button = self._create_operator_button('W ↑')
-        down_button = self._create_operator_button('S ↓')
-        left_button = self._create_operator_button('A ←')
-        right_button = self._create_operator_button('→ D')
-        drop_button = self._create_drop_button('Drop \n(R)')
+        up_button = self._create_operator_button(self._format_hold_button_text("elevation_up"), "elevation_up")
+        down_button = self._create_operator_button(self._format_hold_button_text("elevation_down"), "elevation_down")
+        left_button = self._create_operator_button(self._format_hold_button_text("rotation_left"), "rotation_left")
+        right_button = self._create_operator_button(self._format_hold_button_text("rotation_right"), "rotation_right")
+        drop_button = self._create_drop_button(self._format_drop_button_text(), "drop")
         
         # Organize buttons in grid layout
         spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -80,8 +83,16 @@ class OperatorControlsWidget(QWidget):
         buttons_layout.setColumnStretch(1, 2)
         buttons_layout.setColumnStretch(2, 2)
 
+        self.config_controls_button = QPushButton("Configure Controls")
+        self.config_controls_button.setStyleSheet(Styles.HOVER_BUTTON)
+        self.config_controls_button.clicked.connect(self._handle_config_button_clicked)
+
+        operator_controls_layout = QVBoxLayout()
+        operator_controls_layout.addLayout(buttons_layout)
+        operator_controls_layout.addWidget(self.config_controls_button)
+
         # Adding the buttons to the layout
-        return buttons_layout
+        return operator_controls_layout
 
 
     def _create_speed_controls(self):
@@ -132,25 +143,28 @@ class OperatorControlsWidget(QWidget):
         return slider_layout
     
 
-    def _create_operator_button(self, button_text:str = ""):
+    def _create_operator_button(self, button_text:str = "", action:str = ""):
         """ Returns the operator buttons for the hold commands """
 
         button_style = f"{Styles.HOVER_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
         button = QPushButton(button_text)
         button.setStyleSheet(button_style)
         button.clicked.connect(self._handle_button_clicked)
-        self.operator_buttons.append(button)
+        self.action_buttons.append(button)
+        self.operator_button_actions[button] = action
 
         return button
     
 
-    def _create_drop_button(self, button_text:str = ""):
+    def _create_drop_button(self, button_text:str = "", action:str = ""):
         """ Returns the drop button for the operator controls """
 
         button_style = f"{Styles.HOVER_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
         button = QPushButton(button_text)
         button.setStyleSheet(button_style)
         button.clicked.connect(self._handle_drop_click)
+        self.action_buttons.append(button)
+        self.operator_button_actions[button] = action
 
         return button
     
@@ -158,7 +172,12 @@ class OperatorControlsWidget(QWidget):
     def _handle_button_clicked(self):
         """ Handle the operator button click """
         sender = self.sender()
-        command = Commands.OPERATOR_COMMANDS.get(sender.text())
+        action = self.operator_button_actions.get(sender)
+        if self.remap_mode_active and action:
+            self.remap_target_selected.emit("hold", action)
+            return
+
+        command = self.commands.get_hold_command_for_action(action)
         # print(f"\nOperator button clicked: {sender.text()}")
 
         # If the command is in the list, send it
@@ -171,7 +190,7 @@ class OperatorControlsWidget(QWidget):
         command_action = "Start" if self.service_flag else "Stop"
         #print(f"{command_action} {command} command")
 
-        for button in self.findChildren(QPushButton):
+        for button in self.action_buttons:
             if button != sender:
                 button.setEnabled(not button.isEnabled())
 
@@ -179,9 +198,12 @@ class OperatorControlsWidget(QWidget):
 
 
     def _handle_drop_click(self):
+        if self.remap_mode_active:
+            self.remap_target_selected.emit("toggle", "drop")
+            return
         # print("Operator drop button clicked")
         # Send the command
-        command = Commands.OPERATOR_COMMANDS.get("Drop \n(R)")
+        command = self.commands.get_toggle_command_for_action("drop")
         self.serial_handler.send_command(command)
         # print(f"Sent command: {command}")
 
@@ -193,7 +215,7 @@ class OperatorControlsWidget(QWidget):
         
     
     def _toggle_all_buttons(self, is_enable):
-        for button in self.findChildren(QPushButton):
+        for button in self.action_buttons:
             button.setEnabled(is_enable)
             self._update_button_style(button)
 
@@ -206,6 +228,43 @@ class OperatorControlsWidget(QWidget):
         else:
             button_style = f"{Styles.DISABLED_BUTTON} width: {50 * Styles.SCALE_FACTOR}px; height: {50 * Styles.SCALE_FACTOR}px;"
             button.setStyleSheet(button_style)
+
+
+    def set_remap_mode_active(self, is_active: bool):
+        self.remap_mode_active = is_active
+        if is_active:
+            self.config_controls_button.setText("Configure Controls (On)")
+        else:
+            self.config_controls_button.setText("Configure Controls")
+
+
+    def refresh_key_labels(self):
+        for button, action in self.operator_button_actions.items():
+            if action == "drop":
+                button.setText(self._format_drop_button_text())
+            else:
+                button.setText(self._format_hold_button_text(action))
+
+
+    def _format_hold_button_text(self, action):
+        arrow_map = {
+            "elevation_up": "↑",
+            "elevation_down": "↓",
+            "rotation_left": "←",
+            "rotation_right": "→",
+            }
+        key_text = self.commands.get_key_text(self.commands.get_hold_key_for_action(action))
+        arrow = arrow_map.get(action, "")
+        return f"{key_text} {arrow}".strip()
+
+
+    def _format_drop_button_text(self):
+        key_text = self.commands.get_key_text(self.commands.get_toggle_key_for_action("drop"))
+        return f"Drop \n({key_text})"
+
+
+    def _handle_config_button_clicked(self):
+        self.remap_mode_requested.emit()
 
 
     def _receive_service_flag(self, flag: bool):

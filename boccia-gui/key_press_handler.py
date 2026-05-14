@@ -2,7 +2,6 @@
 from PyQt5.QtCore import QObject, Qt, pyqtSignal
 
 # Custom libraries
-from commands import Commands
 
 class KeyPressHandler(QObject):
     key_service_flag_changed = pyqtSignal(bool)
@@ -24,11 +23,14 @@ class KeyPressHandler(QObject):
         self.mapKeys()
 
     def mapKeys(self):
-        for index, key in enumerate(Commands.TOGGLE_COMMANDS.keys()):
+        for index, key in enumerate(self.commands.toggle_key_map.values()):
             self.key_action_map[key] = index + 1
 
     def eventFilter(self, obj, event):
         if event.type() == event.KeyPress:
+            if hasattr(self.parent, "is_remap_mode_active") and self.parent.is_remap_mode_active():
+                if self.parent.handle_remap_key(event):
+                    return True
             if event.key() == Qt.Key_F1:
                 self.parent.serial_controls_widget.open_help_url()
                 return True
@@ -45,15 +47,14 @@ class KeyPressHandler(QObject):
     def keyPressEvent(self, event):
         if not event.isAutoRepeat():
             key = event.key()
-            
-            if (key in Commands.HOLD_COMMANDS):
-                # Get the command
-                command = Commands.HOLD_COMMANDS[key]
-                self.hold_key_pressed(command, key)
 
-            elif (key in Commands.TOGGLE_COMMANDS):
-                # Get the command
-                command = Commands.TOGGLE_COMMANDS[key]
+            command = self.commands.get_hold_command_for_key(key)
+            if command:
+                self.hold_key_pressed(command, key)
+                return
+
+            command = self.commands.get_toggle_command_for_key(key)
+            if command:
                 self.toggle_key_pressed("Player 1", command, key)
                 
             event.accept()
@@ -123,9 +124,9 @@ class KeyPressHandler(QObject):
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
             key = event.key()
-            if (key in Commands.HOLD_COMMANDS) and (key == self.key_pressed):
+            command = self.commands.get_hold_command_for_key(key)
+            if command and (key == self.key_pressed):
                 #print(f"Operator key released: {key}")
-                command = Commands.HOLD_COMMANDS[key]
                 self.serial_handler.send_command(command)
                 self.key_pressed = None
                 #print(f"Stop {command} command")
@@ -171,10 +172,8 @@ class KeyPressHandlerMultiplayer(QObject):
             key = event.key()
 
             # If the key is a toggle command
-            if (key in Commands.TOGGLE_COMMANDS):
-
-                # Get the command:
-                command = Commands.TOGGLE_COMMANDS[key]
+            command = self.commands.get_toggle_command_for_key(key)
+            if command:
                 # Tell the Bluetooth client to send the command
                 self.bluetooth_client_thread.send_command(command)
                 
