@@ -48,6 +48,12 @@ class KeyPressHandler(QObject):
         if not event.isAutoRepeat():
             key = event.key()
 
+            command = self.commands.get_multiplayer_toggle_command_for_key(key)
+            if command:
+                player = self.commands.get_player_for_toggle_key(key)
+                self.toggle_key_pressed(player, command, key)
+                return
+
             command = self.commands.get_hold_command_for_key(key)
             if command:
                 self.hold_key_pressed(command, key)
@@ -56,6 +62,7 @@ class KeyPressHandler(QObject):
             command = self.commands.get_toggle_command_for_key(key)
             if command:
                 self.toggle_key_pressed("Player 1", command, key)
+                return
                 
             event.accept()
 
@@ -91,6 +98,7 @@ class KeyPressHandler(QObject):
                 return
             
             # Return if the player is not the current player
+            # this may be redundant since it already checks if the key pressed is the same as the toggled key
             if player != self.current_player:
                 return
             

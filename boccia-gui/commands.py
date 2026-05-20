@@ -57,6 +57,25 @@ class Commands():
         "Drop \n(R)": "dd-70",
     }
 
+    MULTIPLAYER_TOGGLE_KEYS = {
+        "Player 1": {
+            "rotation_right": Qt.Key_A,
+            "drop": Qt.Key_Q,
+        },
+        "Player 2": {
+            "rotation_right": Qt.Key_S,
+            "drop": Qt.Key_W,
+        },
+        "Player 3": {
+            "rotation_right": Qt.Key_D,
+            "drop": Qt.Key_E,
+        },
+        "Player 4": {
+            "rotation_right": Qt.Key_F,
+            "drop": Qt.Key_R,
+        },
+    }
+
     # Min and max number of players for multiplayer mode
     MIN_MULTIPLAYERS = 2
     MAX_MULTIPLAYERS = 4
@@ -85,6 +104,11 @@ class Commands():
 
         self.hold_key_map = dict(self.DEFAULT_HOLD_KEYS)
         self.toggle_key_map = dict(self.DEFAULT_TOGGLE_KEYS)
+
+        self.multiplayer_key_map = {}
+        for player, actions in self.MULTIPLAYER_TOGGLE_KEYS.items():
+            for action, key in actions.items():
+                self.multiplayer_key_map[key] = (player, action)
 
     def set_user_controls_widget(self, user_controls_widget):
         self.user_controls_widget = user_controls_widget
@@ -140,6 +164,21 @@ class Commands():
         for action, mapped_key in self.toggle_key_map.items():
             if mapped_key == key:
                 return self.TOGGLE_ACTION_COMMANDS.get(action)
+            
+    def get_multiplayer_toggle_command_for_key(self, key):
+        result = self.multiplayer_key_map.get(key)
+        if not result:
+            return None
+        _, action = result
+        command = self.TOGGLE_ACTION_COMMANDS.get(action)
+        return command
+                
+    def get_player_for_toggle_key(self, key):
+        result = self.multiplayer_key_map.get(key)
+        if not result:
+            return None
+        player, _ = result
+        return player
 
     def get_hold_command_for_action(self, action):
         return self.HOLD_ACTION_COMMANDS.get(action)
