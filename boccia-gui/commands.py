@@ -31,10 +31,10 @@ class Commands():
         }
 
     DEFAULT_HOLD_KEYS = {
-        "rotation_left": Qt.Key_A,
-        "rotation_right": Qt.Key_D,
-        "elevation_up": Qt.Key_W,
-        "elevation_down": Qt.Key_S,
+        "rotation_left": Qt.Key_Left,
+        "rotation_right": Qt.Key_Right,
+        "elevation_up": Qt.Key_Up,
+        "elevation_down": Qt.Key_Down,
         }
 
     DEFAULT_TOGGLE_KEYS = {

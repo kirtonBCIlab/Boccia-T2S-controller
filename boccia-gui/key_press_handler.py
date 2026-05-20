@@ -128,6 +128,7 @@ class KeyPressHandler(QObject):
 
             # Set the current player
             self.current_player = player
+            # print(self.current_player)
 
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
