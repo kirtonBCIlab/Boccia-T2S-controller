@@ -2,6 +2,7 @@
 import os
 import sys
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QWidget,
@@ -56,15 +57,17 @@ class MainWindow(QMainWindow):
         # Initialize user interface
         self.init_UI()
 
-        # Install event filter for keyboard events
+        # Initialize key press handler and connect it to commands and serial handler
         self.key_press_handler = KeyPressHandler(
-               self,
-               self.serial_handler, 
-               self.commands
-               )
-        
-        self.key_press_handler.installEventFilter(self)
-        self.installEventFilter(self.key_press_handler)
+            self,
+            self.serial_handler, 
+            self.commands
+            )
+
+        # Install the key press handler as a global event filter
+        app = QApplication.instance()
+        if app:
+            app.installEventFilter(self.key_press_handler)
         self.commands.set_key_press_handler(self.key_press_handler)
 
         # Set up event connections
