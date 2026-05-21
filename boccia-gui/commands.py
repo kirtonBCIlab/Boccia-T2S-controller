@@ -30,11 +30,12 @@ class Commands():
         "drop": "dd-70",
         }
 
+    # Use different keys than the Multiplayer Toggle Keys
     DEFAULT_HOLD_KEYS = {
-        "rotation_left": Qt.Key_Left,
-        "rotation_right": Qt.Key_Right,
-        "elevation_up": Qt.Key_Up,
-        "elevation_down": Qt.Key_Down,
+        "rotation_left": Qt.Key_J,
+        "rotation_right": Qt.Key_L,
+        "elevation_up": Qt.Key_I,
+        "elevation_down": Qt.Key_K,
         }
 
     DEFAULT_TOGGLE_KEYS = {
@@ -57,22 +58,24 @@ class Commands():
         "Drop \n(R)": "dd-70",
     }
 
+    # Based on available keyboard mapping in T2S iOS app
+    # Each player has a rotation right and drop toggle command
     MULTIPLAYER_TOGGLE_KEYS = {
         "Player 1": {
-            "rotation_right": Qt.Key_A,
-            "drop": Qt.Key_Q,
+            "rotation_right": Qt.Key_W,
+            "drop": Qt.Key_Space,
         },
         "Player 2": {
-            "rotation_right": Qt.Key_S,
-            "drop": Qt.Key_W,
+            "rotation_right": Qt.Key_A,
+            "drop": Qt.Key_Return,
         },
         "Player 3": {
-            "rotation_right": Qt.Key_D,
-            "drop": Qt.Key_E,
+            "rotation_right": Qt.Key_S,
+            "drop": Qt.Key_Up,
         },
         "Player 4": {
-            "rotation_right": Qt.Key_F,
-            "drop": Qt.Key_R,
+            "rotation_right": Qt.Key_D,
+            "drop": Qt.Key_Down,
         },
     }
 

@@ -1,9 +1,9 @@
 {
   "hold_keys": {
-    "rotation_left": 16777234,
-    "rotation_right": 16777236,
-    "elevation_up": 16777235,
-    "elevation_down": 16777237
+    "rotation_left": 74,
+    "rotation_right": 76,
+    "elevation_up": 73,
+    "elevation_down": 75
   },
   "toggle_keys": {
     "elevation_up": 49,
