@@ -30,11 +30,12 @@ class Commands():
         "drop": "dd-70",
         }
 
+    # Use different keys than the Multiplayer Toggle Keys
     DEFAULT_HOLD_KEYS = {
-        "rotation_left": Qt.Key_A,
-        "rotation_right": Qt.Key_D,
-        "elevation_up": Qt.Key_W,
-        "elevation_down": Qt.Key_S,
+        "rotation_left": Qt.Key_J,
+        "rotation_right": Qt.Key_L,
+        "elevation_up": Qt.Key_I,
+        "elevation_down": Qt.Key_K,
         }
 
     DEFAULT_TOGGLE_KEYS = {
@@ -55,6 +56,27 @@ class Commands():
         "W ↑": "es1",
         "S ↓": "es0",
         "Drop \n(R)": "dd-70",
+    }
+
+    # Based on available keyboard mapping in T2S iOS app
+    # Each player has a rotation right and drop toggle command
+    MULTIPLAYER_TOGGLE_KEYS = {
+        "Player 1": {
+            "rotation_right": Qt.Key_W,
+            "drop": Qt.Key_Space,
+        },
+        "Player 2": {
+            "rotation_right": Qt.Key_A,
+            "drop": Qt.Key_Return,
+        },
+        "Player 3": {
+            "rotation_right": Qt.Key_S,
+            "drop": Qt.Key_Up,
+        },
+        "Player 4": {
+            "rotation_right": Qt.Key_D,
+            "drop": Qt.Key_Down,
+        },
     }
 
     # Min and max number of players for multiplayer mode
@@ -85,6 +107,11 @@ class Commands():
 
         self.hold_key_map = dict(self.DEFAULT_HOLD_KEYS)
         self.toggle_key_map = dict(self.DEFAULT_TOGGLE_KEYS)
+
+        self.multiplayer_key_map = {}
+        for player, actions in self.MULTIPLAYER_TOGGLE_KEYS.items():
+            for action, key in actions.items():
+                self.multiplayer_key_map[key] = (player, action)
 
     def set_user_controls_widget(self, user_controls_widget):
         self.user_controls_widget = user_controls_widget
@@ -140,6 +167,21 @@ class Commands():
         for action, mapped_key in self.toggle_key_map.items():
             if mapped_key == key:
                 return self.TOGGLE_ACTION_COMMANDS.get(action)
+            
+    def get_multiplayer_toggle_command_for_key(self, key):
+        result = self.multiplayer_key_map.get(key)
+        if not result:
+            return None
+        _, action = result
+        command = self.TOGGLE_ACTION_COMMANDS.get(action)
+        return command
+                
+    def get_player_for_toggle_key(self, key):
+        result = self.multiplayer_key_map.get(key)
+        if not result:
+            return None
+        player, _ = result
+        return player
 
     def get_hold_command_for_action(self, action):
         return self.HOLD_ACTION_COMMANDS.get(action)
